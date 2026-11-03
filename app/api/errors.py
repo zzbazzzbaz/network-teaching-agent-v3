@@ -11,3 +11,7 @@ def unauthorized() -> HTTPException:
 
 def forbidden() -> HTTPException:
     return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无访问权限")
+
+
+def not_found() -> HTTPException:
+    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="资源不存在")

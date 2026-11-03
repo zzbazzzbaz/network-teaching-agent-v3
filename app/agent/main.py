@@ -1,10 +1,10 @@
 import logging
 
-from fastapi import FastAPI
 from agentscope.app import create_app
 from agentscope.app.message_bus import RedisMessageBus
 from agentscope.app.storage import RedisStorage
 from agentscope.app.workspace_manager import LocalWorkspaceManager
+from fastapi import FastAPI
 
 from app.core.config import get_settings
 

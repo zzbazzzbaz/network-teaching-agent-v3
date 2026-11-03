@@ -1,0 +1,86 @@
+import uuid
+from enum import StrEnum
+
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
+
+from app.repositories.models import Question, QuestionAttempt, QuestionType
+
+
+class QuestionScope(StrEnum):
+    PUBLIC = "public"
+    MINE = "mine"
+    ALL = "all"
+
+
+def _escape_like(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _question_filters(
+    user_id: uuid.UUID,
+    scope: QuestionScope,
+    query: str | None,
+    question_type: QuestionType | None,
+) -> list[ColumnElement[bool]]:
+    filters: list[ColumnElement[bool]] = [Question.deleted_at.is_(None)]
+    if scope is QuestionScope.PUBLIC:
+        filters.append(Question.user_id.is_(None))
+    elif scope is QuestionScope.MINE:
+        filters.append(Question.user_id == user_id)
+    else:
+        filters.append(or_(Question.user_id.is_(None), Question.user_id == user_id))
+    if question_type is not None:
+        filters.append(Question.question_type == question_type)
+    if query:
+        filters.append(Question.stem.ilike(f"%{_escape_like(query)}%", escape="\\"))
+    return filters
+
+
+async def list_questions(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    scope: QuestionScope,
+    query: str | None,
+    question_type: QuestionType | None,
+    limit: int,
+    offset: int,
+) -> tuple[list[Question], int]:
+    filters = _question_filters(user_id, scope, query, question_type)
+    total = await session.scalar(select(func.count()).select_from(Question).where(*filters))
+    statement = (
+        select(Question)
+        .where(*filters)
+        .order_by(Question.created_at.desc(), Question.id)
+        .limit(limit)
+        .offset(offset)
+    )
+    items = (await session.execute(statement)).scalars().all()
+    return list(items), total or 0
+
+
+async def get_question(session: AsyncSession, question_id: uuid.UUID) -> Question | None:
+    return await session.get(Question, question_id)
+
+
+async def list_attempts(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    question_id: uuid.UUID,
+    limit: int,
+    offset: int,
+) -> tuple[list[QuestionAttempt], int]:
+    filters = [QuestionAttempt.user_id == user_id, QuestionAttempt.question_id == question_id]
+    total = await session.scalar(select(func.count()).select_from(QuestionAttempt).where(*filters))
+    statement = (
+        select(QuestionAttempt)
+        .where(*filters)
+        .order_by(QuestionAttempt.created_at.desc(), QuestionAttempt.id)
+        .limit(limit)
+        .offset(offset)
+    )
+    items = (await session.execute(statement)).scalars().all()
+    return list(items), total or 0
