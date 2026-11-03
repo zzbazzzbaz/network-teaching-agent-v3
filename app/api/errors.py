@@ -1,5 +1,3 @@
-"""对外错误响应的统一构造。"""
-
 from fastapi import HTTPException, status
 
 
