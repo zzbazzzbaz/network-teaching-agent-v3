@@ -23,6 +23,7 @@ class RedisSettings(_Base):
     port: int
     password: str | None
 
+
 class DBSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="DB_")
 
@@ -30,6 +31,16 @@ class DBSettings(_Base):
     database: str
     username: str
     password: str
+
+
+class COSSettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="COS_")
+
+    secret_id: str
+    secret_key: str
+    region: str
+    bucket: str
+
 
 class JWTSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="JWT_")
@@ -41,6 +52,7 @@ class Settings(_Base):
     llm: LLMSettings = Field(default_factory=LLMSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     db: DBSettings = Field(default_factory=DBSettings)
+    cos: COSSettings = Field(default_factory=COSSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
 
     agent_base_url: str
