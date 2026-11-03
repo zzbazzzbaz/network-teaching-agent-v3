@@ -1,0 +1,22 @@
+# 环境变量与密钥
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# 工具缓存
+.ruff_cache/
+.pytest_cache/
+
+# IDE
+.idea/
+.vscode/
+
+# 运行时数据
+.data/
+sandbox/
+*.log

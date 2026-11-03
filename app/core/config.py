@@ -21,7 +21,7 @@ class RedisSettings(_Base):
 
     host: str
     port: int
-    password: str | None
+    password: str | None = None
 
 
 class DBSettings(_Base):
@@ -61,11 +61,11 @@ class Settings(_Base):
 
     @property
     def files_dir(self) -> Path:
-        return self.data_root / "files"
+        return Path(self.data_root) / "files"
 
     @property
     def workspaces_dir(self) -> Path:
-        return self.data_root / "workspaces"
+        return Path(self.data_root) / "workspaces"
 
 
 @lru_cache
