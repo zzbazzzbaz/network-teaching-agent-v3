@@ -46,6 +46,8 @@ class JWTSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="JWT_")
 
     secret_key: str
+    access_token_minutes: int = 30
+    refresh_token_days: int = 7
 
 
 class Settings(_Base):
