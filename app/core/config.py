@@ -21,7 +21,7 @@ class RedisSettings(_Base):
 
     host: str
     port: int
-    password: str | None = None
+    password: str | None
 
 
 class DBSettings(_Base):
@@ -40,14 +40,16 @@ class COSSettings(_Base):
     secret_key: str
     region: str
     bucket: str
+    upload_expires: int
+    download_expires: int
 
 
 class JWTSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="JWT_")
 
     secret_key: str
-    access_token_minutes: int = 30
-    refresh_token_days: int = 7
+    access_token_minutes: int
+    refresh_token_days: int
 
 
 class Settings(_Base):
@@ -60,6 +62,7 @@ class Settings(_Base):
     agent_base_url: str
     api_base_url: str
     data_root: str
+    max_upload_bytes: int
 
     @property
     def files_dir(self) -> Path:

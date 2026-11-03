@@ -15,3 +15,7 @@ def forbidden() -> HTTPException:
 
 def not_found() -> HTTPException:
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="资源不存在")
+
+
+def bad_request() -> HTTPException:
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="请求无法完成")
