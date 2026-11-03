@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,7 +11,7 @@ class _Base(BaseSettings):
 
 class LLMSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="LLM_")
-    api_key: str
+    api_key: SecretStr
     base_url: str
     model: str
 
