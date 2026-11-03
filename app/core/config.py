@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,9 +28,6 @@ class DBSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="DB_")
 
     url: str
-    database: str
-    username: str
-    password: str
 
 
 class COSSettings(_Base):
@@ -61,16 +58,29 @@ class Settings(_Base):
 
     agent_base_url: str
     api_base_url: str
-    data_root: str
+    data_root: Path
+    qdrant_url: str
     max_upload_bytes: int
 
-    @property
-    def files_dir(self) -> Path:
-        return Path(self.data_root) / "files"
+    @field_validator("data_root")
+    @classmethod
+    def _require_absolute_data_root(cls, value: Path) -> Path:
+        """相对路径会随启动 cwd 漂移, 直接拒绝。"""
+        if not value.is_absolute():
+            raise ValueError("必须是绝对路径")
+        return value.resolve()
 
     @property
     def workspaces_dir(self) -> Path:
-        return Path(self.data_root) / "workspaces"
+        return self.data_root / "workspaces"
+
+    @property
+    def memory_dir(self) -> Path:
+        return self.data_root / "memory" / "reme"
+
+    @property
+    def kb_blobs_dir(self) -> Path:
+        return self.data_root / "blobs"
 
 
 @lru_cache

@@ -19,4 +19,5 @@ __pycache__/
 # 运行时数据
 .data/
 sandbox/
+logs/
 *.log
