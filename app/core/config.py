@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,7 +13,8 @@ class LLMSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="LLM_")
     api_key: SecretStr
     base_url: str
-    model: str
+    chat_model: str
+    embedding_model: str
 
 
 class RedisSettings(_Base):
