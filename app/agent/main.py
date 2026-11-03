@@ -1,10 +1,12 @@
+import logging
+
 from fastapi import FastAPI
 from agentscope.app import create_app
 from agentscope.app.message_bus import RedisMessageBus
 from agentscope.app.storage import RedisStorage
 from agentscope.app.workspace_manager import LocalWorkspaceManager
 
-from src.config import get_settings
+from app.core.config import get_settings
 
 
 def create_agent_app() -> FastAPI:
@@ -20,3 +22,11 @@ def create_agent_app() -> FastAPI:
         title="计算机网络教学智能体 Agent",
         version="0.1.0",
     )
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+
+app = create_app()
