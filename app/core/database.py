@@ -11,16 +11,8 @@ from sqlmodel import SQLModel
 
 from app.core.config import get_settings
 
-
-def _dsn() -> str:
-    db = get_settings().db
-    if "://" in db.url:
-        return db.url
-    return f"postgresql+asyncpg://{db.username}:{db.password}@{db.url}/{db.database}"
-
-
 engine: AsyncEngine = create_async_engine(
-    _dsn(),
+    get_settings().db.url,
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
