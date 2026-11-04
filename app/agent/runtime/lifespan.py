@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from app.agent.runtime.knowledge import verify_qdrant
 from app.agent.runtime.memory import close_all
+from app.agent.tools.client import close_client
 from app.core.config import Settings
 
 
@@ -19,6 +20,7 @@ def wrap_lifespan(app: FastAPI, settings: Settings) -> None:
                 await verify_qdrant(settings.qdrant_url)
                 yield state
             finally:
+                await close_client()
                 await close_all()
 
     app.router.lifespan_context = lifespan

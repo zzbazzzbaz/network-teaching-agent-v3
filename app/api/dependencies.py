@@ -1,11 +1,13 @@
 import logging
+import uuid
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Header
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.endpoints.schemas.internal_question import USER_ID_HEADER
 from app.api.errors import forbidden, unauthorized
 from app.core.database import session_scope
 from app.core.security import TokenError, TokenType, decode_token
@@ -48,3 +50,24 @@ async def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_internal_user(
+    session: SessionDep,
+    x_user_id: Annotated[str | None, Header(alias=USER_ID_HEADER)] = None,
+) -> User:
+    if not x_user_id:
+        raise unauthorized()
+    try:
+        user_id = uuid.UUID(x_user_id)
+    except ValueError as exc:
+        logger.warning("internal call with invalid user id: %r", x_user_id)
+        raise unauthorized() from exc
+    try:
+        return await user_service.get_user(session, user_id)
+    except user_service.UserNotFoundError as exc:
+        logger.warning("internal call with unknown user: user_id=%s", user_id)
+        raise unauthorized() from exc
+
+
+InternalUser = Annotated[User, Depends(get_internal_user)]

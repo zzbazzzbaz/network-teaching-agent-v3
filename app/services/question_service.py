@@ -4,13 +4,17 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories import question_repositories
-from app.repositories.models import Question, QuestionAttempt, QuestionType
+from app.repositories.models import ChatSession, Question, QuestionAttempt, QuestionType
 from app.repositories.question_repositories import QuestionScope
 
 logger = logging.getLogger(__name__)
 
 
 class QuestionNotFoundError(Exception):
+    pass
+
+
+class SessionNotFoundError(Exception):
     pass
 
 
@@ -89,4 +93,49 @@ async def list_attempts(
         question_id=question_id,
         limit=limit,
         offset=offset,
+    )
+
+
+async def record_answer(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    session_id: uuid.UUID,
+    tool_call_id: str,
+    stem: str,
+    question_type: QuestionType,
+    options: dict[str, str] | None,
+    answer_text: str,
+    answer: str,
+) -> None:
+    chat_session = await session.get(ChatSession, session_id)
+    if chat_session is None or chat_session.user_id != user_id:
+        logger.info("answer session not found: session_id=%s user_id=%s", session_id, user_id)
+        raise SessionNotFoundError
+
+    existing = await question_repositories.get_attempt_by_tool_call(
+        session,
+        user_id=user_id,
+        tool_call_id=tool_call_id,
+    )
+    if existing is not None:
+        logger.info("answer replayed: tool_call_id=%s attempt_id=%s", tool_call_id, existing.id)
+        return
+
+    question = await create_question(
+        session,
+        user_id=user_id,
+        stem=stem,
+        question_type=question_type,
+        options=options,
+        answer_text=answer_text,
+        note=None,
+    )
+    await question_repositories.create_attempt(
+        session,
+        user_id=user_id,
+        question_id=question.id,
+        session_id=session_id,
+        tool_call_id=tool_call_id,
+        answer_text=answer,
     )
