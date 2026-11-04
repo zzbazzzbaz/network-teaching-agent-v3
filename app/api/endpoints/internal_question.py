@@ -18,6 +18,8 @@ router = APIRouter(
     include_in_schema=False,
 )
 
+_LETTERS = "ABCDEF"
+
 
 @router.post(
     "/answers",
@@ -30,9 +32,17 @@ async def write_answer(
     session: SessionDep,
 ) -> bool:
     question = body.question
-    answer = (
-        body.answer.upper() if question.question_type is QuestionType.SINGLE_CHOICE else body.answer
-    )
+    answer = body.answer.strip()
+    if question.question_type is QuestionType.SINGLE_CHOICE:
+        answer = answer.upper()
+
+    options = dict(zip(_LETTERS, question.options, strict=False)) if question.options else None
+    answer_text = (
+        question.correct_option
+        if question.question_type is QuestionType.SINGLE_CHOICE
+        else question.reference_answer
+    ) or ""
+
     try:
         await question_service.record_answer(
             session,
@@ -41,8 +51,8 @@ async def write_answer(
             tool_call_id=body.tool_call_id,
             stem=question.stem,
             question_type=question.question_type,
-            options=question.options_map,
-            answer_text=question.answer_text,
+            options=options,
+            answer_text=answer_text,
             answer=answer,
         )
     except question_service.SessionNotFoundError as exc:

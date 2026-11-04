@@ -9,9 +9,9 @@ from agentscope.permission import (
     PermissionDecision,
 )
 from agentscope.tool import ToolBase
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.agent.tools.client import InternalApiClient, InternalApiError
+from app.agent.tools.schemas.quiz_student import QuizStudentAnswer, QuizStudentQuestion
 from app.api.endpoints.schemas.internal_question import (
     AnswerWriteRequest,
     QuestionPayload,
@@ -26,48 +26,22 @@ _DESCRIPTION = (
 )
 
 
-class QuizStudentQuestion(QuestionPayload):
-    """模型出题参数; 同时是前端作答时必须原样回传的题目快照。"""
-
-
-class QuizStudentAnswer(BaseModel):
-    """学生的作答。"""
-
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    answer: str = Field(
-        min_length=1,
-        max_length=2000,
-        description='学生答案。单选题传字母, 例如 "B"; 简答题传文本。',
-    )
-
-
-class QuizStudentMetadata(QuizStudentAnswer):
-    """``ToolResultBlock.metadata`` 的约定: 答案 + 题目快照。"""
-
-    question: QuizStudentQuestion = Field(
-        description="出题时的题目快照, 原样带回; agent 进程靠它重建题目并落库。",
-    )
-
-
 class QuizStudent(ToolBase):
-    """出题并等待外部作答的教学工具。"""
-
     name: str = "quiz_student"
     description: str = _DESCRIPTION
 
     input_schema: dict[str, Any] = QuizStudentQuestion.model_json_schema()
-    metadata_schema: dict[str, Any] | None = QuizStudentMetadata.model_json_schema()
+    metadata_schema: dict[str, Any] | None = QuizStudentAnswer.model_json_schema()
 
     is_read_only: bool = False
     is_concurrency_safe: bool = False
     is_external_tool: bool = True
 
     def __init__(
-            self,
-            client: InternalApiClient,
-            user_id: str,
-            session_id: str,
+        self,
+        client: InternalApiClient,
+        user_id: str,
+        session_id: str,
     ) -> None:
         super().__init__()
         self._client = client
@@ -75,19 +49,11 @@ class QuizStudent(ToolBase):
         self._session_id = uuid.UUID(session_id)
 
     async def check_permissions(
-            self,
-            tool_input: dict[str, Any],
-            context: PermissionContext,
+        self,
+        tool_input: dict[str, Any],
+        context: PermissionContext,
     ) -> PermissionDecision:
-        del context
-        try:
-            QuizStudentQuestion.model_validate(tool_input)
-        except ValidationError as exc:
-            reason = "; ".join(error["msg"] for error in exc.errors())
-            return PermissionDecision(
-                behavior=PermissionBehavior.DENY,
-                message=f"题目不合法, 请修正后重新出题: {reason}",
-            )
+        del tool_input, context
         return PermissionDecision(
             behavior=PermissionBehavior.ALLOW,
             message="题目由前端 HITL 作答, 无需确认工具调用。",
@@ -98,15 +64,17 @@ class QuizStudent(ToolBase):
         if result.state != ToolResultState.SUCCESS:
             return
 
-        metadata = QuizStudentMetadata.model_validate(result.metadata)
+        payload = QuizStudentAnswer.model_validate(result.metadata)
         try:
             await self._client.write_answer(
                 self._user_id,
                 AnswerWriteRequest(
                     session_id=self._session_id,
                     tool_call_id=result.id,
-                    question=metadata.question,
-                    answer=metadata.answer,
+                    question=QuestionPayload.model_validate(
+                        payload.question.model_dump(mode="json"),
+                    ),
+                    answer=payload.answer,
                 ),
             )
         except InternalApiError as exc:
@@ -116,4 +84,4 @@ class QuizStudent(ToolBase):
                 exc,
             )
 
-        result.output = f"学生答案: {metadata.answer}"
+        result.output = f"学生答案: {payload.answer}"
