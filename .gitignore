@@ -21,3 +21,6 @@ __pycache__/
 sandbox/
 logs/
 *.log
+
+# 本地文档（不纳入版本管理）
+docs/chat/
