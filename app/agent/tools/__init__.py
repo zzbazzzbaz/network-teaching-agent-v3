@@ -1,6 +1,7 @@
 from agentscope.tool import ToolBase
 
 from app.agent.tools.client import get_client
+from app.agent.tools.get_question import GetQuestion
 from app.agent.tools.quiz_student import QuizStudent
 
 
@@ -15,5 +16,9 @@ async def agent_tools(
             client=get_client(),
             user_id=user_id,
             session_id=session_id,
+        ),
+        GetQuestion(
+            client=get_client(),
+            user_id=user_id,
         ),
     ]

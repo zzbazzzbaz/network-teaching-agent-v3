@@ -1,3 +1,4 @@
+import uuid
 from typing import Any
 
 import httpx
@@ -5,11 +6,13 @@ import httpx
 from app.api.endpoints.schemas.internal_question import (
     USER_ID_HEADER,
     AnswerWriteRequest,
+    QuestionDetailResponse,
 )
 from app.core.config import get_settings
 
 # 与 app/api/endpoints/internal_question.py 的路由保持一致
 ANSWER_WRITE_PATH = "/api/internal/questions/answers"
+QUESTION_DETAIL_PATH = "/api/internal/questions/{question_id}"
 
 
 class InternalApiError(RuntimeError):
@@ -53,6 +56,20 @@ class InternalApiClient:
             json=payload.model_dump(mode="json"),
         )
         return bool(response.json())
+
+    async def get_question(
+        self,
+        user_id: str,
+        question_id: uuid.UUID,
+        attempt_limit: int,
+    ) -> QuestionDetailResponse:
+        response = await self._request(
+            "GET",
+            QUESTION_DETAIL_PATH.format(question_id=question_id),
+            user_id=user_id,
+            params={"attempt_limit": attempt_limit},
+        )
+        return QuestionDetailResponse.model_validate(response.json())
 
     async def _request(
         self,

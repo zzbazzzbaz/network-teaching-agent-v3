@@ -96,6 +96,24 @@ async def list_attempts(
     )
 
 
+async def get_question_with_attempts(
+    session: AsyncSession,
+    *,
+    question_id: uuid.UUID,
+    user_id: uuid.UUID,
+    limit: int,
+) -> tuple[Question, list[QuestionAttempt], int]:
+    question = await get_question(session, question_id, user_id)
+    attempts, total = await question_repositories.list_attempts(
+        session,
+        user_id=user_id,
+        question_id=question_id,
+        limit=limit,
+        offset=0,
+    )
+    return question, attempts, total
+
+
 async def record_answer(
     session: AsyncSession,
     *,

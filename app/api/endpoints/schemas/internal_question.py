@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -20,3 +21,20 @@ class AnswerWriteRequest(BaseModel):
     tool_call_id: str
     question: QuestionPayload
     answer: str
+
+
+class AttemptItem(BaseModel):
+    answer_text: str
+    created_at: datetime
+
+
+class QuestionDetailResponse(BaseModel):
+    id: uuid.UUID
+    question_type: QuestionType
+    stem: str
+    options: dict[str, str] | None = None
+    answer_text: str
+    note: str | None = None
+    created_at: datetime
+    attempts: list[AttemptItem]
+    attempt_total: int

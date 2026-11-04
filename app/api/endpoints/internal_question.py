@@ -4,10 +4,17 @@
 调用者身份由 ``X-User-ID`` 头给出。它只应被 agent 进程访问。
 """
 
-from fastapi import APIRouter
+import uuid
+from typing import Annotated
+
+from fastapi import APIRouter, Query
 
 from app.api.dependencies import InternalUser, SessionDep
-from app.api.endpoints.schemas.internal_question import AnswerWriteRequest
+from app.api.endpoints.schemas.internal_question import (
+    AnswerWriteRequest,
+    AttemptItem,
+    QuestionDetailResponse,
+)
 from app.api.errors import not_found
 from app.repositories.models import QuestionType
 from app.services import question_service
@@ -58,3 +65,40 @@ async def write_answer(
     except question_service.SessionNotFoundError as exc:
         raise not_found() from exc
     return True
+
+
+@router.get(
+    "/{question_id}",
+    response_model=QuestionDetailResponse,
+    summary="题目详情与作答记录",
+)
+async def get_question(
+    question_id: uuid.UUID,
+    user: InternalUser,
+    session: SessionDep,
+    attempt_limit: Annotated[int, Query(ge=1, le=20)] = 5,
+) -> QuestionDetailResponse:
+    try:
+        question, attempts, total = await question_service.get_question_with_attempts(
+            session,
+            question_id=question_id,
+            user_id=user.id,
+            limit=attempt_limit,
+        )
+    except question_service.QuestionNotFoundError as exc:
+        raise not_found() from exc
+
+    return QuestionDetailResponse(
+        id=question.id,
+        question_type=question.question_type,
+        stem=question.stem,
+        options=question.options,
+        answer_text=question.answer_text,
+        note=question.note,
+        created_at=question.created_at,
+        attempts=[
+            AttemptItem(answer_text=attempt.answer_text, created_at=attempt.created_at)
+            for attempt in attempts
+        ],
+        attempt_total=total,
+    )
