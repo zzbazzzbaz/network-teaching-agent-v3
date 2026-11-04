@@ -65,6 +65,29 @@ async def get_question(session: AsyncSession, question_id: uuid.UUID) -> Questio
     return await session.get(Question, question_id)
 
 
+async def create_question(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    stem: str,
+    question_type: QuestionType,
+    options: dict[str, str] | None,
+    answer_text: str,
+    note: str | None,
+) -> Question:
+    question = Question(
+        user_id=user_id,
+        stem=stem,
+        question_type=question_type,
+        options=options,
+        answer_text=answer_text,
+        note=note,
+    )
+    session.add(question)
+    await session.flush()
+    return question
+
+
 async def list_attempts(
     session: AsyncSession,
     *,

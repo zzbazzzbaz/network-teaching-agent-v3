@@ -53,6 +53,27 @@ async def get_question(
     return question
 
 
+async def create_question(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    stem: str,
+    question_type: QuestionType,
+    options: dict[str, str] | None,
+    answer_text: str,
+    note: str | None,
+) -> Question:
+    return await question_repositories.create_question(
+        session,
+        user_id=user_id,
+        stem=stem,
+        question_type=question_type,
+        options=options,
+        answer_text=answer_text,
+        note=note,
+    )
+
+
 async def list_attempts(
     session: AsyncSession,
     *,
