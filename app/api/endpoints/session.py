@@ -20,7 +20,6 @@ from app.api.endpoints.schemas.session import (
     SessionStatusResponse,
 )
 from app.api.errors import (
-    bad_request,
     conflict,
     forbidden,
     not_found,
@@ -55,7 +54,7 @@ def _agent_failure(exc: AgentError) -> HTTPException:
     if exc.status_code == 404:
         return not_found()
     if exc.status_code == 409:
-        return conflict("上一条消息仍在生成中")
+        return conflict()
     return service_unavailable()
 
 
@@ -70,7 +69,10 @@ def _normalize_event_cursor(value: str | None) -> str | None:
     if not cursor:
         return None
     if not _EVENT_CURSOR_PATTERN.fullmatch(cursor):
-        raise bad_request("无效的事件游标")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="无效的事件游标",
+        )
     return cursor
 
 
@@ -141,7 +143,10 @@ async def rename_session(
 ) -> SessionItem:
     title = payload.title.strip()
     if not title:
-        raise bad_request("标题不能为空")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="标题不能为空",
+        )
     try:
         chat = await session_service.rename_session(
             session,
@@ -202,7 +207,10 @@ async def send_message(
     except session_service.SessionNotFoundError as exc:
         raise not_found() from exc
     except session_service.InvalidMessageError as exc:
-        raise bad_request(exc.detail) from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
     except AgentError as exc:
         logger.warning(
             "agent chat trigger failed: user_id=%s session_id=%s status=%s detail=%s",
@@ -363,18 +371,30 @@ async def submit_event(
 ) -> SendMessageResponse:
     event_type = payload.get("type")
     if not isinstance(event_type, str) or event_type not in _ALLOWED_EVENT_TYPES:
-        raise bad_request("不支持的事件类型")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="不支持的事件类型",
+        )
     reply_id = payload.get("reply_id")
     if not isinstance(reply_id, str) or not reply_id:
-        raise bad_request("事件格式不正确")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="事件格式不正确",
+        )
     if event_type == "EXTERNAL_EXECUTION_RESULT" and not _non_empty_list(
         payload.get("execution_results")
     ):
-        raise bad_request("事件格式不正确")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="事件格式不正确",
+        )
     if event_type == "USER_CONFIRM_RESULT" and not _non_empty_list(
         payload.get("confirm_results")
     ):
-        raise bad_request("事件格式不正确")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="事件格式不正确",
+        )
 
     try:
         chat = await session_service.get_session(

@@ -23,7 +23,7 @@ class RedisSettings(_Base):
     host: str
     port: int
     password: str | None
-    max_connections: int = 200
+    max_connections: int
 
 
 class DBSettings(_Base):
@@ -63,8 +63,8 @@ class Settings(_Base):
     data_root: Path
     qdrant_url: str
     max_upload_bytes: int
-    agent_http_max_connections: int = 200
-    agent_http_max_keepalive_connections: int = 20
+    agent_http_max_connections: int
+    agent_http_max_keepalive_connections: int
 
     @field_validator("data_root")
     @classmethod
