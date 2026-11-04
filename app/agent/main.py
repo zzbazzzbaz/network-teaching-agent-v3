@@ -10,6 +10,7 @@ from app.agent.runtime.knowledge import build_blob_store, build_kb_manager, buil
 from app.agent.runtime.lifespan import wrap_lifespan
 from app.agent.runtime.middlewares import agent_middlewares
 from app.agent.runtime.workspace import build_workspace_manager
+from app.agent.tools import agent_tools
 from app.core.config import get_settings
 
 
@@ -26,6 +27,7 @@ def create_agent_app() -> FastAPI:
         blob_store=build_blob_store(settings),
         resource_access_policy=build_access_policy(),
         extra_agent_middlewares=agent_middlewares,
+        extra_agent_tools=agent_tools,
         enable_index_worker=True,
         enable_scheduler=False,
         enable_channel_worker=False,

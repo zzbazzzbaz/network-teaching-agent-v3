@@ -88,6 +88,45 @@ async def create_question(
     return question
 
 
+async def get_attempt_by_tool_call(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    tool_call_id: str,
+) -> QuestionAttempt | None:
+    statement = (
+        select(QuestionAttempt)
+        .where(
+            QuestionAttempt.user_id == user_id,
+            QuestionAttempt.tool_call_id == tool_call_id,
+        )
+        .order_by(QuestionAttempt.created_at.desc())
+        .limit(1)
+    )
+    return await session.scalar(statement)
+
+
+async def create_attempt(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    question_id: uuid.UUID,
+    session_id: uuid.UUID,
+    tool_call_id: str | None,
+    answer_text: str,
+) -> QuestionAttempt:
+    attempt = QuestionAttempt(
+        user_id=user_id,
+        question_id=question_id,
+        session_id=session_id,
+        tool_call_id=tool_call_id,
+        answer_text=answer_text,
+    )
+    session.add(attempt)
+    await session.flush()
+    return attempt
+
+
 async def list_attempts(
     session: AsyncSession,
     *,
