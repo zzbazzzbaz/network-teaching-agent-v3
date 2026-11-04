@@ -4,8 +4,8 @@ from agentscope.agent import Agent
 from agentscope.middleware import MiddlewareBase
 from agentscope.workspace import LocalWorkspace, WorkspaceBase
 
-from app.agent.memory import get_memory
-from app.agent.workspace import TEACHING_WORKSPACE_INSTRUCTIONS
+from app.agent.runtime.memory import get_memory
+from app.agent.runtime.workspace import TEACHING_WORKSPACE_INSTRUCTIONS
 from app.core.config import get_settings
 
 # 服务层默认下发的工具里有 shell / 文件 / 团队 / 调度 / 规划五类,

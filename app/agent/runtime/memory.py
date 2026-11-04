@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 from agentscope.middleware import ReMeMiddleware
 
-from app.agent.models import build_chat_model, build_embedding_model
+from app.agent.runtime.models import build_chat_model, build_embedding_model
 from app.core.config import Settings
 
 # 每个实例都带一个文件监听和一个 23:00 的 dream cron, 必须有上限。

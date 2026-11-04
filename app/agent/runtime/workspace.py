@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from agentscope.app.workspace_manager import IsolationPolicy, LocalWorkspaceManager
 
 from app.core.config import Settings
@@ -9,11 +11,18 @@ TEACHING_WORKSPACE_INSTRUCTIONS = (
     "</workspace>"
 )
 
+_SKILLS_DIR = Path(__file__).parent.parent / "skills"
+
+
+def _discover_skill_paths() -> list[str]:
+    return [str(path.parent) for path in sorted(_SKILLS_DIR.glob("*/SKILL.md"))]
+
 
 def build_workspace_manager(settings: Settings) -> LocalWorkspaceManager:
-    """本地目录工作区: 每个 agent 一个目录, 无外部依赖。"""
+    """本地目录工作区: 框架按 agent_id 分目录, 无外部依赖。"""
     return LocalWorkspaceManager(
         str(settings.workspaces_dir),
         isolation=IsolationPolicy.PER_AGENT,
+        skill_paths=_discover_skill_paths(),
         ttl=3600.0,
     )

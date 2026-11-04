@@ -4,8 +4,8 @@ from typing import Any
 
 from fastapi import FastAPI
 
-from app.agent.knowledge import verify_qdrant
-from app.agent.memory import close_all
+from app.agent.runtime.knowledge import verify_qdrant
+from app.agent.runtime.memory import close_all
 from app.core.config import Settings
 
 
