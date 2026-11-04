@@ -1,5 +1,0 @@
-SYSTEM_USER_ID = "system"
-TEACH_AGENT_ID = "teach_agent"
-TEACH_AGENT_NAME = "计算机网络教学智能体"
-AGENT_CREDENTIAL_ID = "bailian"
-SESSION_PLACEHOLDER_TITLE = "新对话"

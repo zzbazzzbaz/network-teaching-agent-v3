@@ -4,13 +4,12 @@ from pathlib import Path
 from agentscope.app.storage import AgentData, AgentRecord, StorageBase
 from agentscope.credential import DashScopeCredential
 
-from app.core.agents import (
+from app.core.config import Settings
+from app.core.constants import (
     AGENT_CREDENTIAL_ID,
     SYSTEM_USER_ID,
     TEACH_AGENT_ID,
-    TEACH_AGENT_NAME,
 )
-from app.core.config import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ async def ensure_seed(storage: StorageBase, settings: Settings) -> None:
         user_id=SYSTEM_USER_ID,
         data=AgentData(
             id=TEACH_AGENT_ID,
-            name=TEACH_AGENT_NAME,
+            name="计算机网络教学智能体",
             system_prompt=_PROMPT_PATH.read_text(encoding="utf-8"),
         ),
     )

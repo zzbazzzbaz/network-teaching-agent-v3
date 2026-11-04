@@ -7,12 +7,12 @@ from agentscope.message import DataBlock, Msg, TextBlock, URLSource
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.endpoints.schemas.session import MessageAttachment
-from app.core.agents import (
+from app.core.config import get_settings
+from app.core.constants import (
     AGENT_CREDENTIAL_ID,
     SESSION_PLACEHOLDER_TITLE,
     TEACH_AGENT_ID,
 )
-from app.core.config import get_settings
 from app.infra.agent_client import AgentError, get_agent_client
 from app.repositories import file_repositories, session_repositories
 from app.repositories.models import AgentKind, ChatSession, FileStatus, User

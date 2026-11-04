@@ -26,7 +26,7 @@ from app.api.errors import (
     service_unavailable,
     unauthorized,
 )
-from app.core.agents import SESSION_PLACEHOLDER_TITLE
+from app.core.constants import SESSION_PLACEHOLDER_TITLE
 from app.core.database import session_scope
 from app.infra.agent_client import AgentError, get_agent_client
 from app.repositories.models import ChatSession, UserStatus
