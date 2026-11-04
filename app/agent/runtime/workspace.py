@@ -11,10 +11,9 @@ TEACHING_WORKSPACE_INSTRUCTIONS = (
     "</workspace>"
 )
 
-_SKILLS_DIR = Path(__file__).parent.parent / "skills"
-
 
 def _discover_skill_paths() -> list[str]:
+    _SKILLS_DIR = Path(__file__).parent.parent / "skills"
     return [str(path.parent) for path in sorted(_SKILLS_DIR.glob("*/SKILL.md"))]
 
 
