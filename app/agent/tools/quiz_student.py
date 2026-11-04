@@ -16,7 +16,6 @@ from app.api.endpoints.schemas.internal_question import (
     AnswerWriteRequest,
     QuestionPayload,
 )
-from app.repositories.models import QuestionType
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +26,11 @@ _DESCRIPTION = (
 )
 
 
-class AskStudentQuestion(QuestionPayload):
+class QuizStudentQuestion(QuestionPayload):
     """模型出题参数; 同时是前端作答时必须原样回传的题目快照。"""
 
 
-class AskStudentAnswer(BaseModel):
+class QuizStudentAnswer(BaseModel):
     """学生的作答。"""
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -43,22 +42,22 @@ class AskStudentAnswer(BaseModel):
     )
 
 
-class AskStudentMetadata(AskStudentAnswer):
+class QuizStudentMetadata(QuizStudentAnswer):
     """``ToolResultBlock.metadata`` 的约定: 答案 + 题目快照。"""
 
-    question: AskStudentQuestion = Field(
+    question: QuizStudentQuestion = Field(
         description="出题时的题目快照, 原样带回; agent 进程靠它重建题目并落库。",
     )
 
 
-class AskStudent(ToolBase):
+class QuizStudent(ToolBase):
     """出题并等待外部作答的教学工具。"""
 
-    name: str = "ask_student"
+    name: str = "quiz_student"
     description: str = _DESCRIPTION
 
-    input_schema: dict[str, Any] = AskStudentQuestion.model_json_schema()
-    metadata_schema: dict[str, Any] | None = AskStudentMetadata.model_json_schema()
+    input_schema: dict[str, Any] = QuizStudentQuestion.model_json_schema()
+    metadata_schema: dict[str, Any] | None = QuizStudentMetadata.model_json_schema()
 
     is_read_only: bool = False
     is_concurrency_safe: bool = False
@@ -82,7 +81,7 @@ class AskStudent(ToolBase):
     ) -> PermissionDecision:
         del context
         try:
-            AskStudentQuestion.model_validate(tool_input)
+            QuizStudentQuestion.model_validate(tool_input)
         except ValidationError as exc:
             reason = "; ".join(error["msg"] for error in exc.errors())
             return PermissionDecision(
@@ -99,7 +98,7 @@ class AskStudent(ToolBase):
         if result.state != ToolResultState.SUCCESS:
             return
 
-        metadata = AskStudentMetadata.model_validate(result.metadata)
+        metadata = QuizStudentMetadata.model_validate(result.metadata)
         try:
             await self._client.write_answer(
                 self._user_id,
@@ -112,9 +111,9 @@ class AskStudent(ToolBase):
             )
         except InternalApiError as exc:
             logger.warning(
-                "ask_student 作答落库失败: tool_call_id=%s error=%s",
+                "quiz_student 作答落库失败: tool_call_id=%s error=%s",
                 result.id,
                 exc,
             )
 
-        result.output = f"学生答案：{metadata.answer}"
+        result.output = f"学生答案: {metadata.answer}"
