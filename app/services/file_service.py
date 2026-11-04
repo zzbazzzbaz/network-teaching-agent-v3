@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import logging
 import mimetypes
 import uuid
@@ -178,6 +180,27 @@ async def _get_owned(session: AsyncSession, *, file_id: uuid.UUID, user_id: uuid
         logger.info("file not found: file_id=%s user_id=%s", file_id, user_id)
         raise AttachmentNotFoundError
     return file
+
+
+async def get_ready_file(session: AsyncSession, *, file_id: uuid.UUID) -> File:
+    file = await file_repositories.get_by_id(session, file_id)
+    if file is None or file.deleted_at is not None or file.status is not FileStatus.READY:
+        raise AttachmentNotFoundError
+    return file
+
+
+def raw_token(file_id: uuid.UUID) -> str:
+    secret = get_settings().jwt.secret_key.encode()
+    return hmac.new(secret, f"file:{file_id.hex}".encode(), hashlib.sha256).hexdigest()
+
+
+def verify_raw_token(file_id: uuid.UUID, token: str) -> bool:
+    return hmac.compare_digest(raw_token(file_id), token)
+
+
+def raw_url(file: File) -> str:
+    base = get_settings().api_base_url.rstrip("/")
+    return f"{base}/api/files/{file.id}/raw?token={raw_token(file.id)}"
 
 
 def preview_url(file: File) -> str:

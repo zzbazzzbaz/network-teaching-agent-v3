@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Query, status
+from fastapi.responses import RedirectResponse
 
 from app.api.dependencies import CurrentUser, SessionDep
 from app.api.endpoints.schemas.file import (
@@ -119,3 +120,22 @@ async def get_file(
     except file_service.AttachmentNotFoundError as exc:
         raise not_found() from exc
     return _to_detail(file)
+
+
+@router.get("/{file_id}/raw", summary="图片稳定访问地址")
+async def raw_file(
+    file_id: uuid.UUID,
+    token: Annotated[str, Query(min_length=1)],
+    session: SessionDep,
+) -> RedirectResponse:
+    if not file_service.verify_raw_token(file_id, token):
+        raise not_found()
+    try:
+        file = await file_service.get_ready_file(session, file_id=file_id)
+    except file_service.AttachmentNotFoundError as exc:
+        raise not_found() from exc
+    return RedirectResponse(
+        url=file_service.preview_url(file),
+        status_code=status.HTTP_302_FOUND,
+        headers={"Cache-Control": "no-store"},
+    )

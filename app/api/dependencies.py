@@ -52,6 +52,21 @@ async def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+async def get_access_user_id(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+) -> uuid.UUID:
+    if credentials is None:
+        raise unauthorized()
+    try:
+        return decode_token(credentials.credentials, TokenType.ACCESS)
+    except TokenError as exc:
+        logger.warning("stream access token rejected: %r", exc.__cause__)
+        raise unauthorized() from exc
+
+
+StreamUserID = Annotated[uuid.UUID, Depends(get_access_user_id)]
+
+
 async def get_internal_user(
     session: SessionDep,
     x_user_id: Annotated[str | None, Header(alias=USER_ID_HEADER)] = None,

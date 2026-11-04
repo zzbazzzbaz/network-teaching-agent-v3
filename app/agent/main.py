@@ -16,11 +16,23 @@ from app.core.config import get_settings
 
 def create_agent_app() -> FastAPI:
     settings = get_settings()
-    host, port, password = settings.redis.host, settings.redis.port, settings.redis.password
-    storage = RedisStorage(host=host, port=port, db=1, password=password)
+    storage = RedisStorage(
+        host=settings.redis.host,
+        port=settings.redis.port,
+        db=1,
+        password=settings.redis.password,
+        max_connections=settings.redis.max_connections,
+    )
+    message_bus = RedisMessageBus(
+        host=settings.redis.host,
+        port=settings.redis.port,
+        db=2,
+        password=settings.redis.password,
+        max_connections=settings.redis.max_connections,
+    )
     app = create_app(
         storage=storage,
-        message_bus=RedisMessageBus(host=host, port=port, db=2, password=password),
+        message_bus=message_bus,
         workspace_manager=build_workspace_manager(settings),
         knowledge_base_manager=build_kb_manager(settings, storage),
         knowledge_parsers=build_parsers(),

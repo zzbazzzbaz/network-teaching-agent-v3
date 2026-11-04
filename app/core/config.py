@@ -23,6 +23,7 @@ class RedisSettings(_Base):
     host: str
     port: int
     password: str | None
+    max_connections: int = 200
 
 
 class DBSettings(_Base):
@@ -62,11 +63,12 @@ class Settings(_Base):
     data_root: Path
     qdrant_url: str
     max_upload_bytes: int
+    agent_http_max_connections: int = 200
+    agent_http_max_keepalive_connections: int = 20
 
     @field_validator("data_root")
     @classmethod
     def _require_absolute_data_root(cls, value: Path) -> Path:
-        """相对路径会随启动 cwd 漂移, 直接拒绝。"""
         if not value.is_absolute():
             raise ValueError("必须是绝对路径")
         return value.resolve()
