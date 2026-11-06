@@ -1,5 +1,6 @@
+import { ArrowLeftOutlined, CopyOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Alert, Button, Collapse, Skeleton, Tag, Typography } from 'antd';
+import { Alert, App, Button, Skeleton, Tag, Typography } from 'antd';
 import { useNavigate, useParams } from 'react-router';
 
 import { toErrorMessage } from '@/api/client';
@@ -14,6 +15,7 @@ import styles from './QuestionDetailPage.module.css';
 export function QuestionDetailPage() {
   const { questionId } = useParams();
   const navigate = useNavigate();
+  const { message } = App.useApp();
 
   const questionQuery = useQuery({
     queryKey: ['question', questionId],
@@ -44,68 +46,99 @@ export function QuestionDetailPage() {
 
   const question = questionQuery.data;
   const options = question.options ? Object.entries(question.options) : [];
+  const isSingleChoice = question.question_type === 'single_choice';
+
+  const copyAnswer = async () => {
+    try {
+      await navigator.clipboard.writeText(question.answer_text);
+      message.success('已复制参考答案');
+    } catch {
+      message.error('复制失败，请手动选择文本');
+    }
+  };
 
   return (
     <div className="page-shell">
-      <div className={styles.topbar}>
-        <Button type="text" onClick={() => navigate('/questions')} className={styles.back}>
-          返回题库
-        </Button>
-        <span className="data-text">{formatDateTime(question.created_at)}</span>
-      </div>
-
-      <article className={styles.article}>
-        <div className={styles.badges}>
-          <Tag>{question.question_type === 'single_choice' ? '单选题' : '简答题'}</Tag>
-          {question.user_id ? null : <Tag>公共题</Tag>}
+      <div className={styles.container}>
+        <div className={styles.topbar}>
+          <Button
+            type="text"
+            className={styles.back}
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/questions')}
+          >
+            返回题库
+          </Button>
         </div>
 
-        <Markdown content={question.stem} className={styles.stem} />
+        <article className={styles.article}>
+          <div className={styles.meta}>
+            <div className={styles.badges}>
+              <Tag
+                bordered={false}
+                className={`${styles.badge} ${isSingleChoice ? styles.badgeBrand : styles.badgeMuted}`}
+              >
+                {isSingleChoice ? '单选题' : '简答题'}
+              </Tag>
+              {question.user_id ? null : (
+                <Tag bordered={false} className={`${styles.badge} ${styles.badgeOutline}`}>
+                  公共题
+                </Tag>
+              )}
+            </div>
+            <span className={`data-text ${styles.createdAt}`}>
+              创建于 {formatDateTime(question.created_at)}
+            </span>
+          </div>
 
-        {options.length > 0 ? (
-          <ol className={styles.options}>
-            {options.map(([letter, text]) => (
-              <li key={letter}>
-                <span className={styles.optionLetter}>{letter}</span>
-                <span>{text}</span>
-              </li>
-            ))}
-          </ol>
-        ) : null}
+          <Markdown content={question.stem} className={styles.stem} />
 
-        {question.note ? (
-          <Alert
-            className={styles.note}
-            type="info"
-            showIcon
-            message="备注"
-            description={question.note}
-          />
-        ) : null}
+          {options.length > 0 ? (
+            <ol className={styles.options}>
+              {options.map(([letter, text]) => (
+                <li key={letter} className={styles.option}>
+                  <span className={styles.optionLetter}>{letter}</span>
+                  <span className={styles.optionText}>{text}</span>
+                </li>
+              ))}
+            </ol>
+          ) : null}
 
-        <Collapse
-          className={styles.collapse}
-          items={[
-            {
-              key: 'answer',
-              label: '参考答案',
-              children: (
-                <Typography.Paragraph
-                  className={styles.answer}
-                  copyable={{ text: question.answer_text }}
+          {question.note ? (
+            <Alert
+              className={styles.note}
+              type="info"
+              showIcon
+              message="备注"
+              description={question.note}
+            />
+          ) : null}
+
+          <section className={styles.answerBlock}>
+            <div className={styles.answerHeader}>
+              <span className={styles.sectionLabel}>参考答案</span>
+              {question.answer_text ? (
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<CopyOutlined />}
+                  className={styles.copy}
+                  onClick={() => void copyAnswer()}
                 >
-                  {question.answer_text}
-                </Typography.Paragraph>
-              ),
-            },
-          ]}
-        />
-      </article>
+                  复制
+                </Button>
+              ) : null}
+            </div>
+            {question.answer_text ? (
+              <div className={styles.answer}>{question.answer_text}</div>
+            ) : (
+              <Typography.Text type="secondary">暂无参考答案</Typography.Text>
+            )}
+          </section>
+        </article>
 
-      <section className={styles.attempts}>
-        <h2 className="section-title">作答记录</h2>
         <AttemptList questionId={question.id} />
-      </section>
+      </div>
     </div>
   );
 }

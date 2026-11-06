@@ -7,7 +7,7 @@ import { toErrorMessage } from '@/api/client';
 import { getMyStats } from '@/api/stats';
 import type { DailyStatsItem } from '@/api/types';
 import { EmptyState, ErrorState } from '@/components/common';
-import { CacheHitChart, RoundsTrendChart, TokensTrendChart } from '@/features/stats/charts';
+import { DailyTrendChart } from '@/features/stats/charts';
 import { formatNumber, formatPercent } from '@/lib/format';
 
 import styles from './StatsPage.module.css';
@@ -34,32 +34,32 @@ export function StatsPage() {
     {
       title: '日期',
       dataIndex: 'date',
-      width: 120,
+      width: 130,
       render: (value: string) => <span className="data-text">{value}</span>,
     },
     {
-      title: 'input',
+      title: '输入 tokens',
       dataIndex: 'input_tokens',
-      width: 110,
+      width: 120,
       align: 'right',
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
-      title: 'output',
+      title: '输出 tokens',
       dataIndex: 'output_tokens',
-      width: 110,
+      width: 120,
       align: 'right',
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
-      title: 'cache',
+      title: '缓存 tokens',
       dataIndex: 'cache_input_tokens',
-      width: 110,
+      width: 120,
       align: 'right',
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
-      title: 'tokens',
+      title: '总 tokens',
       dataIndex: 'tokens',
       width: 120,
       align: 'right',
@@ -73,9 +73,9 @@ export function StatsPage() {
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
-      title: '命中率',
+      title: '缓存命中率',
       dataIndex: 'cache_hit_rate',
-      width: 110,
+      width: 120,
       align: 'right',
       render: (value: number | null) => <span className="data-text">{formatPercent(value)}</span>,
     },
@@ -138,34 +138,30 @@ export function StatsPage() {
             />
           ) : (
             <>
-              <div className={styles.panels}>
-                <section className={styles.panel}>
-                  <h2 className="section-title">每日 tokens</h2>
-                  <TokensTrendChart data={data.daily} />
-                </section>
-                <section className={styles.panel}>
-                  <h2 className="section-title">每日轮次</h2>
-                  <RoundsTrendChart data={data.daily} />
-                </section>
-              </div>
-
               <section className={styles.panel}>
-                <h2 className="section-title">缓存命中率</h2>
-                <CacheHitChart data={data.daily} />
-                <Typography.Text type="secondary" className={styles.hint}>
-                  没有缓存数据时显示「--」，不代表 0%。
-                </Typography.Text>
+                <div className={styles.panelHeader}>
+                  <h2 className="section-title">每日趋势</h2>
+                  <Typography.Text type="secondary" className={styles.hint}>
+                    tokens 看左轴，轮次与缓存命中率看右轴
+                  </Typography.Text>
+                </div>
+                <DailyTrendChart data={data.daily} />
               </section>
 
               <section className={styles.panel}>
-                <h2 className="section-title">明细</h2>
+                <div className={styles.panelHeader}>
+                  <h2 className="section-title">每日明细</h2>
+                  <Typography.Text type="secondary" className={styles.hint}>
+                    没有缓存数据时显示「--」，不代表 0%
+                  </Typography.Text>
+                </div>
                 <Table
                   rowKey="date"
                   size="middle"
                   columns={columns}
                   dataSource={data.daily}
                   pagination={false}
-                  scroll={{ x: 820 }}
+                  scroll={{ x: 880 }}
                 />
               </section>
             </>

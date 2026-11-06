@@ -31,34 +31,34 @@
   font-variant-numeric: tabular-nums;
 }
 
-.panels {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  padding: 16px 16px 8px;
-  margin-bottom: 16px;
+  padding: 16px;
   min-width: 0;
 }
 
+.panel + .panel {
+  margin-top: 16px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
 .hint {
-  display: block;
   font-size: 12px;
-  padding: 4px 0 8px;
 }
 
 @media (max-width: 1199px) {
   .cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .panels {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -69,5 +69,9 @@
 
   .cardValue {
     font-size: 20px;
+  }
+
+  .panel {
+    padding: 12px;
   }
 }

@@ -77,10 +77,13 @@ button {
 }
 
 .page-shell {
+  flex: 1;
+  min-height: 0;
   width: 100%;
   max-width: var(--content-max);
   margin: 0 auto;
   padding: 24px 24px 48px;
+  overflow-y: auto;
 }
 
 .page-subtitle {

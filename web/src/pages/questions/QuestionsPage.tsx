@@ -96,12 +96,6 @@ export function QuestionsPage() {
 
   const columns: ColumnsType<QuestionItem> = [
     {
-      title: '题型',
-      dataIndex: 'question_type',
-      width: 90,
-      render: (value: QuestionType) => <Tag>{TYPE_LABELS[value]}</Tag>,
-    },
-    {
       title: '题干',
       dataIndex: 'stem',
       render: (stem: string, record) => (
