@@ -4,12 +4,12 @@ from typing import Any
 import httpx
 
 from app.api.endpoints.schemas.internal_question import (
-    USER_ID_HEADER,
     AnswerWriteRequest,
     QuestionDetailResponse,
 )
 from app.api.endpoints.schemas.internal_usage import ReplyUsageReport
 from app.core.config import get_settings
+from app.core.constants import USER_ID_HEADER
 
 # 与 app/api/endpoints/internal_question.py、internal_usage.py 的路由保持一致
 ANSWER_WRITE_PATH = "/api/internal/questions/answers"

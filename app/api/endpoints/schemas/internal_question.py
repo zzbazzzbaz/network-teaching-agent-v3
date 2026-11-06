@@ -5,8 +5,6 @@ from pydantic import BaseModel
 
 from app.repositories.models import QuestionType
 
-USER_ID_HEADER = "X-User-ID"
-
 
 class QuestionPayload(BaseModel):
     question_type: QuestionType

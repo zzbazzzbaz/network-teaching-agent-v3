@@ -7,8 +7,8 @@ from fastapi import Depends, Header
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.endpoints.schemas.internal_question import USER_ID_HEADER
 from app.api.errors import forbidden, unauthorized
+from app.core.constants import USER_ID_HEADER
 from app.core.database import session_scope
 from app.core.security import TokenError, TokenType, decode_token
 from app.repositories.models import User, UserStatus

@@ -89,3 +89,21 @@ async def soft_delete(session: AsyncSession, chat: ChatSession, at: datetime) ->
     chat.deleted_at = at
     session.add(chat)
     await session.flush()
+
+
+async def get_titles(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    session_ids: set[uuid.UUID],
+) -> dict[uuid.UUID, str | None]:
+    if not session_ids:
+        return {}
+
+    statement = select(ChatSession.id, ChatSession.title).where(
+        ChatSession.id.in_(session_ids),
+        ChatSession.user_id == user_id,
+        ChatSession.deleted_at.is_(None),
+    )
+    rows = (await session.execute(statement)).all()
+    return {row[0]: row[1] for row in rows}

@@ -33,3 +33,10 @@ def service_unavailable() -> HTTPException:
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         detail="对话服务暂不可用",
     )
+
+
+def memory_unavailable() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="记忆服务暂不可用",
+    )

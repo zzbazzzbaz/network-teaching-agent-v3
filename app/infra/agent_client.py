@@ -5,8 +5,8 @@ from typing import Any
 
 import httpx
 
-from app.api.endpoints.schemas.internal_question import USER_ID_HEADER
 from app.core.config import get_settings
+from app.core.constants import USER_ID_HEADER
 
 
 class AgentError(Exception):
@@ -131,6 +131,37 @@ class AgentClient:
             f"/sessions/{session_id}/messages",
             user_id=user_id,
             params=params,
+        )
+        return response.json()
+
+    async def list_memory_entries(
+        self,
+        *,
+        user_id: str,
+        kind: str,
+        limit: int,
+        offset: int,
+        date: str | None,
+        session_id: str | None,
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {"kind": kind, "limit": limit, "offset": offset}
+        if date:
+            params["date"] = date
+        if session_id:
+            params["session_id"] = session_id
+        response = await self._request(
+            "GET",
+            "/memory/entries",
+            user_id=user_id,
+            params=params,
+        )
+        return response.json()
+
+    async def get_memory_entry(self, *, user_id: str, entry_id: str) -> dict[str, Any]:
+        response = await self._request(
+            "GET",
+            f"/memory/entries/{entry_id}",
+            user_id=user_id,
         )
         return response.json()
 
