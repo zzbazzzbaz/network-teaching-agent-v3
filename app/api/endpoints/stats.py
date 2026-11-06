@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from app.api.dependencies import CurrentUser, SessionDep
-from app.api.endpoints.schemas.stats import DailyStatsItem, MyStatsResponse, StatsTotals
 from app.services import stats_service
+from app.shared.dto.stats import DailyStatsItem, MyStatsResponse, StatsTotals
 
 router = APIRouter(prefix="/stats", tags=["统计"])
 

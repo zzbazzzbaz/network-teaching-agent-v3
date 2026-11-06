@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.repositories.models import QuestionType
+from app.shared.enums import QuestionType
 
 
 class QuestionPayload(BaseModel):

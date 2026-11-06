@@ -1,16 +1,17 @@
 import logging
 import uuid
+from collections.abc import Sequence
 from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.endpoints.schemas.memory import (
-    MemoryEntryDetail,
-    MemoryEntryItem,
-    MemoryEntryListResponse,
-)
 from app.infra.agent_client import get_agent_client
 from app.repositories import session_repositories
+from app.shared.dto.memory import (
+    MemoryEntryDetailDTO,
+    MemoryEntryDTO,
+    MemoryEntryListDTO,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,17 +29,16 @@ async def list_entries(
     offset: int,
     date: str | None,
     session_id: uuid.UUID | None,
-) -> MemoryEntryListResponse:
-    payload = await get_agent_client().list_memory_entries(
-        user_id=str(user_id),
-        kind=kind,
-        limit=limit,
-        offset=offset,
-        date=date,
-        session_id=str(session_id) if session_id is not None else None,
-    )
+) -> MemoryEntryListDTO:
     try:
-        response = MemoryEntryListResponse.model_validate(payload)
+        response = await get_agent_client().list_memory_entries(
+            user_id=str(user_id),
+            kind=kind,
+            limit=limit,
+            offset=offset,
+            date=date,
+            session_id=str(session_id) if session_id is not None else None,
+        )
     except ValueError as exc:
         logger.error("invalid memory list response: status=invalid_payload")
         raise InvalidMemoryResponseError from exc
@@ -52,13 +52,12 @@ async def get_entry(
     *,
     user_id: uuid.UUID,
     entry_id: str,
-) -> MemoryEntryDetail:
-    payload = await get_agent_client().get_memory_entry(
-        user_id=str(user_id),
-        entry_id=entry_id,
-    )
+) -> MemoryEntryDetailDTO:
     try:
-        detail = MemoryEntryDetail.model_validate(payload)
+        detail = await get_agent_client().get_memory_entry(
+            user_id=str(user_id),
+            entry_id=entry_id,
+        )
     except ValueError as exc:
         logger.error("invalid memory detail response: status=invalid_payload")
         raise InvalidMemoryResponseError from exc
@@ -70,7 +69,7 @@ async def get_entry(
 async def _fill_session_titles(
     session: AsyncSession,
     user_id: uuid.UUID,
-    items: list[MemoryEntryItem],
+    items: Sequence[MemoryEntryDTO | MemoryEntryDetailDTO],
 ) -> None:
     session_ids = {item.session_id for item in items if item.session_id is not None}
     if not session_ids:

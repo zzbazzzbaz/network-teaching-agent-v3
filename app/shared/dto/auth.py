@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.repositories.models import UserStatus
+from app.shared.enums import UserStatus
 
 
 class LoginRequest(BaseModel):

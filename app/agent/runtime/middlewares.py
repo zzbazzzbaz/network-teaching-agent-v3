@@ -12,8 +12,8 @@ from agentscope.workspace import LocalWorkspace, WorkspaceBase
 from app.agent.runtime.memory import get_memory
 from app.agent.runtime.workspace import TEACHING_WORKSPACE_INSTRUCTIONS
 from app.agent.tools.client import get_client
-from app.api.endpoints.schemas.internal_usage import ReplyUsageReport
 from app.core.config import get_settings
+from app.shared.dto.internal_usage import ReplyUsageReport
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ def _reply_usage(agent: Agent) -> Usage | None:
 
 class UsageReportMiddleware(MiddlewareBase):
     """每轮回复结束后记录token用量"""
+
     def __init__(self, user_id: str, session_id: str) -> None:
         self._user_id = user_id
         self._session_id = session_id

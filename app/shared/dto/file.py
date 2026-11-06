@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.repositories.models import FileStatus
+from app.shared.enums import FileStatus
 
 
 class UploadUrlRequest(BaseModel):
@@ -32,7 +32,15 @@ class FileItem(BaseModel):
     created_at: datetime
 
 
-class FileDetail(FileItem):
+class FileDetail(BaseModel):
+    id: uuid.UUID
+    original_name: str
+    content_type: str
+    size_bytes: int
+    has_thumb: bool
+    thumb_url: str | None
+    preview_url: str
+    created_at: datetime
     session_id: uuid.UUID
     status: FileStatus
     download_url: str

@@ -1,4 +1,33 @@
+import json
+from typing import Any
+
 from fastapi import HTTPException, status
+
+
+class RemoteServiceError(Exception):
+    def __init__(self, status_code: int, detail: str = "") -> None:
+        super().__init__(detail or f"remote service returned {status_code}")
+        self.status_code = status_code
+        self.detail = detail
+
+
+class RemoteServiceUnavailableError(RemoteServiceError):
+    def __init__(self, detail: str = "remote service unreachable") -> None:
+        super().__init__(status_code=503, detail=detail)
+
+
+def detail_from_payload(payload: Any) -> str:
+    if isinstance(payload, dict) and isinstance(payload.get("detail"), str):
+        return payload["detail"]
+    return ""
+
+
+def detail_from_body(body: bytes) -> str:
+    try:
+        payload = json.loads(body)
+    except ValueError:
+        return ""
+    return detail_from_payload(payload)
 
 
 def unauthorized() -> HTTPException:

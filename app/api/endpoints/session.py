@@ -9,7 +9,12 @@ from fastapi import APIRouter, Body, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import CurrentUser, SessionDep, StreamUserID
-from app.api.endpoints.schemas.session import (
+from app.core.constants import SESSION_PLACEHOLDER_TITLE
+from app.core.database import session_scope
+from app.infra.agent_client import get_agent_client
+from app.repositories.models import ChatSession, UserStatus
+from app.services import session_service, user_service
+from app.shared.dto.session import (
     InterruptResponse,
     MessageListResponse,
     RenameSessionRequest,
@@ -19,18 +24,14 @@ from app.api.endpoints.schemas.session import (
     SessionListResponse,
     SessionStatusResponse,
 )
-from app.api.errors import (
+from app.shared.errors import (
+    RemoteServiceError,
     conflict,
     forbidden,
     not_found,
     service_unavailable,
     unauthorized,
 )
-from app.core.constants import SESSION_PLACEHOLDER_TITLE
-from app.core.database import session_scope
-from app.infra.agent_client import AgentError, get_agent_client
-from app.repositories.models import ChatSession, UserStatus
-from app.services import session_service, user_service
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ def _to_item(chat: ChatSession) -> SessionItem:
     )
 
 
-def _agent_failure(exc: AgentError) -> HTTPException:
+def _agent_failure(exc: RemoteServiceError) -> HTTPException:
     if exc.status_code == 404:
         return not_found()
     if exc.status_code == 409:
@@ -87,7 +88,7 @@ async def create_session(session: SessionDep, current_user: CurrentUser) -> Sess
         chat = await session_service.create_session(session, user_id=current_user.id)
     except session_service.InvalidAgentResponseError as exc:
         raise service_unavailable() from exc
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent create session failed: user_id=%s status=%s detail=%s",
             current_user.id,
@@ -211,7 +212,7 @@ async def send_message(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent chat trigger failed: user_id=%s session_id=%s status=%s detail=%s",
             current_user.id,
@@ -255,7 +256,7 @@ async def list_messages(
         )
     except session_service.SessionNotFoundError as exc:
         raise not_found() from exc
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent list messages failed: session_id=%s status=%s detail=%s",
             session_id,
@@ -296,7 +297,7 @@ async def stream_session(
     )
     try:
         upstream = await stream.__aenter__()
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent stream failed: session_id=%s status=%s detail=%s",
             session_id,
@@ -346,7 +347,7 @@ async def stop_session(
         await session_service.interrupt(user_id=current_user.id, chat=chat)
     except session_service.SessionNotFoundError as exc:
         raise not_found() from exc
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent interrupt failed: session_id=%s status=%s detail=%s",
             session_id,
@@ -409,7 +410,7 @@ async def submit_event(
         )
     except session_service.SessionNotFoundError as exc:
         raise not_found() from exc
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent event submit failed: session_id=%s status=%s detail=%s",
             session_id,
@@ -442,7 +443,7 @@ async def get_session_status(
         )
     except session_service.SessionNotFoundError as exc:
         raise not_found() from exc
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent status failed: session_id=%s status=%s detail=%s",
             session_id,

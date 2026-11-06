@@ -4,7 +4,7 @@ from typing import Any, Self
 
 from pydantic import BaseModel, Field, HttpUrl, model_validator
 
-from app.repositories.models import AgentKind
+from app.shared.enums import AgentKind
 
 
 class SessionItem(BaseModel):

@@ -7,17 +7,21 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi import Path as PathParam
 
 from app.api.dependencies import CurrentUser, SessionDep
-from app.api.endpoints.schemas.memory import MemoryEntryDetail, MemoryEntryListResponse
-from app.api.errors import bad_request, memory_unavailable, not_found
-from app.infra.agent_client import AgentError
 from app.services import memory_service
+from app.shared.dto.memory import MemoryEntryDetailDTO, MemoryEntryListDTO
+from app.shared.errors import (
+    RemoteServiceError,
+    bad_request,
+    memory_unavailable,
+    not_found,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/memory", tags=["记忆"])
 
 
-def _agent_failure(exc: AgentError) -> HTTPException:
+def _agent_failure(exc: RemoteServiceError) -> HTTPException:
     if exc.status_code == 404:
         return not_found()
     if exc.status_code in (400, 422):
@@ -27,7 +31,7 @@ def _agent_failure(exc: AgentError) -> HTTPException:
 
 @router.get(
     "/entries",
-    response_model=MemoryEntryListResponse,
+    response_model=MemoryEntryListDTO,
     summary="记忆列表",
 )
 async def list_memory_entries(
@@ -38,7 +42,7 @@ async def list_memory_entries(
     offset: Annotated[int, Query(ge=0)] = 0,
     date: Annotated[str | None, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")] = None,
     session_id: uuid.UUID | None = None,
-) -> MemoryEntryListResponse:
+) -> MemoryEntryListDTO:
     if date is not None:
         try:
             Date.fromisoformat(date)
@@ -57,7 +61,7 @@ async def list_memory_entries(
         )
     except memory_service.InvalidMemoryResponseError as exc:
         raise memory_unavailable() from exc
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent memory list failed: user_id=%s status=%s detail=%s",
             current_user.id,
@@ -69,14 +73,14 @@ async def list_memory_entries(
 
 @router.get(
     "/entries/{entry_id}",
-    response_model=MemoryEntryDetail,
+    response_model=MemoryEntryDetailDTO,
     summary="记忆详情",
 )
 async def get_memory_entry(
     entry_id: Annotated[str, PathParam(max_length=512)],
     session: SessionDep,
     current_user: CurrentUser,
-) -> MemoryEntryDetail:
+) -> MemoryEntryDetailDTO:
     try:
         return await memory_service.get_entry(
             session,
@@ -85,7 +89,7 @@ async def get_memory_entry(
         )
     except memory_service.InvalidMemoryResponseError as exc:
         raise memory_unavailable() from exc
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent memory detail failed: user_id=%s status=%s detail=%s",
             current_user.id,

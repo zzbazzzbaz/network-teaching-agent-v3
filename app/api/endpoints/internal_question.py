@@ -10,14 +10,14 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from app.api.dependencies import InternalUser, SessionDep
-from app.api.endpoints.schemas.internal_question import (
+from app.repositories.models import QuestionType
+from app.services import question_service
+from app.shared.dto.internal_question import (
     AnswerWriteRequest,
     AttemptItem,
     QuestionDetailResponse,
 )
-from app.api.errors import not_found
-from app.repositories.models import QuestionType
-from app.services import question_service
+from app.shared.errors import not_found
 
 router = APIRouter(
     prefix="/internal/questions",

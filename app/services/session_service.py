@@ -6,17 +6,18 @@ from typing import Any
 from agentscope.message import DataBlock, Msg, TextBlock, URLSource
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.endpoints.schemas.session import MessageAttachment
 from app.core.config import get_settings
 from app.core.constants import (
     AGENT_CREDENTIAL_ID,
     SESSION_PLACEHOLDER_TITLE,
     TEACH_AGENT_ID,
 )
-from app.infra.agent_client import AgentError, get_agent_client
+from app.infra.agent_client import get_agent_client
 from app.repositories import file_repositories, session_repositories, usage_repositories
 from app.repositories.models import AgentKind, ChatSession, FileStatus, User
 from app.services import file_service
+from app.shared.dto.session import MessageAttachment
+from app.shared.errors import RemoteServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ async def create_session(session: AsyncSession, *, user_id: uuid.UUID) -> ChatSe
                 agent_id=TEACH_AGENT_ID,
                 session_id=agent_session_id,
             )
-        except AgentError:
+        except RemoteServiceError:
             logger.warning("failed to compensate agent session: session_id=%s", agent_session_id)
         raise
     return chat
@@ -142,7 +143,7 @@ async def delete_session(
             agent_id=chat.agent_kind.value,
             session_id=chat.id.hex,
         )
-    except AgentError as exc:
+    except RemoteServiceError as exc:
         logger.warning(
             "agent session delete failed: session_id=%s status=%s detail=%s",
             chat.id,

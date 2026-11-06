@@ -3,14 +3,14 @@ import logging
 from fastapi import APIRouter
 
 from app.api.dependencies import CurrentUser, SessionDep
-from app.api.endpoints.schemas.auth import (
+from app.services import user_service
+from app.shared.dto.auth import (
     AuthResponse,
     LoginRequest,
     RefreshRequest,
     UserResponse,
 )
-from app.api.errors import forbidden, unauthorized
-from app.services import user_service
+from app.shared.errors import forbidden, unauthorized
 
 logger = logging.getLogger(__name__)
 

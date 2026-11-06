@@ -1,15 +1,10 @@
-from enum import StrEnum
-
 from pydantic import BaseModel
 
-
-class QuizQuestionType(StrEnum):
-    SINGLE_CHOICE = "single_choice"
-    SHORT_ANSWER = "short_answer"
+from app.shared.enums import QuestionType
 
 
 class QuizStudentQuestion(BaseModel):
-    question_type: QuizQuestionType
+    question_type: QuestionType
     stem: str
     options: list[str] | None = None
     correct_option: str | None = None

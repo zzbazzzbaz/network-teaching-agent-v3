@@ -15,12 +15,12 @@ from agentscope.app.deps import get_current_user_id
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi import Path as PathParam
 
-from app.agent.api.schemas.memory import (
-    MemoryEntryDetail,
-    MemoryEntryItem,
-    MemoryEntryListResponse,
-)
 from app.core.config import get_settings
+from app.shared.dto.memory import (
+    MemoryEntryDetailDTO,
+    MemoryEntryDTO,
+    MemoryEntryListDTO,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ def get_memory_dir() -> Path:
 
 @router.get(
     "/entries",
-    response_model=MemoryEntryListResponse,
+    response_model=MemoryEntryListDTO,
     summary="List memory entries",
 )
 async def list_memory_entries(
@@ -83,7 +83,7 @@ async def list_memory_entries(
     offset: Annotated[int, Query(ge=0)] = 0,
     date: Annotated[str | None, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")] = None,
     session_id: Annotated[str | None, Query()] = None,
-) -> MemoryEntryListResponse:
+) -> MemoryEntryListDTO:
     root = _user_root(memory_dir, user_id)
     if date is not None:
         try:
@@ -121,7 +121,7 @@ async def list_memory_entries(
         ) from exc
 
     items = [_to_item(entry) for entry in page.items]
-    return MemoryEntryListResponse(
+    return MemoryEntryListDTO(
         items=items,
         total=page.total,
         has_more=offset + len(items) < page.total,
@@ -131,14 +131,14 @@ async def list_memory_entries(
 
 @router.get(
     "/entries/{entry_id}",
-    response_model=MemoryEntryDetail,
+    response_model=MemoryEntryDetailDTO,
     summary="Read one memory entry",
 )
 async def read_memory_entry(
     entry_id: Annotated[str, PathParam(max_length=512)],
     user_id: Annotated[str, Depends(get_current_user_id)],
     memory_dir: Annotated[Path, Depends(get_memory_dir)],
-) -> MemoryEntryDetail:
+) -> MemoryEntryDetailDTO:
     root = _user_root(memory_dir, user_id)
     try:
         entry = await asyncio.to_thread(get_entry, root, entry_id)
@@ -164,7 +164,7 @@ async def read_memory_entry(
             detail="记忆暂不可用",
         ) from exc
 
-    return MemoryEntryDetail(
+    return MemoryEntryDetailDTO(
         **_to_item(entry).model_dump(),
         content=entry.content or "",
         content_truncated=entry.content_truncated,
@@ -398,8 +398,8 @@ def _user_root(memory_dir: Path, user_id: str) -> Path:
     return memory_dir / str(parsed)
 
 
-def _to_item(entry: MemoryEntry) -> MemoryEntryItem:
-    return MemoryEntryItem(
+def _to_item(entry: MemoryEntry) -> MemoryEntryDTO:
+    return MemoryEntryDTO(
         id=entry.entry_id,
         kind=entry.kind,
         title=entry.title,

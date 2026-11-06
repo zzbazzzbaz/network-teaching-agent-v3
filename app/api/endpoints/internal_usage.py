@@ -3,10 +3,10 @@ from datetime import UTC, datetime
 from fastapi import APIRouter
 
 from app.api.dependencies import InternalUser, SessionDep
-from app.api.endpoints.schemas.internal_usage import ReplyUsageReport
-from app.api.errors import not_found
 from app.repositories import usage_repositories
 from app.repositories.models import ChatSession
+from app.shared.dto.internal_usage import ReplyUsageReport
+from app.shared.errors import not_found
 
 router = APIRouter(
     prefix="/internal/usage",

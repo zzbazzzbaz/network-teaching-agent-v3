@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-class MemoryEntryItem(BaseModel):
+class MemoryEntryDTO(BaseModel):
     id: str
     kind: Literal["daily", "digest"]
     title: str
@@ -16,13 +16,21 @@ class MemoryEntryItem(BaseModel):
     updated_at: datetime
 
 
-class MemoryEntryDetail(MemoryEntryItem):
+class MemoryEntryDetailDTO(BaseModel):
+    id: str
+    kind: Literal["daily", "digest"]
+    title: str
+    summary: str
+    date: str | None
+    session_id: uuid.UUID | None
+    session_title: str | None = None
+    updated_at: datetime
     content: str
     content_truncated: bool
 
 
-class MemoryEntryListResponse(BaseModel):
-    items: list[MemoryEntryItem]
+class MemoryEntryListDTO(BaseModel):
+    items: list[MemoryEntryDTO]
     total: int
     has_more: bool
     truncated: bool

@@ -9,9 +9,10 @@ from agentscope.permission import (
 )
 from agentscope.tool import ToolBase, ToolChunk
 
-from app.agent.tools.client import InternalApiClient, InternalApiError
+from app.agent.tools.client import InternalApiClient
 from app.agent.tools.schemas.get_question import GetQuestionInput
-from app.api.endpoints.schemas.internal_question import QuestionDetailResponse
+from app.shared.dto.internal_question import QuestionDetailResponse
+from app.shared.errors import RemoteServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ class GetQuestion(ToolBase):
                 data.question_id,
                 data.attempt_limit,
             )
-        except InternalApiError as exc:
+        except RemoteServiceError as exc:
             logger.warning(
                 "get_question 获取失败: question_id=%s error=%s",
                 data.question_id,

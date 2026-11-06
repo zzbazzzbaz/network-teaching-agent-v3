@@ -1,35 +1,16 @@
 import uuid
 from datetime import UTC, datetime
-from enum import StrEnum
 from pathlib import Path
 
 from sqlalchemy import Column, Index, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
+from app.shared.enums import AgentKind, FileStatus, QuestionType, UserStatus
+
 
 def _now() -> datetime:
     return datetime.now(UTC)
-
-
-class UserStatus(StrEnum):
-    ACTIVE = "active"
-    DISABLED = "disabled"
-
-
-class AgentKind(StrEnum):
-    TEACH = "teach_agent"
-    EXP = "exp_agent"
-
-
-class QuestionType(StrEnum):
-    SINGLE_CHOICE = "single_choice"
-    SHORT_ANSWER = "short_answer"
-
-
-class FileStatus(StrEnum):
-    PENDING = "pending"
-    READY = "ready"
 
 
 class User(SQLModel, table=True):

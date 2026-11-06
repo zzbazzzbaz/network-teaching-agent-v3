@@ -10,12 +10,13 @@ from agentscope.permission import (
 )
 from agentscope.tool import ToolBase
 
-from app.agent.tools.client import InternalApiClient, InternalApiError
+from app.agent.tools.client import InternalApiClient
 from app.agent.tools.schemas.quiz_student import QuizStudentAnswer, QuizStudentQuestion
-from app.api.endpoints.schemas.internal_question import (
+from app.shared.dto.internal_question import (
     AnswerWriteRequest,
     QuestionPayload,
 )
+from app.shared.errors import RemoteServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class QuizStudent(ToolBase):
                     answer=payload.answer,
                 ),
             )
-        except InternalApiError as exc:
+        except RemoteServiceError as exc:
             logger.warning(
                 "quiz_student 作答落库失败: tool_call_id=%s error=%s",
                 result.id,
