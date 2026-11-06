@@ -1,7 +1,6 @@
+import { API_BASE } from '@/lib/config';
 import { recordMetric } from '@/lib/metrics';
 import { readAuthTokens, writeAuthTokens } from '@/lib/storage';
-
-const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
 export class ApiError extends Error {
   status: number;

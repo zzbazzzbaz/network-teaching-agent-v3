@@ -1,4 +1,6 @@
-const enabled = import.meta.env.VITE_ENABLE_METRICS === 'true';
+import { ENABLE_METRICS } from './config';
+
+const enabled = ENABLE_METRICS;
 const isDev = import.meta.env.DEV;
 
 type MetricTags = Record<string, string | number | boolean>;

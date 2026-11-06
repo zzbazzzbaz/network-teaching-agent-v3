@@ -36,39 +36,40 @@ uv run uvicorn app.api.main:app --port 8000
   未配置时浏览器直传会在预检（OPTIONS）阶段拿到 403，前端表现为「网络错误，上传失败」。
   当前桶已配置如下规则（可用 `uv run python -m scripts.setup_cos_cors` 更新，需桶级 PutBucketCORS 权限）：
 
-  | 项 | 值 |
-  |---|---|
-  | Origin | `http://localhost:5173`、`http://127.0.0.1:5173`、`https://*.chatgqt.top` |
-  | Methods | `PUT`、`GET`、`HEAD` |
-  | Allow-Headers | `*` |
-  | Expose-Headers | `ETag` |
-  | Max-Age | `600` |
+  | 项             | 值                                                                        |
+  | -------------- | ------------------------------------------------------------------------- |
+  | Origin         | `http://localhost:5173`、`http://127.0.0.1:5173`、`https://*.chatgqt.top` |
+  | Methods        | `PUT`、`GET`、`HEAD`                                                      |
+  | Allow-Headers  | `*`                                                                       |
+  | Expose-Headers | `ETag`                                                                    |
+  | Max-Age        | `600`                                                                     |
 
   上线前把生产前端域名补进 Origin（若不是 `*.chatgqt.top`）。
+
 - `API_BASE_URL` 必须指向浏览器可访问的地址，否则历史图片无法加载。
 
 ## 脚本
 
-| 命令 | 说明 |
-|---|---|
-| `npm run dev` | 开发服务器 |
-| `npm run build` | 先 `typecheck` 再打包 |
-| `npm run preview` | 预览构建产物 |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run test` | Vitest 单元与组件测试 |
-| `npm run test:e2e` | Playwright 端到端（首次需 `npx playwright install chromium`） |
+| 命令                | 说明                                                          |
+| ------------------- | ------------------------------------------------------------- |
+| `npm run dev`       | 开发服务器                                                    |
+| `npm run build`     | 先 `typecheck` 再打包                                         |
+| `npm run preview`   | 预览构建产物                                                  |
+| `npm run lint`      | ESLint                                                        |
+| `npm run typecheck` | `tsc --noEmit`                                                |
+| `npm run test`      | Vitest 单元与组件测试                                         |
+| `npm run test:e2e`  | Playwright 端到端（首次需 `npx playwright install chromium`） |
 
-## 环境变量
+## 前端常量
 
-复制 `.env.example` 为 `.env.local`（`VITE_*` 会打进产物，禁止放密钥）。
+不读取环境变量，全部集中在 `src/lib/config.ts`：
 
-| 变量 | 默认 | 用途 |
-|---|---|---|
-| `VITE_API_BASE` | `/api` | API 前缀 |
-| `VITE_UPLOAD_MAX_BYTES` | `104857600` | 单张图片大小上限 |
-| `VITE_UPLOAD_MAX_COUNT` | `4` | 单条消息附件上限 |
-| `VITE_ENABLE_METRICS` | `false` | 打开 `window.__metrics` 采集 |
+| 常量               | 值          | 用途                        |
+| ------------------ | ----------- | --------------------------- |
+| `API_BASE`         | `/api`      | API 前缀                    |
+| `UPLOAD_MAX_BYTES` | `104857600` | 单张图片大小上限            |
+| `UPLOAD_MAX_COUNT` | `4`         | 单条消息附件上限            |
+| `ENABLE_METRICS`   | `false`     | 是否采集 `window.__metrics` |
 
 ## 目录
 
@@ -141,11 +142,11 @@ base-uri 'self';
 
 `npm run build` 后统计登录页实际请求的资源：
 
-| 项 | 原始大小 | 说明 |
-|---|---|---|
-| 登录页首屏 JS | ≈ 1.38 MB（gzip ≈ 430 KB） | 主要是 React 19 + antd 6 |
-| 统计路由增量 | 352 KB（gzip 99 KB） | 含 Recharts |
-| 代码高亮 / KaTeX / Mermaid | 按需加载 | 出现代码块、公式、mermaid 时才拉取 |
+| 项                         | 原始大小                   | 说明                               |
+| -------------------------- | -------------------------- | ---------------------------------- |
+| 登录页首屏 JS              | ≈ 1.38 MB（gzip ≈ 430 KB） | 主要是 React 19 + antd 6           |
+| 统计路由增量               | 352 KB（gzip 99 KB）       | 含 Recharts                        |
+| 代码高亮 / KaTeX / Mermaid | 按需加载                   | 出现代码块、公式、mermaid 时才拉取 |
 
 对话页按 Spec 要求同步加载，因此首屏包含 `@ant-design/x` 与 Markdown 渲染器。若后续需要压到 320 KB gzip 以内，可把 `/chat` 改为路由懒加载，代价是首屏多一次 chunk 往返。
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { completeUpload, requestUploadUrl } from '@/api/files';
 import { toErrorMessage } from '@/api/client';
+import { UPLOAD_MAX_BYTES, UPLOAD_MAX_COUNT } from '@/lib/config';
 import { recordMetric } from '@/lib/metrics';
 
 import { putFileWithProgress } from './put-file';
@@ -21,9 +22,6 @@ export interface UploadItem {
 }
 
 const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/bmp']);
-
-const MAX_BYTES = Number(import.meta.env.VITE_UPLOAD_MAX_BYTES ?? 104857600);
-const MAX_COUNT = Number(import.meta.env.VITE_UPLOAD_MAX_COUNT ?? 4);
 
 function itemId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -125,7 +123,7 @@ export function useUploads(sessionId: string | null): UseUploadsResult {
           rejection = '只支持 PNG、JPG、WebP、GIF、BMP 图片';
           continue;
         }
-        if (file.size > MAX_BYTES) {
+        if (file.size > UPLOAD_MAX_BYTES) {
           rejection = '单张图片不能超过 100MB';
           continue;
         }
@@ -148,14 +146,14 @@ export function useUploads(sessionId: string | null): UseUploadsResult {
       }
 
       const currentCount = itemsRef.current.length;
-      const remaining = Math.max(MAX_COUNT - currentCount, 0);
+      const remaining = Math.max(UPLOAD_MAX_COUNT - currentCount, 0);
       if (accepted.length > remaining) {
-        rejection = `单条消息最多 ${MAX_COUNT} 张图片`;
+        rejection = `单条消息最多 ${UPLOAD_MAX_COUNT} 张图片`;
         accepted.splice(remaining);
       }
 
       if (accepted.length === 0) {
-        setError(rejection ?? `单条消息最多 ${MAX_COUNT} 张图片`);
+        setError(rejection ?? `单条消息最多 ${UPLOAD_MAX_COUNT} 张图片`);
         return;
       }
 
