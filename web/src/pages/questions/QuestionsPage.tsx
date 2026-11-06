@@ -120,12 +120,6 @@ export function QuestionsPage() {
 
   return (
     <div className="page-shell">
-      <header className={styles.header}>
-        <div>
-          <p className="page-subtitle">每次作答都会记录成一道题，可以回看题干与参考答案。</p>
-        </div>
-      </header>
-
       <div className={styles.toolbar}>
         <Segmented
           value={scope}

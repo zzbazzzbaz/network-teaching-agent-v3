@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Card, Segmented, Skeleton, Table, Typography } from 'antd';
+import { Card, Collapse, Segmented, Skeleton, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useSearchParams } from 'react-router';
 
@@ -86,9 +86,6 @@ export function StatsPage() {
   return (
     <div className="page-shell">
       <header className={styles.header}>
-        <div>
-          <p className="page-subtitle">按 Asia/Shanghai 聚合的用量概览，只统计你自己的数据。</p>
-        </div>
         <Segmented
           value={days}
           onChange={(value) => updateDays(Number(value))}
@@ -139,29 +136,30 @@ export function StatsPage() {
           ) : (
             <>
               <section className={styles.panel}>
-                <div className={styles.panelHeader}>
-                  <h2 className="section-title">每日趋势</h2>
-                  <Typography.Text type="secondary" className={styles.hint}>
-                    tokens 看左轴，轮次与缓存命中率看右轴
-                  </Typography.Text>
-                </div>
+                <h2 className={`section-title ${styles.panelTitle}`}>每日趋势</h2>
                 <DailyTrendChart data={data.daily} />
               </section>
 
-              <section className={styles.panel}>
-                <div className={styles.panelHeader}>
-                  <h2 className="section-title">每日明细</h2>
-                  <Typography.Text type="secondary" className={styles.hint}>
-                    没有缓存数据时显示「--」，不代表 0%
-                  </Typography.Text>
-                </div>
-                <Table
-                  rowKey="date"
-                  size="middle"
-                  columns={columns}
-                  dataSource={data.daily}
-                  pagination={false}
-                  scroll={{ x: 880 }}
+              <section className={styles.detailPanel}>
+                <Collapse
+                  ghost
+                  expandIconPosition="end"
+                  items={[
+                    {
+                      key: 'detail',
+                      label: <span className="section-title">每日明细</span>,
+                      children: (
+                        <Table
+                          rowKey="date"
+                          size="middle"
+                          columns={columns}
+                          dataSource={data.daily}
+                          pagination={false}
+                          scroll={{ x: 880 }}
+                        />
+                      ),
+                    },
+                  ]}
                 />
               </section>
             </>

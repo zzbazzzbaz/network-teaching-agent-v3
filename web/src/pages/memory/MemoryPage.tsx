@@ -118,12 +118,6 @@ export function MemoryPage() {
 
   return (
     <div className="page-shell">
-      <header className={styles.header}>
-        <div>
-          <p className="page-subtitle">学习过程中沉淀的日常记录与阶段摘要，只读。</p>
-        </div>
-      </header>
-
       <div className={styles.toolbar}>
         <Segmented
           value={kind}

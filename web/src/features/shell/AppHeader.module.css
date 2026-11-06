@@ -27,65 +27,8 @@
   text-overflow: ellipsis;
 }
 
-.instrument {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-}
-
-.sessionId {
-  color: var(--ink-600);
-  letter-spacing: 0.3px;
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ink-400);
-}
-
-.phase {
-  font-size: 12px;
-  color: var(--ink-600);
-}
-
-.toneIdle {
-  background: var(--ink-400);
-}
-
-.toneRunning {
-  background: var(--brand-600);
-}
-
-.toneWaiting {
-  background: var(--warning);
-}
-
-.toneWarning {
-  background: var(--warning);
-}
-
-.toneDanger {
-  background: var(--danger);
-}
-
 @media (max-width: 767px) {
   .header {
     padding: 0 12px;
-  }
-
-  .instrument {
-    padding: 2px 8px;
-    gap: 6px;
-  }
-
-  .sessionId {
-    display: none;
   }
 }

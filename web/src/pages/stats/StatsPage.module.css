@@ -1,7 +1,7 @@
 .header {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 20px;
@@ -39,21 +39,24 @@
   min-width: 0;
 }
 
-.panel + .panel {
-  margin-top: 16px;
-}
-
-.panelHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+.panelTitle {
   margin-bottom: 12px;
 }
 
-.hint {
-  font-size: 12px;
+.detailPanel {
+  margin-top: 16px;
+  padding: 4px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.detailPanel :global(.ant-collapse-header) {
+  padding: 12px 0 !important;
+}
+
+.detailPanel :global(.ant-collapse-content-box) {
+  padding: 0 0 16px !important;
 }
 
 @media (max-width: 1199px) {
@@ -73,5 +76,9 @@
 
   .panel {
     padding: 12px;
+  }
+
+  .detailPanel {
+    padding: 4px 12px;
   }
 }
