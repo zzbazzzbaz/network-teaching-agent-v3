@@ -51,8 +51,7 @@ export function LoginPage() {
           </span>
           <span className="data-text text-ink-subtle">netclass / 计算机网络</span>
         </div>
-        <h1 className="mb-1 text-2xl leading-tight font-semibold">登录</h1>
-        <p className="mb-6 text-[13px] text-ink-muted">使用老师分配的账号登录，开始本轮学习。</p>
+        <h1 className="mb-6 text-2xl leading-tight font-semibold">登录</h1>
 
         <Form<LoginFormValues>
           layout="vertical"
