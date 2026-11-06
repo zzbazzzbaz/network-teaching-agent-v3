@@ -1,7 +1,6 @@
 import uuid
-from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from app.shared.enums import UserStatus
 
@@ -28,4 +27,4 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     username: str
     status: UserStatus
-    created_at: datetime
+    created_at: AwareDatetime

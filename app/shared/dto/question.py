@@ -1,7 +1,6 @@
 import uuid
-from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import AwareDatetime, BaseModel, ConfigDict
 
 from app.shared.enums import QuestionType
 
@@ -16,7 +15,7 @@ class QuestionResponse(BaseModel):
     options: dict[str, str] | None
     answer_text: str
     note: str | None
-    created_at: datetime
+    created_at: AwareDatetime
 
 
 class QuestionListResponse(BaseModel):
@@ -32,7 +31,7 @@ class AttemptResponse(BaseModel):
     session_id: uuid.UUID
     tool_call_id: str | None
     answer_text: str
-    created_at: datetime
+    created_at: AwareDatetime
 
 
 class AttemptListResponse(BaseModel):

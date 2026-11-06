@@ -1,7 +1,6 @@
 import uuid
-from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field
 
 
 class ReplyUsageReport(BaseModel):
@@ -11,4 +10,4 @@ class ReplyUsageReport(BaseModel):
     output_tokens: int = Field(default=0, ge=0)
     cache_input_tokens: int = Field(default=0, ge=0)
     cache_creation_input_tokens: int = Field(default=0, ge=0)
-    started_at: datetime | None = None
+    started_at: AwareDatetime | None = None

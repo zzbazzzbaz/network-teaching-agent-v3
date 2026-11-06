@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, date, datetime, time, timedelta, timezone
+from datetime import date
 from enum import StrEnum
 
 from sqlalchemy import func, or_, select
@@ -7,9 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.api.repositories.models import Question, QuestionAttempt, QuestionType
-from app.shared.constants import STATS_TIMEZONE
-
-_LOCAL_TZ = timezone(timedelta(hours=8), STATS_TIMEZONE)
+from app.shared.time import local_day_end, local_day_start
 
 
 class QuestionScope(StrEnum):
@@ -23,9 +21,10 @@ def _escape_like(value: str) -> str:
 
 
 def _created_date_filters(day: date) -> list[ColumnElement[bool]]:
-    start_at = datetime.combine(day, time.min, tzinfo=_LOCAL_TZ).astimezone(UTC)
-    end_at = datetime.combine(day + timedelta(days=1), time.min, tzinfo=_LOCAL_TZ).astimezone(UTC)
-    return [Question.created_at >= start_at, Question.created_at < end_at]
+    return [
+        Question.created_at >= local_day_start(day),
+        Question.created_at < local_day_end(day),
+    ]
 
 
 def _question_filters(

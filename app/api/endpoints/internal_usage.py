@@ -26,8 +26,6 @@ async def write_reply_usage(
         raise not_found()
     now = datetime.now(UTC)
     started_at = body.started_at or now
-    if started_at.tzinfo is None:
-        started_at = started_at.replace(tzinfo=UTC)
     if started_at > now:
         started_at = now
     await usage_repositories.upsert_reply_usage(

@@ -13,6 +13,7 @@ from app.agent.tools.client import InternalApiClient
 from app.agent.tools.schemas.get_question import GetQuestionInput
 from app.shared.dto.internal_question import QuestionDetailResponse
 from app.shared.errors import RemoteServiceError
+from app.shared.time import APP_TZ
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,6 @@ def _format_detail(detail: QuestionDetailResponse) -> str:
         if is_single_choice:
             correct = attempt.answer_text.strip().upper() == detail.answer_text.strip().upper()
             mark = "  答对" if correct else "  答错"
-        stamp = attempt.created_at.astimezone().strftime("%Y-%m-%d %H:%M")
+        stamp = attempt.created_at.astimezone(APP_TZ).strftime("%Y-%m-%d %H:%M")
         lines.append(f"{index}. {stamp}  学生答案: {attempt.answer_text}{mark}")
     return "\n".join(lines)

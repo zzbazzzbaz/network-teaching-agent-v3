@@ -18,6 +18,7 @@ engine: AsyncEngine = create_async_engine(
     max_overflow=20,
     pool_recycle=1800,
     echo=False,
+    connect_args={"server_settings": {"timezone": "UTC"}},
 )
 
 SessionFactory = async_sessionmaker(

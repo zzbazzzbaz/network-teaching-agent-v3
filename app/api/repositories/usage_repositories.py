@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.repositories.models import ChatRound, ReplyUsage
-from app.shared.constants import STATS_TIMEZONE
+from app.shared.constants import APP_TIMEZONE
 
 
 class DailyTokenUsage(NamedTuple):
@@ -23,7 +23,7 @@ class DailyRoundCount(NamedTuple):
 
 
 def _day_column(column):
-    return cast(func.timezone(STATS_TIMEZONE, column), Date)
+    return cast(func.timezone(APP_TIMEZONE, column), Date)
 
 
 async def upsert_reply_usage(

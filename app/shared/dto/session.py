@@ -1,8 +1,7 @@
 import uuid
-from datetime import datetime
 from typing import Any, Self
 
-from pydantic import BaseModel, Field, HttpUrl, model_validator
+from pydantic import AwareDatetime, BaseModel, Field, HttpUrl, model_validator
 
 from app.shared.enums import AgentKind
 
@@ -11,8 +10,8 @@ class SessionItem(BaseModel):
     id: uuid.UUID
     agent_kind: AgentKind
     title: str
-    last_message_at: datetime | None
-    created_at: datetime
+    last_message_at: AwareDatetime | None
+    created_at: AwareDatetime
 
 
 class SessionListResponse(BaseModel):

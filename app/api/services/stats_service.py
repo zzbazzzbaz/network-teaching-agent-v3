@@ -1,13 +1,11 @@
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time, timedelta, timezone
+from datetime import date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.repositories import question_repositories, session_repositories, usage_repositories
-from app.shared.constants import STATS_TIMEZONE
-
-_STATS_TZ = timezone(timedelta(hours=8), STATS_TIMEZONE)
+from app.shared.time import APP_TZ, local_day_end, local_day_start
 
 
 @dataclass(frozen=True)
@@ -36,10 +34,10 @@ async def get_stats(
     user_id: uuid.UUID,
     days: int,
 ) -> StatsSnapshot:
-    today = datetime.now(_STATS_TZ).date()
+    today = datetime.now(APP_TZ).date()
     start_day = today - timedelta(days=days - 1)
-    start_at = datetime.combine(start_day, time.min, tzinfo=_STATS_TZ).astimezone(UTC)
-    end_at = datetime.combine(today + timedelta(days=1), time.min, tzinfo=_STATS_TZ).astimezone(UTC)
+    start_at = local_day_start(start_day)
+    end_at = local_day_end(today)
 
     total_tokens = await usage_repositories.total_tokens(session, user_id=user_id)
     total_sessions = await session_repositories.count_started(

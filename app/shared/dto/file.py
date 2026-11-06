@@ -1,7 +1,6 @@
 import uuid
-from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field
 
 from app.shared.enums import FileStatus
 
@@ -29,7 +28,7 @@ class FileItem(BaseModel):
     has_thumb: bool
     thumb_url: str | None
     preview_url: str
-    created_at: datetime
+    created_at: AwareDatetime
 
 
 class FileDetail(BaseModel):
@@ -40,7 +39,7 @@ class FileDetail(BaseModel):
     has_thumb: bool
     thumb_url: str | None
     preview_url: str
-    created_at: datetime
+    created_at: AwareDatetime
     session_id: uuid.UUID
     status: FileStatus
     download_url: str

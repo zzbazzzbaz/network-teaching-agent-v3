@@ -14,7 +14,7 @@ from app.shared.dto.question import (
     QuestionListResponse,
     QuestionResponse,
 )
-from app.shared.errors import bad_request, not_found
+from app.shared.errors import not_found
 
 router = APIRouter(prefix="/questions", tags=["题目"])
 
@@ -26,24 +26,17 @@ async def list_questions(
     query: Annotated[str | None, Query(max_length=200)] = None,
     question_type: QuestionType | None = None,
     scope: QuestionScope = QuestionScope.ALL,
-    date: Annotated[str | None, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")] = None,
+    date: Date | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> QuestionListResponse:
-    created_date: Date | None = None
-    if date is not None:
-        try:
-            created_date = Date.fromisoformat(date)
-        except ValueError as exc:
-            raise bad_request() from exc
-
     questions, total = await question_service.list_questions(
         session,
         user_id=current_user.id,
         scope=scope,
         query=query,
         question_type=question_type,
-        date=created_date,
+        date=date,
         limit=limit,
         offset=offset,
     )

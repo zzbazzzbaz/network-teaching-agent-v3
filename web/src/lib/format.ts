@@ -1,3 +1,5 @@
+import { APP_TIME_ZONE } from './config';
+
 const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
   year: 'numeric',
   month: '2-digit',
@@ -5,6 +7,14 @@ const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
   hour: '2-digit',
   minute: '2-digit',
   hour12: false,
+  timeZone: APP_TIME_ZONE,
+});
+
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: APP_TIME_ZONE,
 });
 
 const numberFormatter = new Intl.NumberFormat('zh-CN');
@@ -24,7 +34,11 @@ export function formatDate(value: string | null | undefined): string {
   if (!value) {
     return '--';
   }
-  return value.slice(0, 10);
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return '--';
+  }
+  return dateFormatter.format(parsed).replace(/\//g, '-');
 }
 
 export function formatNumber(value: number | null | undefined): string {

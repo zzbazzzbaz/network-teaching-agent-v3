@@ -1,8 +1,7 @@
 import uuid
-from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import AwareDatetime, BaseModel
 
 
 class MemoryEntryDTO(BaseModel):
@@ -13,7 +12,7 @@ class MemoryEntryDTO(BaseModel):
     date: str | None
     session_id: uuid.UUID | None
     session_title: str | None = None
-    updated_at: datetime
+    updated_at: AwareDatetime
 
 
 class MemoryEntryDetailDTO(BaseModel):
@@ -24,7 +23,7 @@ class MemoryEntryDetailDTO(BaseModel):
     date: str | None
     session_id: uuid.UUID | None
     session_title: str | None = None
-    updated_at: datetime
+    updated_at: AwareDatetime
     content: str
     content_truncated: bool
 
