@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import {
   CartesianGrid,
+  LabelList,
   Legend,
   Line,
   LineChart,
@@ -49,15 +50,48 @@ const TOOLTIP_ORDER: Record<string, number> = {
   缓存命中率: 2,
 };
 
+interface RateLabelProps {
+  x?: number;
+  y?: number;
+  value?: number | null;
+  color: string;
+}
+
+function RateLabel({ x, y, value, color }: RateLabelProps) {
+  if (x === undefined || y === undefined || value === null || value === undefined) {
+    return null;
+  }
+  const numeric = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
+  const text = formatPercent(numeric);
+  const width = text.length * 7 + 10;
+  const height = 16;
+  return (
+    <g transform={`translate(${x - width - 10}, ${y - height / 2})`}>
+      <rect width={width} height={height} rx={4} fill="#fff" stroke={color} strokeOpacity={0.35} />
+      <text x={width / 2} y={height / 2 + 3.5} textAnchor="middle" fill={color} fontSize={10}>
+        {text}
+      </text>
+    </g>
+  );
+}
+
+function formatAxisDate(value: string): string {
+  return value.length >= 10 ? value.slice(5) : value;
+}
+
 export function DailyTrendChart({ data }: { data: DailyStatsItem[] }) {
   const colors = useChartColors();
+  const ratePointCount = data.filter((item) => item.cache_hit_rate !== null).length;
 
   return (
     <div className={styles.chart} role="img" aria-label="每日 tokens、轮次与缓存命中率趋势">
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={colors.line} strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="date" {...AXIS_PROPS} />
+          <XAxis dataKey="date" {...AXIS_PROPS} tickFormatter={formatAxisDate} />
           <YAxis
             yAxisId="tokens"
             orientation="left"
@@ -129,10 +163,14 @@ export function DailyTrendChart({ data }: { data: DailyStatsItem[] }) {
             stroke={colors.rate}
             strokeWidth={2}
             strokeDasharray="5 4"
-            dot={{ r: 2, strokeWidth: 0, fill: colors.rate }}
-            activeDot={{ r: 4 }}
+            dot={{ r: 4, strokeWidth: 2, stroke: '#fff', fill: colors.rate }}
+            activeDot={{ r: 5 }}
             connectNulls
-          />
+          >
+            {ratePointCount > 0 && ratePointCount <= 3 ? (
+              <LabelList dataKey="cache_hit_rate" content={<RateLabel color={colors.rate} />} />
+            ) : null}
+          </Line>
         </LineChart>
       </ResponsiveContainer>
     </div>
