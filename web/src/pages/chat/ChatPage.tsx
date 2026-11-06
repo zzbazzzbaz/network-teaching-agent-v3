@@ -1,0 +1,241 @@
+import { PlusOutlined } from '@ant-design/icons';
+import { Attachments, Prompts, Sender, Welcome } from '@ant-design/x';
+import { useQuery } from '@tanstack/react-query';
+import { Button, Result, Typography, Upload } from 'antd';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+
+import { ApiError } from '@/api/client';
+import { createSession, getSession } from '@/api/sessions';
+import { ErrorState, PageLoading } from '@/components/common';
+import { ChatActionsProvider } from '@/features/chat/chat-actions';
+import { ChatComposer } from '@/features/chat/ChatComposer';
+import { MessageList } from '@/features/chat/MessageList';
+import { setOutbox, takeOutbox } from '@/features/chat/outbox';
+import { useChatSession } from '@/features/chat/use-chat-session';
+import { useUploads } from '@/features/upload/use-uploads';
+import { useAuthStore } from '@/stores/auth-store';
+import { useChatStore } from '@/stores/chat-store';
+
+import styles from './ChatPage.module.css';
+
+const PROMPTS = [
+  { key: 'tcp', label: 'TCP 三次握手为什么不是两次？' },
+  { key: 'congestion', label: '拥塞控制的四个阶段分别做什么？' },
+  { key: 'subnet', label: '子网掩码与 CIDR 该怎么算？' },
+];
+
+export function ChatPage() {
+  const { sessionId } = useParams();
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const [draft, setDraft] = useState('');
+  const [stickSignal, setStickSignal] = useState(0);
+  const outboxHandled = useRef<string | null>(null);
+
+  const sessionQuery = useQuery({
+    queryKey: ['session', sessionId],
+    queryFn: () => getSession(sessionId as string),
+    enabled: Boolean(sessionId),
+    retry: false,
+  });
+
+  const chat = useChatSession(sessionId ?? null, user?.username ?? '我');
+  const uploads = useUploads(sessionId ?? null);
+  const phase = useChatStore((state) => state.runtime?.phase ?? 'idle');
+  const handleSend = async (text: string, fileIds: string[], previewUrls: string[]) => {
+    setStickSignal((value) => value + 1);
+    return chat.send(text, fileIds, previewUrls);
+  };
+  const addFilesRef = useRef(uploads.addFiles);
+  addFilesRef.current = uploads.addFiles;
+
+  useEffect(() => {
+    if (!sessionId || chat.loading || outboxHandled.current === sessionId) {
+      return;
+    }
+    const outbox = takeOutbox();
+    if (!outbox) {
+      return;
+    }
+    outboxHandled.current = sessionId;
+    if (outbox.files.length > 0) {
+      addFilesRef.current(outbox.files);
+    }
+    if (outbox.text) {
+      setDraft(outbox.text);
+      if (outbox.autoSend && outbox.files.length === 0) {
+        void chat.send(outbox.text, []);
+        setDraft('');
+      }
+    }
+  }, [chat, sessionId]);
+
+  const handleNewChatSubmit = async (text: string): Promise<boolean> => {
+    if (!text.trim()) {
+      return false;
+    }
+    const created = await createSession();
+    if (!created) {
+      return false;
+    }
+    setOutbox({ text: text.trim(), files: [], autoSend: true });
+    navigate(`/chat/${created.id}`);
+    return true;
+  };
+
+  const handleNewChatFiles = async (files: File[]): Promise<void> => {
+    const created = await createSession();
+    if (!created) {
+      return;
+    }
+    setOutbox({ text: draft.trim(), files, autoSend: false });
+    navigate(`/chat/${created.id}`);
+  };
+
+  const notFound = sessionQuery.error instanceof ApiError && sessionQuery.error.status === 404;
+
+  if (sessionId && notFound) {
+    return (
+      <Result
+        status="404"
+        title="会话不存在"
+        subTitle="它可能已被删除，或不属于当前账号。"
+        extra={
+          <Button type="primary" onClick={() => navigate('/chat')}>
+            返回对话
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (sessionId && chat.loadError) {
+    return (
+      <ErrorState
+        title="对话加载失败"
+        message={chat.loadError}
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+
+  const actions = {
+    stop: () => void chat.stop(),
+    retry: () => void chat.retry(),
+    resend: (messageId: string, text: string) => void chat.resend(messageId, text),
+    resync: chat.resync,
+  };
+
+  return (
+    <ChatActionsProvider value={actions}>
+      <div className={styles.page}>
+        <div className={styles.column}>
+          <div className={styles.scrollArea}>
+            {sessionId && chat.loading ? (
+              <PageLoading text="正在加载对话" />
+            ) : chat.messages.length === 0 ? (
+              <div className={styles.welcome}>
+                <Welcome
+                  variant="borderless"
+                  title="计算机网络 · 对话式学习"
+                  description="问概念、拆协议、做题都可以。发送后会实时看到老师的推理与回答。"
+                />
+                <Prompts
+                  vertical
+                  title="可以从这里开始"
+                  items={PROMPTS.map((item) => ({ key: item.key, label: item.label }))}
+                  onItemClick={(info) => setDraft(String(info.data.label ?? ''))}
+                />
+              </div>
+            ) : (
+              <MessageList
+                messages={chat.messages}
+                hasMore={chat.hasMore}
+                loadingOlder={chat.loadingOlder}
+                stickSignal={stickSignal}
+                onLoadOlder={chat.loadOlder}
+              />
+            )}
+          </div>
+
+          <div className={styles.composer}>
+            {sessionId ? (
+              <ChatComposer
+                value={draft}
+                onChange={setDraft}
+                onSubmit={handleSend}
+                uploads={uploads}
+                phase={phase}
+                onStop={actions.stop}
+                disabled={chat.loading}
+              />
+            ) : (
+              <PendingComposer
+                draft={draft}
+                onDraftChange={setDraft}
+                onSubmit={handleNewChatSubmit}
+                onFiles={handleNewChatFiles}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </ChatActionsProvider>
+  );
+}
+
+function PendingComposer({
+  draft,
+  onDraftChange,
+  onSubmit,
+  onFiles,
+}: {
+  draft: string;
+  onDraftChange: (value: string) => void;
+  onSubmit: (text: string) => Promise<boolean>;
+  onFiles: (files: File[]) => Promise<void>;
+}) {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!draft.trim() || submitting) {
+      return;
+    }
+    setSubmitting(true);
+    const ok = await onSubmit(draft);
+    setSubmitting(false);
+    if (!ok) {
+      return;
+    }
+  };
+
+  return (
+    <div className={styles.pendingComposer}>
+      <Typography.Text type="secondary" className={styles.pendingHint}>
+        发送后会创建新会话
+      </Typography.Text>
+      <Sender
+        value={draft}
+        onChange={onDraftChange}
+        onSubmit={() => void handleSubmit()}
+        loading={submitting}
+        placeholder="向老师提问，Enter 发送，Shift + Enter 换行"
+        autoSize={{ minRows: 1, maxRows: 8 }}
+        aria-label="输入问题"
+        header={
+          <Attachments
+            multiple
+            maxCount={4}
+            accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+            placeholder={{ icon: <PlusOutlined />, title: '添加图片' }}
+            beforeUpload={(file) => {
+              void onFiles([file as unknown as File]);
+              return Upload.LIST_IGNORE;
+            }}
+          />
+        }
+      />
+    </div>
+  );
+}

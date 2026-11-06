@@ -1,0 +1,88 @@
+.assistant {
+  width: 100%;
+  color: var(--ink-900);
+}
+
+.user {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.userText {
+  background: var(--brand-50);
+  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+  padding: 10px 14px;
+  max-width: min(86vw, 640px);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.userImage {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.system {
+  width: 100%;
+  padding: 4px 0 4px 12px;
+  border-left: 2px solid var(--line);
+  font-size: 13px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  min-height: 28px;
+}
+
+.usage {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.error {
+  margin-top: 12px;
+}
+
+.thinking {
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--ink-600);
+}
+
+.thinking summary {
+  cursor: pointer;
+  color: var(--ink-600);
+  user-select: none;
+}
+
+.thinkingBody {
+  margin-top: 8px;
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+
+.assistantImage {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 767px) {
+  .userText {
+    max-width: min(86vw, 640px);
+  }
+}

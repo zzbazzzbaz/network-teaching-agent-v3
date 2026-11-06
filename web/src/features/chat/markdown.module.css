@@ -1,0 +1,51 @@
+.root {
+  overflow-wrap: anywhere;
+}
+
+.inlineCode {
+  background: var(--surface-sunken);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
+
+.blockedLink {
+  color: var(--ink-600);
+  text-decoration: underline dotted;
+}
+
+.image {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+
+.tableScroll {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 12px 0;
+}
+
+.tableScroll table {
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 100%;
+}
+
+.tableScroll th,
+.tableScroll td {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.codeFallback {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
