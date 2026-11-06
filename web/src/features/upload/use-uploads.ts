@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { completeUpload, requestUploadUrl } from '@/api/files';
 import { toErrorMessage } from '@/api/client';
-import { UPLOAD_MAX_BYTES, UPLOAD_MAX_COUNT } from '@/lib/config';
 import { recordMetric } from '@/lib/metrics';
 
+import { selectFiles } from './file-rules';
 import { putFileWithProgress } from './put-file';
 
 export type UploadStatus = 'uploading' | 'completing' | 'ready' | 'error';
@@ -20,8 +20,6 @@ export interface UploadItem {
   error: string | null;
   file: File;
 }
-
-const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/bmp']);
 
 function itemId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -112,54 +110,24 @@ export function useUploads(sessionId: string | null): UseUploadsResult {
       if (!sessionId) {
         return;
       }
-      const incoming = Array.from(files);
-      setError(null);
-
-      const accepted: UploadItem[] = [];
-      let rejection: string | null = null;
-
-      for (const file of incoming) {
-        if (!ALLOWED_TYPES.has(file.type)) {
-          rejection = '只支持 PNG、JPG、WebP、GIF、BMP 图片';
-          continue;
-        }
-        if (file.size > UPLOAD_MAX_BYTES) {
-          rejection = '单张图片不能超过 100MB';
-          continue;
-        }
-        accepted.push({
-          uid: itemId(),
-          name: file.name,
-          size: file.size,
-          status: 'uploading',
-          percent: 0,
-          fileId: null,
-          previewUrl: URL.createObjectURL(file),
-          error: null,
-          file,
-        });
-      }
-
-      if (accepted.length === 0) {
-        setError(rejection);
-        return;
-      }
-
-      const currentCount = itemsRef.current.length;
-      const remaining = Math.max(UPLOAD_MAX_COUNT - currentCount, 0);
-      if (accepted.length > remaining) {
-        rejection = `单条消息最多 ${UPLOAD_MAX_COUNT} 张图片`;
-        accepted.splice(remaining);
-      }
-
-      if (accepted.length === 0) {
-        setError(rejection ?? `单条消息最多 ${UPLOAD_MAX_COUNT} 张图片`);
-        return;
-      }
-
+      const { accepted, rejection } = selectFiles(Array.from(files), itemsRef.current.length);
       setError(rejection);
-      setItems((current) => [...current, ...accepted]);
-      accepted.forEach((item) => {
+      if (accepted.length === 0) {
+        return;
+      }
+      const staged: UploadItem[] = accepted.map((file) => ({
+        uid: itemId(),
+        name: file.name,
+        size: file.size,
+        status: 'uploading',
+        percent: 0,
+        fileId: null,
+        previewUrl: URL.createObjectURL(file),
+        error: null,
+        file,
+      }));
+      setItems((current) => [...current, ...staged]);
+      staged.forEach((item) => {
         void runUpload(item, sessionId);
       });
     },

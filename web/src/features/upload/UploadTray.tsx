@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 
 import { formatBytes } from '@/lib/format';
 
+import { ACCEPTED_IMAGE_TYPES } from './file-rules';
 import type { UploadItem } from './use-uploads';
 
 export interface UploadTrayProps {
@@ -50,7 +51,7 @@ export function UploadTray({ items, error, disabled, onAdd, onRemove, onRetry }:
   );
 
   const sharedProps = {
-    accept: 'image/png,image/jpeg,image/webp,image/gif,image/bmp',
+    accept: ACCEPTED_IMAGE_TYPES,
     multiple: true,
     maxCount: 4,
     disabled,

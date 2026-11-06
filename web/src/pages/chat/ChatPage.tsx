@@ -13,7 +13,9 @@ import { ChatComposer } from '@/features/chat/ChatComposer';
 import { MessageList } from '@/features/chat/MessageList';
 import { setOutbox, takeOutbox } from '@/features/chat/outbox';
 import { useChatSession } from '@/features/chat/use-chat-session';
+import { ACCEPTED_IMAGE_TYPES, selectFiles } from '@/features/upload/file-rules';
 import { useUploads } from '@/features/upload/use-uploads';
+import { UPLOAD_MAX_COUNT } from '@/lib/config';
 import { useIsMobile } from '@/lib/use-media-query';
 import { useAuthStore } from '@/stores/auth-store';
 import { useChatStore } from '@/stores/chat-store';
@@ -48,6 +50,11 @@ export function ChatPage() {
   };
   const addFilesRef = useRef(uploads.addFiles);
   addFilesRef.current = uploads.addFiles;
+  const pendingSendRef = useRef<{ text: string } | null>(null);
+
+  useEffect(() => {
+    pendingSendRef.current = null;
+  }, [sessionId]);
 
   useEffect(() => {
     if (!sessionId || chat.loading || outboxHandled.current === sessionId) {
@@ -60,36 +67,55 @@ export function ChatPage() {
     outboxHandled.current = sessionId;
     if (outbox.files.length > 0) {
       addFilesRef.current(outbox.files);
+      setDraft(outbox.text);
+      if (outbox.autoSend) {
+        pendingSendRef.current = { text: outbox.text };
+      }
+      return;
     }
     if (outbox.text) {
       setDraft(outbox.text);
-      if (outbox.autoSend && outbox.files.length === 0) {
+      if (outbox.autoSend) {
         void chat.send(outbox.text, []);
         setDraft('');
       }
     }
   }, [chat, sessionId]);
 
-  const handleNewChatSubmit = async (text: string): Promise<boolean> => {
-    if (!text.trim()) {
-      return false;
-    }
-    const created = await createSession();
-    if (!created) {
-      return false;
-    }
-    setOutbox({ text: text.trim(), files: [], autoSend: true });
-    navigate(`/chat/${created.id}`);
-    return true;
-  };
-
-  const handleNewChatFiles = async (files: File[]): Promise<void> => {
-    const created = await createSession();
-    if (!created) {
+  useEffect(() => {
+    const pending = pendingSendRef.current;
+    if (!pending || !sessionId || chat.loading) {
       return;
     }
-    setOutbox({ text: draft.trim(), files, autoSend: false });
+    if (uploads.items.some((item) => item.status === 'error')) {
+      pendingSendRef.current = null;
+      return;
+    }
+    if (uploads.items.length === 0 || !uploads.canSend) {
+      return;
+    }
+    pendingSendRef.current = null;
+    setStickSignal((value) => value + 1);
+    void chat.send(
+      pending.text,
+      uploads.readyIds,
+      uploads.items.map((item) => item.previewUrl),
+    );
+    setDraft('');
+    uploads.detach();
+  }, [chat, sessionId, uploads]);
+
+  const handleNewChatSubmit = async (text: string, files: File[]): Promise<boolean> => {
+    if (!text.trim() && files.length === 0) {
+      return false;
+    }
+    const created = await createSession();
+    if (!created) {
+      return false;
+    }
+    setOutbox({ text: text.trim(), files, autoSend: true });
     navigate(`/chat/${created.id}`);
+    return true;
   };
 
   const notFound = sessionQuery.error instanceof ApiError && sessionQuery.error.status === 404;
@@ -174,7 +200,6 @@ export function ChatPage() {
                 draft={draft}
                 onDraftChange={setDraft}
                 onSubmit={handleNewChatSubmit}
-                onFiles={handleNewChatFiles}
               />
             )}
           </div>
@@ -184,31 +209,88 @@ export function ChatPage() {
   );
 }
 
+interface StagedFile {
+  uid: string;
+  file: File;
+  previewUrl: string;
+}
+
 function PendingComposer({
   draft,
   onDraftChange,
   onSubmit,
-  onFiles,
 }: {
   draft: string;
   onDraftChange: (value: string) => void;
-  onSubmit: (text: string) => Promise<boolean>;
-  onFiles: (files: File[]) => Promise<void>;
+  onSubmit: (text: string, files: File[]) => Promise<boolean>;
 }) {
   const isMobile = useIsMobile();
   const [submitting, setSubmitting] = useState(false);
+  const [files, setFiles] = useState<StagedFile[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const filesRef = useRef<StagedFile[]>([]);
+
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
+
+  useEffect(() => {
+    return () => {
+      filesRef.current.forEach((item) => {
+        window.setTimeout(() => URL.revokeObjectURL(item.previewUrl), 10 * 60 * 1000);
+      });
+    };
+  }, []);
+
+  const addFiles = (incoming: File[]) => {
+    const { accepted, rejection } = selectFiles(incoming, files.length);
+    setFileError(rejection);
+    if (accepted.length === 0) {
+      return;
+    }
+    setFiles((current) => [
+      ...current,
+      ...accepted.map((file) => ({
+        uid: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      })),
+    ]);
+  };
+
+  const removeFile = (uid: string) => {
+    setFileError(null);
+    setFiles((current) => {
+      const target = current.find((item) => item.uid === uid);
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return current.filter((item) => item.uid !== uid);
+    });
+  };
+
+  const canSubmit = !submitting && (draft.trim().length > 0 || files.length > 0);
 
   const handleSubmit = async () => {
-    if (!draft.trim() || submitting) {
+    if (!canSubmit) {
       return;
     }
     setSubmitting(true);
-    const ok = await onSubmit(draft);
+    await onSubmit(
+      draft,
+      files.map((item) => item.file),
+    );
     setSubmitting(false);
-    if (!ok) {
-      return;
-    }
   };
+
+  const attachments = files.map((item) => ({
+    uid: item.uid,
+    name: item.file.name,
+    size: item.file.size,
+    status: 'done' as const,
+    url: item.previewUrl,
+    thumbUrl: item.previewUrl,
+  }));
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -224,21 +306,44 @@ function PendingComposer({
         autoSize={{ minRows: 1, maxRows: 8 }}
         aria-label="输入问题"
         header={
-          <Attachments
-            multiple
-            maxCount={4}
-            accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
-            beforeUpload={(file) => {
-              void onFiles([file as unknown as File]);
-              return Upload.LIST_IGNORE;
-            }}
-          >
-            <Button size="small" type="text" icon={<PlusOutlined />}>
-              添加图片
-            </Button>
-          </Attachments>
+          files.length === 0 ? (
+            <Attachments
+              multiple
+              maxCount={UPLOAD_MAX_COUNT}
+              accept={ACCEPTED_IMAGE_TYPES}
+              beforeUpload={(file) => {
+                addFiles([file as unknown as File]);
+                return Upload.LIST_IGNORE;
+              }}
+            >
+              <Button size="small" type="text" icon={<PlusOutlined />}>
+                添加图片
+              </Button>
+            </Attachments>
+          ) : (
+            <Attachments
+              items={attachments}
+              multiple
+              maxCount={UPLOAD_MAX_COUNT}
+              accept={ACCEPTED_IMAGE_TYPES}
+              overflow="scrollX"
+              beforeUpload={(file) => {
+                addFiles([file as unknown as File]);
+                return Upload.LIST_IGNORE;
+              }}
+              onRemove={(file) => {
+                removeFile(file.uid);
+                return true;
+              }}
+            />
+          )
         }
       />
+      {fileError ? (
+        <Typography.Text type="danger" className="text-xs">
+          {fileError}
+        </Typography.Text>
+      ) : null}
     </div>
   );
 }

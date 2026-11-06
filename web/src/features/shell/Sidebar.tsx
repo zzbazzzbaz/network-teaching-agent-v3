@@ -4,23 +4,21 @@ import {
   EditOutlined,
   LineChartOutlined,
   LogoutOutlined,
-  MessageOutlined,
   PlusOutlined,
   ReadOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Conversations } from '@ant-design/x';
-import { Button, Dropdown, Menu, Modal, Input, Skeleton, Typography, App } from 'antd';
+import { Button, Dropdown, Modal, Input, Skeleton, Typography, App } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { EmptyState } from '@/components/common';
 import { useAuthStore } from '@/stores/auth-store';
 
 import { useSessions } from './use-sessions';
 
-const NAV_ITEMS = [
-  { key: 'chat', label: '对话', icon: <MessageOutlined />, path: '/chat' },
+const ACCOUNT_ITEMS = [
   { key: 'memory', label: '记忆', icon: <ReadOutlined />, path: '/memory' },
   { key: 'questions', label: '题库', icon: <BookOutlined />, path: '/questions' },
   { key: 'stats', label: '统计', icon: <LineChartOutlined />, path: '/stats' },
@@ -28,7 +26,6 @@ const NAV_ITEMS = [
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const params = useParams();
   const { modal } = App.useApp();
   const user = useAuthStore((state) => state.user);
@@ -43,8 +40,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   useEffect(() => {
     loadMoreRef.current = sessions.loadMore;
   }, [sessions.loadMore]);
-
-  const activeSection = NAV_ITEMS.find((item) => location.pathname.startsWith(item.path))?.key;
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -72,12 +67,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     [sessions.items],
   );
 
-  const handleCreate = async () => {
-    const created = await sessions.create();
-    if (!created) {
-      return;
-    }
-    navigate(`/chat/${created.id}`);
+  const handleCreate = () => {
+    navigate('/chat');
     onNavigate?.();
   };
 
@@ -151,27 +142,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         className="mx-1 mb-3"
         type="primary"
         icon={<PlusOutlined />}
-        onClick={() => void handleCreate()}
+        onClick={handleCreate}
         loading={sessions.isLoading && sessions.items.length === 0}
       >
-        新对话
+        新建对话
       </Button>
-
-      <Menu
-        style={{ borderInlineEnd: 'none', background: 'transparent' }}
-        mode="inline"
-        selectable
-        selectedKeys={activeSection ? [activeSection] : []}
-        items={NAV_ITEMS.map((item) => ({
-          key: item.key,
-          icon: item.icon,
-          label: item.label,
-          onClick: () => {
-            navigate(item.path);
-            onNavigate?.();
-          },
-        }))}
-      />
 
       <div className="mx-2 my-3 h-px bg-line" />
       <div className="flex items-center justify-between px-2.5 pb-2 text-ink-subtle">
@@ -192,10 +167,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         ) : sessions.items.length === 0 ? (
           <EmptyState
             title="还没有对话"
-            description="点击「新对话」开始第一个问题。"
+            description="点击「新建对话」开始第一个问题。"
             action={
-              <Button size="small" onClick={() => void handleCreate()}>
-                新建会话
+              <Button size="small" onClick={handleCreate}>
+                新建对话
               </Button>
             }
           />
@@ -230,11 +205,25 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Dropdown
           trigger={['click']}
           menu={{
-            items: [{ key: 'logout', label: '退出登录', icon: <LogoutOutlined />, danger: true }],
+            items: [
+              ...ACCOUNT_ITEMS.map((item) => ({
+                key: item.key,
+                label: item.label,
+                icon: item.icon,
+              })),
+              { type: 'divider' },
+              { key: 'logout', label: '退出登录', icon: <LogoutOutlined />, danger: true },
+            ],
             onClick: ({ key }) => {
               if (key === 'logout') {
                 logout();
                 navigate('/login', { replace: true });
+                return;
+              }
+              const target = ACCOUNT_ITEMS.find((item) => item.key === key);
+              if (target) {
+                navigate(target.path);
+                onNavigate?.();
               }
             },
           }}
