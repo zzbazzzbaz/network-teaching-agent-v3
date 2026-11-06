@@ -42,9 +42,7 @@ async def list_owned(
     if not include_empty:
         filters.append(ChatSession.last_message_at.is_not(None))
 
-    total = await session.scalar(
-        select(func.count()).select_from(ChatSession).where(*filters)
-    )
+    total = await session.scalar(select(func.count()).select_from(ChatSession).where(*filters))
     statement = (
         select(ChatSession)
         .where(*filters)
@@ -57,6 +55,22 @@ async def list_owned(
     )
     items = (await session.execute(statement)).scalars().all()
     return list(items), total or 0
+
+
+async def count_started(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    include_deleted: bool,
+) -> int:
+    filters = [
+        ChatSession.user_id == user_id,
+        ChatSession.last_message_at.is_not(None),
+    ]
+    if not include_deleted:
+        filters.append(ChatSession.deleted_at.is_(None))
+    total = await session.scalar(select(func.count()).select_from(ChatSession).where(*filters))
+    return int(total or 0)
 
 
 async def touch(session: AsyncSession, chat: ChatSession, at: datetime) -> None:

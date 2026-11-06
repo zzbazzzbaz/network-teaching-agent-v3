@@ -8,11 +8,13 @@ from app.api.endpoints.schemas.internal_question import (
     AnswerWriteRequest,
     QuestionDetailResponse,
 )
+from app.api.endpoints.schemas.internal_usage import ReplyUsageReport
 from app.core.config import get_settings
 
-# 与 app/api/endpoints/internal_question.py 的路由保持一致
+# 与 app/api/endpoints/internal_question.py、internal_usage.py 的路由保持一致
 ANSWER_WRITE_PATH = "/api/internal/questions/answers"
 QUESTION_DETAIL_PATH = "/api/internal/questions/{question_id}"
+USAGE_REPLY_WRITE_PATH = "/api/internal/usage/replies"
 
 
 class InternalApiError(RuntimeError):
@@ -70,6 +72,20 @@ class InternalApiClient:
             params={"attempt_limit": attempt_limit},
         )
         return QuestionDetailResponse.model_validate(response.json())
+
+    async def report_reply_usage(
+        self,
+        user_id: str,
+        payload: ReplyUsageReport,
+    ) -> bool:
+        response = await self._request(
+            "POST",
+            USAGE_REPLY_WRITE_PATH,
+            user_id=user_id,
+            json=payload.model_dump(mode="json"),
+            timeout=5.0,
+        )
+        return bool(response.json())
 
     async def _request(
         self,

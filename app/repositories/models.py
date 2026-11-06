@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 
-from sqlalchemy import Column, Text
+from sqlalchemy import Column, Index, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
@@ -103,4 +103,30 @@ class QuestionAttempt(SQLModel, table=True):
     session_id: uuid.UUID = Field(foreign_key="sessions.id", index=True)
     tool_call_id: str | None = Field(default=None, max_length=128, index=True)
     answer_text: str = Field(sa_column=Column(Text, nullable=False))
+    created_at: datetime = Field(default_factory=_now)
+
+
+class ReplyUsage(SQLModel, table=True):
+    __tablename__ = "reply_usages"
+    __table_args__ = (Index("ix_reply_usages_user_started", "user_id", "started_at"),)
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    reply_id: str = Field(max_length=64, unique=True, index=True)
+    user_id: uuid.UUID = Field(foreign_key="users.id")
+    session_id: uuid.UUID = Field(foreign_key="sessions.id", index=True)
+    input_tokens: int = Field(default=0)
+    output_tokens: int = Field(default=0)
+    cache_input_tokens: int = Field(default=0)
+    cache_creation_input_tokens: int = Field(default=0)
+    started_at: datetime = Field(default_factory=_now)
+    updated_at: datetime = Field(default_factory=_now)
+
+
+class ChatRound(SQLModel, table=True):
+    __tablename__ = "chat_rounds"
+    __table_args__ = (Index("ix_chat_rounds_user_created", "user_id", "created_at"),)
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="users.id")
+    session_id: uuid.UUID = Field(foreign_key="sessions.id", index=True)
     created_at: datetime = Field(default_factory=_now)

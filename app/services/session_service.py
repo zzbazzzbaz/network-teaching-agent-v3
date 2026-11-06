@@ -14,7 +14,7 @@ from app.core.constants import (
     TEACH_AGENT_ID,
 )
 from app.infra.agent_client import AgentError, get_agent_client
-from app.repositories import file_repositories, session_repositories
+from app.repositories import file_repositories, session_repositories, usage_repositories
 from app.repositories.models import AgentKind, ChatSession, FileStatus, User
 from app.services import file_service
 
@@ -198,11 +198,18 @@ async def send_message(
     )
 
     try:
-        await session_repositories.touch(session, chat, datetime.now(UTC))
+        now = datetime.now(UTC)
+        await usage_repositories.create_round(
+            session,
+            user_id=user.id,
+            session_id=chat.id,
+            created_at=now,
+        )
+        await session_repositories.touch(session, chat, now)
         await session.commit()
     except Exception:
         await session.rollback()
-        logger.exception("failed to update last_message_at: session_id=%s", chat.id)
+        logger.exception("failed to record message round: session_id=%s", chat.id)
 
 
 async def submit_event(

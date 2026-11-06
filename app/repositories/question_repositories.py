@@ -127,6 +127,14 @@ async def create_attempt(
     return attempt
 
 
+async def count_attempts(session: AsyncSession, *, user_id: uuid.UUID) -> int:
+    statement = (
+        select(func.count()).select_from(QuestionAttempt).where(QuestionAttempt.user_id == user_id)
+    )
+    total = await session.scalar(statement)
+    return int(total or 0)
+
+
 async def list_attempts(
     session: AsyncSession,
     *,
