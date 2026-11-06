@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from app.agent.api.memory import (
+from app.agent.endpoints.memory import (
     InvalidMemoryEntryId,
     MemoryEntryNotFound,
     decode_entry_id,

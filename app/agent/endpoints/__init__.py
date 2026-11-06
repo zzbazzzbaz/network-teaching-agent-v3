@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.agent.api.memory import router as memory_router
+from app.agent.endpoints.memory import router as memory_router
 
 api_router = APIRouter()
 api_router.include_router(memory_router)

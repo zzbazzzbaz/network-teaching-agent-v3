@@ -5,10 +5,10 @@ from agentscope.app.message_bus import RedisMessageBus
 from agentscope.app.storage import RedisStorage
 from fastapi import FastAPI
 
-from app.agent.api import api_router
+from app.agent.endpoints import api_router
+from app.agent.lifespan import wrap_lifespan
 from app.agent.runtime.access import build_access_policy
 from app.agent.runtime.knowledge import build_blob_store, build_kb_manager, build_parsers
-from app.agent.runtime.lifespan import wrap_lifespan
 from app.agent.runtime.middlewares import agent_middlewares
 from app.agent.runtime.workspace import build_workspace_manager
 from app.agent.tools import agent_tools

@@ -4,7 +4,7 @@ from agentscope.app.deps import get_current_user_id
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.agent.api.memory import encode_entry_id, get_memory_dir, router
+from app.agent.endpoints.memory import encode_entry_id, get_memory_dir, router
 
 USER_ID = "32487b0e-4238-4008-8012-469091385e86"
 
