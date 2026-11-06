@@ -6,11 +6,9 @@ import { useSearchParams } from 'react-router';
 import { toErrorMessage } from '@/api/client';
 import { getMyStats } from '@/api/stats';
 import type { DailyStatsItem } from '@/api/types';
-import { EmptyState, ErrorState } from '@/components/common';
+import { EmptyState, ErrorState, PageShell } from '@/components/common';
 import { DailyTrendChart } from '@/features/stats/charts';
 import { formatNumber, formatPercent } from '@/lib/format';
-
-import styles from './StatsPage.module.css';
 
 const RANGES = [7, 30, 90];
 
@@ -84,8 +82,8 @@ export function StatsPage() {
   const data = statsQuery.data;
 
   return (
-    <div className="page-shell">
-      <header className={styles.header}>
+    <PageShell>
+      <header className="mb-5 flex flex-wrap items-start gap-4">
         <Segmented
           value={days}
           onChange={(value) => updateDays(Number(value))}
@@ -109,22 +107,30 @@ export function StatsPage() {
         />
       ) : (
         <>
-          <div className={styles.cards}>
-            <Card className={styles.card} size="small">
-              <div className={styles.cardLabel}>总 tokens</div>
-              <div className={styles.cardValue}>{formatNumber(data.totals.tokens)}</div>
+          <div className="mb-6 grid grid-cols-2 gap-3 min-[1200px]:grid-cols-4">
+            <Card className="border border-line" size="small">
+              <div className="mb-1.5 text-[13px] text-ink-muted">总 tokens</div>
+              <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
+                {formatNumber(data.totals.tokens)}
+              </div>
             </Card>
-            <Card className={styles.card} size="small">
-              <div className={styles.cardLabel}>会话数</div>
-              <div className={styles.cardValue}>{formatNumber(data.totals.sessions)}</div>
+            <Card className="border border-line" size="small">
+              <div className="mb-1.5 text-[13px] text-ink-muted">会话数</div>
+              <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
+                {formatNumber(data.totals.sessions)}
+              </div>
             </Card>
-            <Card className={styles.card} size="small">
-              <div className={styles.cardLabel}>对话轮次</div>
-              <div className={styles.cardValue}>{formatNumber(data.totals.rounds)}</div>
+            <Card className="border border-line" size="small">
+              <div className="mb-1.5 text-[13px] text-ink-muted">对话轮次</div>
+              <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
+                {formatNumber(data.totals.rounds)}
+              </div>
             </Card>
-            <Card className={styles.card} size="small">
-              <div className={styles.cardLabel}>作答数</div>
-              <div className={styles.cardValue}>{formatNumber(data.totals.answers)}</div>
+            <Card className="border border-line" size="small">
+              <div className="mb-1.5 text-[13px] text-ink-muted">作答数</div>
+              <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
+                {formatNumber(data.totals.answers)}
+              </div>
             </Card>
           </div>
 
@@ -135,19 +141,22 @@ export function StatsPage() {
             />
           ) : (
             <>
-              <section className={styles.panel}>
-                <h2 className={`section-title ${styles.panelTitle}`}>每日趋势</h2>
+              <section className="min-w-0 rounded-card border border-line bg-surface p-4 max-[767px]:p-3">
+                <h2 className="mb-3 text-base font-semibold leading-normal">每日趋势</h2>
                 <DailyTrendChart data={data.daily} />
               </section>
 
-              <section className={styles.detailPanel}>
+              <section className="mt-4 rounded-card border border-line bg-surface px-4 py-1 max-[767px]:px-3">
                 <Collapse
                   ghost
                   expandIconPosition="end"
+                  styles={{ header: { padding: '12px 0' }, body: { padding: '0 0 16px' } }}
                   items={[
                     {
                       key: 'detail',
-                      label: <span className="section-title">每日明细</span>,
+                      label: (
+                        <span className="text-base font-semibold leading-normal">每日明细</span>
+                      ),
                       children: (
                         <Table
                           rowKey="date"
@@ -166,6 +175,6 @@ export function StatsPage() {
           )}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

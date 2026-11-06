@@ -19,11 +19,9 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { toErrorMessage } from '@/api/client';
 import { listQuestions, type QuestionScope } from '@/api/questions';
 import type { QuestionItem, QuestionType } from '@/api/types';
-import { EmptyState, ErrorState } from '@/components/common';
+import { EmptyState, ErrorState, PageShell } from '@/components/common';
 import { formatDateTime, truncate } from '@/lib/format';
 import { useIsMobile } from '@/lib/use-media-query';
-
-import styles from './QuestionsPage.module.css';
 
 const PAGE_SIZE = 20;
 
@@ -101,7 +99,7 @@ export function QuestionsPage() {
       render: (stem: string, record) => (
         <button
           type="button"
-          className={styles.stem}
+          className="cursor-pointer border-0 bg-transparent p-0 text-left text-sm text-ink hover:text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           onClick={() => navigate(`/questions/${record.id}`)}
         >
           {truncate(stem, 80)}
@@ -119,8 +117,8 @@ export function QuestionsPage() {
   const data = listQuery.data;
 
   return (
-    <div className="page-shell">
-      <div className={styles.toolbar}>
+    <PageShell>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 max-[767px]:flex-col max-[767px]:items-stretch">
         <Segmented
           value={scope}
           onChange={(value) => updateParam('scope', value === 'mine' ? 'mine' : null)}
@@ -129,7 +127,7 @@ export function QuestionsPage() {
             { label: '我的', value: 'mine' },
           ]}
         />
-        <div className={styles.filters}>
+        <div className="flex flex-wrap items-center gap-2">
           <DatePicker
             allowClear
             placeholder="按日期筛选"
@@ -170,20 +168,25 @@ export function QuestionsPage() {
         <EmptyState title="还没有题目" description="完成一次检查题后，题目会出现在这里。" />
       ) : isMobile ? (
         <List
-          className={styles.list}
+          className="overflow-hidden rounded-card border border-line bg-surface"
           dataSource={data.items}
           rowKey="id"
           renderItem={(item) => (
             <List.Item
               onClick={() => navigate(`/questions/${item.id}`)}
-              className={styles.listItem}
+              className="cursor-pointer"
+              style={{ padding: '12px 16px' }}
             >
-              <div className={styles.listContent}>
-                <div className={styles.listMeta}>
+              <div className="w-full">
+                <div className="mb-1.5 flex items-center gap-2 text-ink-subtle">
                   <Tag>{TYPE_LABELS[item.question_type]}</Tag>
                   <span className="data-text">{formatDateTime(item.created_at)}</span>
                 </div>
-                <Typography.Paragraph className={styles.listStem} ellipsis={{ rows: 3 }}>
+                <Typography.Paragraph
+                  className="text-sm"
+                  style={{ margin: 0 }}
+                  ellipsis={{ rows: 3 }}
+                >
                   {item.stem}
                 </Typography.Paragraph>
               </div>
@@ -191,17 +194,19 @@ export function QuestionsPage() {
           )}
         />
       ) : (
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={data.items}
-          pagination={false}
-          className={styles.table}
-        />
+        <div className="overflow-hidden rounded-card border border-line bg-surface">
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={data.items}
+            pagination={false}
+            className="bg-surface"
+          />
+        </div>
       )}
 
       {data && data.items.length > 0 ? (
-        <div className={styles.pagination}>
+        <div className="mt-4 flex justify-end">
           <Pagination
             current={page}
             pageSize={PAGE_SIZE}
@@ -211,6 +216,6 @@ export function QuestionsPage() {
           />
         </div>
       ) : null}
-    </div>
+    </PageShell>
   );
 }

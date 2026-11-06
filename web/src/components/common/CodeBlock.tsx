@@ -1,8 +1,6 @@
 import { CodeHighlighter } from '@ant-design/x';
 import { lazy, Suspense } from 'react';
 
-import styles from './CodeBlock.module.css';
-
 const MermaidLazy = lazy(() => import('./mermaid-block'));
 
 export interface CodeBlockProps {
@@ -16,7 +14,7 @@ export function CodeBlock({ code, lang, mermaid = false }: CodeBlockProps) {
     return (
       <Suspense
         fallback={
-          <pre className={styles.mermaidFallback}>
+          <pre className="my-3 overflow-x-auto rounded-card bg-surface-sunken p-3 font-code text-[13px]">
             <code>{code}</code>
           </pre>
         }
@@ -26,7 +24,7 @@ export function CodeBlock({ code, lang, mermaid = false }: CodeBlockProps) {
     );
   }
   return (
-    <div className={styles.root}>
+    <div className="my-3 overflow-hidden rounded-card border border-line bg-surface-sunken">
       <CodeHighlighter lang={lang} header={false}>
         {code}
       </CodeHighlighter>

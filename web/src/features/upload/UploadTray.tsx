@@ -6,7 +6,6 @@ import { useMemo } from 'react';
 import { formatBytes } from '@/lib/format';
 
 import type { UploadItem } from './use-uploads';
-import styles from './UploadTray.module.css';
 
 export interface UploadTrayProps {
   items: UploadItem[];
@@ -35,14 +34,14 @@ export function UploadTray({ items, error, disabled, onAdd, onRemove, onRetry }:
         thumbUrl: item.previewUrl,
         description:
           item.status === 'error' ? (
-            <span className={styles.errorRow}>
+            <span className="inline-flex items-center gap-1 text-xs text-danger">
               <span>{item.error ?? '上传失败'}</span>
               <Button type="link" size="small" onClick={() => onRetry(item.uid)}>
                 重试
               </Button>
             </span>
           ) : (
-            <span className={styles.meta}>
+            <span className="font-code text-xs text-ink-subtle">
               {item.status === 'ready' ? '已就绪' : `${item.percent}%`} · {formatBytes(item.size)}
             </span>
           ),
@@ -68,7 +67,7 @@ export function UploadTray({ items, error, disabled, onAdd, onRemove, onRetry }:
   const failed = items.filter((item) => item.status === 'error');
 
   return (
-    <div className={styles.root}>
+    <div className="flex flex-col gap-2">
       {items.length === 0 ? (
         <Attachments {...sharedProps}>
           <Button size="small" type="text" icon={<PlusOutlined />} disabled={disabled}>
@@ -79,7 +78,7 @@ export function UploadTray({ items, error, disabled, onAdd, onRemove, onRetry }:
         <Attachments {...sharedProps} items={attachmentItems} overflow="scrollX" />
       )}
       {failed.map((item) => (
-        <div key={item.uid} className={styles.failRow}>
+        <div key={item.uid} className="flex items-center gap-1 text-xs text-danger">
           <span>
             {item.name}：{item.error ?? '上传失败'}
           </span>
@@ -88,9 +87,7 @@ export function UploadTray({ items, error, disabled, onAdd, onRemove, onRetry }:
           </Button>
         </div>
       ))}
-      {error ? (
-        <Alert className={styles.alert} type="warning" showIcon banner message={error} />
-      ) : null}
+      {error ? <Alert className="mt-1" type="warning" showIcon banner message={error} /> : null}
     </div>
   );
 }

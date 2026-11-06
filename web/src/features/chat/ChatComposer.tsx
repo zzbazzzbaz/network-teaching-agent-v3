@@ -5,8 +5,6 @@ import { UploadTray } from '@/features/upload/UploadTray';
 import type { UseUploadsResult } from '@/features/upload/use-uploads';
 import type { SessionPhase } from '@/lib/agentscope/project';
 
-import styles from './ChatComposer.module.css';
-
 export interface ChatComposerProps {
   value: string;
   onChange: (value: string) => void;
@@ -57,7 +55,7 @@ export function ChatComposer({
   };
 
   return (
-    <div className={styles.root}>
+    <div className="w-full border-t border-line bg-surface py-3 pb-[calc(12px+env(safe-area-inset-bottom))]">
       <Sender
         value={value}
         onChange={(next) => onChange(next.slice(0, TEXT_LIMIT))}
@@ -81,12 +79,12 @@ export function ChatComposer({
           />
         }
       />
-      <div className={styles.meta}>
+      <div className="flex items-center justify-between gap-3 px-1 pt-1.5 text-xs text-ink-subtle">
         <span className="data-text">
           {value.trim().length} / {TEXT_LIMIT}
         </span>
         {phase === 'reconnecting' ? (
-          <span className={styles.warn}>正在恢复连接，暂不能发送</span>
+          <span className="text-warning">正在恢复连接，暂不能发送</span>
         ) : null}
       </div>
     </div>

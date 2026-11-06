@@ -18,7 +18,6 @@ import { EmptyState } from '@/components/common';
 import { useAuthStore } from '@/stores/auth-store';
 
 import { useSessions } from './use-sessions';
-import styles from './Sidebar.module.css';
 
 const NAV_ITEMS = [
   { key: 'chat', label: '对话', icon: <MessageOutlined />, path: '/chat' },
@@ -137,17 +136,19 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   };
 
   return (
-    <div className={styles.root}>
-      <div className={styles.brand}>
-        <span className={styles.brandMark}>CN</span>
+    <div className="flex h-full min-h-0 flex-col px-3 pt-4 pb-3">
+      <div className="flex items-center gap-2.5 px-2 pb-4">
+        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-chip bg-brand font-code text-[13px] tracking-[0.5px] text-white">
+          CN
+        </span>
         <div>
           <Typography.Text strong>计算机网络</Typography.Text>
-          <div className={styles.brandSub}>教学智能体</div>
+          <div className="text-xs leading-tight text-ink-subtle">教学智能体</div>
         </div>
       </div>
 
       <Button
-        className={styles.newButton}
+        className="mx-1 mb-3"
         type="primary"
         icon={<PlusOutlined />}
         onClick={() => void handleCreate()}
@@ -157,7 +158,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </Button>
 
       <Menu
-        className={styles.nav}
+        style={{ borderInlineEnd: 'none', background: 'transparent' }}
         mode="inline"
         selectable
         selectedKeys={activeSection ? [activeSection] : []}
@@ -172,17 +173,17 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         }))}
       />
 
-      <div className={styles.divider} />
-      <div className={styles.listHeader}>
+      <div className="mx-2 my-3 h-px bg-line" />
+      <div className="flex items-center justify-between px-2.5 pb-2 text-ink-subtle">
         <span className="data-text">会话</span>
         <span className="data-text">{sessions.total}</span>
       </div>
 
-      <div className={styles.list}>
+      <div className="min-h-0 flex-1 overflow-y-auto pb-2">
         {sessions.isLoading ? (
           <Skeleton active paragraph={{ rows: 3 }} title={false} />
         ) : sessions.isError ? (
-          <div className={styles.listError}>
+          <div className="flex items-center justify-between px-2.5 py-2 text-[13px]">
             <Typography.Text type="secondary">会话列表加载失败</Typography.Text>
             <Button size="small" type="link" onClick={sessions.refetch}>
               重试
@@ -201,7 +202,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         ) : (
           <>
             <Conversations
-              className={styles.conversations}
+              className="bg-transparent"
               items={conversationItems}
               activeKey={params.sessionId}
               onActiveChange={(key) => {
@@ -210,14 +211,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               }}
               menu={(value) => menuFor(String(value.key))}
             />
-            <div ref={sentinelRef} className={styles.sentinel} />
+            <div ref={sentinelRef} className="h-px" />
             {sessions.loadingMore ? (
-              <Typography.Text type="secondary" className={styles.loadingMore}>
+              <Typography.Text type="secondary" className="block py-2 text-center text-xs">
                 正在加载更多
               </Typography.Text>
             ) : null}
             {!sessions.hasMore && sessions.items.length > 0 ? (
-              <Typography.Text type="secondary" className={styles.loadingMore}>
+              <Typography.Text type="secondary" className="block py-2 text-center text-xs">
                 没有更多会话了
               </Typography.Text>
             ) : null}
@@ -225,7 +226,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         )}
       </div>
 
-      <div className={styles.user}>
+      <div className="border-t border-line pt-2.5">
         <Dropdown
           trigger={['click']}
           menu={{
@@ -238,7 +239,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             },
           }}
         >
-          <button type="button" className={styles.userButton}>
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded-chip px-2.5 py-2 text-left text-sm text-ink transition-colors hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
+          >
             <UserOutlined />
             <span>{user?.username ?? '未登录'}</span>
           </button>

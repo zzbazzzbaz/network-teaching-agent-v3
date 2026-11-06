@@ -13,8 +13,6 @@ import {
 import type { DailyStatsItem } from '@/api/types';
 import { formatNumber } from '@/lib/format';
 
-import styles from './charts.module.css';
-
 function useChartColors() {
   return useMemo(() => {
     if (typeof window === 'undefined') {
@@ -43,7 +41,7 @@ export function DailyTrendChart({ data }: { data: DailyStatsItem[] }) {
   const colors = useChartColors();
 
   return (
-    <div className={styles.chart} role="img" aria-label="每日 tokens 与轮次趋势">
+    <div className="min-h-[200px] w-full" role="img" aria-label="每日 tokens 与轮次趋势">
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={colors.line} strokeDasharray="3 3" vertical={false} />
@@ -87,6 +85,7 @@ export function DailyTrendChart({ data }: { data: DailyStatsItem[] }) {
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4 }}
+            isAnimationActive={false}
           />
           <Line
             yAxisId="rounds"
@@ -97,6 +96,7 @@ export function DailyTrendChart({ data }: { data: DailyStatsItem[] }) {
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4 }}
+            isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>

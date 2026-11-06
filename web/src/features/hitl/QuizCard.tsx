@@ -8,7 +8,6 @@ import { quizQuestionFromInput } from '@/lib/agentscope/project';
 import { useChatStore } from '@/stores/chat-store';
 
 import { submitQuizAnswer } from './submit';
-import styles from './QuizCard.module.css';
 
 const ANSWER_LIMIT = 2000;
 const STALL_MS = 60_000;
@@ -39,7 +38,7 @@ export function QuizCard({ replyId, toolCall }: QuizCardProps) {
 
   if (toolCall.state === 'finished') {
     return (
-      <div className={styles.collapsed}>
+      <div className="mt-3 border-t border-dashed border-line py-1.5">
         <Typography.Text type="secondary">已作答</Typography.Text>
       </div>
     );
@@ -47,7 +46,7 @@ export function QuizCard({ replyId, toolCall }: QuizCardProps) {
 
   if (!question) {
     return (
-      <div className={styles.card}>
+      <div className="mt-3 flex flex-col gap-3 rounded-card border border-line border-l-[3px] border-l-brand bg-surface p-4">
         <Typography.Text strong>题目数据缺失，无法作答</Typography.Text>
         <Space>
           <Button size="small" onClick={stop}>
@@ -60,10 +59,12 @@ export function QuizCard({ replyId, toolCall }: QuizCardProps) {
 
   if (submittedAt) {
     return (
-      <div className={styles.card}>
-        <div className={styles.header}>
+      <div className="mt-3 flex flex-col gap-3 rounded-card border border-line border-l-[3px] border-l-brand bg-surface p-4">
+        <div className="flex items-center gap-2">
           <Typography.Text strong>检查题</Typography.Text>
-          <span className={styles.locked}>已提交</span>
+          <span className="rounded-full border border-line px-2 font-code text-xs text-success">
+            已提交
+          </span>
         </div>
         <Typography.Text type="secondary">已提交，等待反馈</Typography.Text>
         {stalled ? (
@@ -104,28 +105,31 @@ export function QuizCard({ replyId, toolCall }: QuizCardProps) {
   };
 
   return (
-    <section className={styles.card} aria-label="检查题">
-      <div className={styles.header}>
+    <section
+      className="mt-3 flex flex-col gap-3 rounded-card border border-line border-l-[3px] border-l-brand bg-surface p-4"
+      aria-label="检查题"
+    >
+      <div className="flex items-center gap-2">
         <Typography.Text strong>检查题</Typography.Text>
-        <span className={styles.hint}>{isChoice ? '单选题' : '简答题'}</span>
+        <span className="font-code text-xs text-ink-subtle">{isChoice ? '单选题' : '简答题'}</span>
       </div>
-      <fieldset className={styles.fieldset}>
-        <legend className={styles.legend}>
+      <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
+        <legend className="w-full p-0 text-[15px] font-medium leading-[1.75] text-ink">
           <Markdown content={question.stem} />
         </legend>
         {isChoice ? (
           <Radio.Group
             value={answer}
             onChange={(event) => setAnswer(event.target.value as string)}
-            className={styles.options}
+            className="block"
           >
             <Space direction="vertical" size={8}>
               {(question.options ?? []).map((option, position) => {
                 const letter = LETTERS[position] ?? String(position + 1);
                 return (
                   <Radio key={letter} value={letter}>
-                    <span className={styles.option}>
-                      <span className={styles.letter}>{letter}</span>
+                    <span className="inline-flex items-baseline gap-2.5">
+                      <span className="min-w-3.5 font-code text-ink-muted">{letter}</span>
                       <span>{option}</span>
                     </span>
                   </Radio>
@@ -145,7 +149,7 @@ export function QuizCard({ replyId, toolCall }: QuizCardProps) {
         )}
       </fieldset>
       {entry?.error ? <Alert type="error" showIcon message={entry.error} /> : null}
-      <div className={styles.footer}>
+      <div className="flex justify-end gap-2 max-[767px]:flex-col-reverse">
         <Button onClick={stop}>终止本轮</Button>
         <Button type="primary" loading={submitting} disabled={!canSubmit} onClick={handleSubmit}>
           提交作答

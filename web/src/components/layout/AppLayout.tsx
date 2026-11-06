@@ -1,4 +1,4 @@
-import { Drawer, Layout } from 'antd';
+import { Drawer } from 'antd';
 import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
 
@@ -7,8 +7,6 @@ import { AppHeader } from '@/features/shell/AppHeader';
 import { Sidebar } from '@/features/shell/Sidebar';
 import { useIsMobile } from '@/lib/use-media-query';
 import { useUiStore } from '@/stores/ui-store';
-
-import styles from './AppLayout.module.css';
 
 export function AppLayout() {
   const isMobile = useIsMobile();
@@ -21,11 +19,11 @@ export function AppLayout() {
   }, [location.pathname, setSidebarOpen]);
 
   return (
-    <Layout className={styles.root} hasSider={!isMobile}>
+    <div className="flex h-full min-h-0">
       {!isMobile ? (
-        <Layout.Sider width={264} className={styles.sider} theme="light">
+        <aside className="sticky top-0 h-screen w-[264px] shrink-0 overflow-hidden border-r border-line bg-surface max-[1199px]:w-[220px]">
           <Sidebar />
-        </Layout.Sider>
+        </aside>
       ) : (
         <Drawer
           placement="left"
@@ -34,20 +32,19 @@ export function AppLayout() {
           width={288}
           closable={false}
           styles={{ body: { padding: 0 } }}
-          rootClassName={styles.drawer}
         >
           <Sidebar onNavigate={() => setSidebarOpen(false)} />
         </Drawer>
       )}
 
-      <Layout className={styles.main}>
+      <div className="flex h-screen min-w-0 flex-1 flex-col">
         <AppHeader />
-        <Layout.Content className={styles.content}>
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <Suspense fallback={<PageLoading text="正在加载页面" />}>
             <Outlet />
           </Suspense>
-        </Layout.Content>
-      </Layout>
-    </Layout>
+        </main>
+      </div>
+    </div>
   );
 }

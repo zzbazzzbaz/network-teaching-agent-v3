@@ -6,8 +6,6 @@ import { lazy, Suspense, useEffect, useState, type ComponentType, type ReactNode
 
 import { nodeText } from '@/lib/node-text';
 
-import styles from './markdown.module.css';
-
 const LazyCodeBlock = lazy(() =>
   import('@/components/common/CodeBlock').then((module) => ({ default: module.CodeBlock })),
 );
@@ -16,7 +14,7 @@ function CodeBlock(props: { code: string; lang?: string; mermaid?: boolean }) {
   return (
     <Suspense
       fallback={
-        <pre className={styles.codeFallback}>
+        <pre className="my-3 overflow-x-auto rounded-card border border-line bg-surface-sunken p-3 font-code text-[13px] leading-[1.6]">
           <code>{props.code}</code>
         </pre>
       }
@@ -64,7 +62,7 @@ function MarkdownCode(props: ComponentProps) {
   const { block, lang, streamStatus, children } = props;
   const code = nodeText(children);
   if (!block) {
-    return <code className={styles.inlineCode}>{children}</code>;
+    return <code className="rounded bg-surface-sunken px-1 py-px text-[0.92em]">{children}</code>;
   }
   if (lang === 'mermaid') {
     return <CodeBlock code={code} mermaid={streamStatus === 'done'} />;
@@ -79,7 +77,7 @@ function MarkdownPre(props: ComponentProps) {
 function MarkdownLink(props: ComponentProps) {
   const href = typeof props.href === 'string' ? props.href : '';
   if (!href || !isSafeHref(href)) {
-    return <span className={styles.blockedLink}>{props.children}</span>;
+    return <span className="text-ink-muted underline decoration-dotted">{props.children}</span>;
   }
   return (
     <a href={href} target="_blank" rel="noopener noreferrer">
@@ -99,7 +97,7 @@ function MarkdownImage(props: ComponentProps) {
       src={src}
       alt={alt}
       referrerPolicy="no-referrer"
-      className={styles.image}
+      className="max-w-full rounded-chip border border-line"
       style={{ maxWidth: 320 }}
     />
   );
@@ -107,7 +105,7 @@ function MarkdownImage(props: ComponentProps) {
 
 function MarkdownTable(props: ComponentProps) {
   return (
-    <div className={styles.tableScroll}>
+    <div className="my-3 max-w-full overflow-x-auto">
       <table>{props.children}</table>
     </div>
   );
@@ -134,7 +132,7 @@ export function Markdown({ content, streaming = false, className }: MarkdownProp
   const config = useMarkdownConfig(content);
   return (
     <div
-      className={`markdown-body ${className ?? styles.root}`}
+      className={`markdown-body ${className ?? ''}`}
       data-streaming={streaming ? 'true' : 'false'}
     >
       <XMarkdown

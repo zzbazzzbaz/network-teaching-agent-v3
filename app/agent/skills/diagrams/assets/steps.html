@@ -1,0 +1,290 @@
+<!--
+  分步时序图模板：只替换下面 DIAGRAM 对象，渲染器（第二个 script）不要改。
+  actors 2–4 个，steps 3–8 步，note 写「为什么」，不复述 label。
+-->
+<div class="seq" id="seq">
+  <div class="head">
+    <div class="heading">
+      <h3 id="seq-title"></h3>
+      <p class="hint" id="seq-hint"></p>
+    </div>
+    <div class="actions">
+      <span class="progress" id="seq-progress"></span>
+      <button type="button" id="seq-play" class="primary">从头演示</button>
+      <button type="button" id="seq-prev">上一步</button>
+      <button type="button" id="seq-next">下一步</button>
+    </div>
+  </div>
+  <div class="actors" id="seq-actors"></div>
+  <div class="board" id="seq-board"></div>
+  <p class="note" id="seq-note" aria-live="polite"></p>
+</div>
+
+<style>
+  .seq {
+    --ink: #121a1c;
+    --muted: #5c6e70;
+    --line: #dce3e1;
+    --link: #0e6b60;
+    --link-strong: #0a4f47;
+    --link-soft: #e7f1ee;
+    --surface: #ffffff;
+    padding: 2px 2px 0;
+    color: var(--ink);
+  }
+  .seq * { box-sizing: border-box; }
+  .seq .head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 12px; }
+  .seq h3 { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.5; }
+  .seq .hint { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+  .seq .actions { display: flex; align-items: center; gap: 6px; }
+  .seq .progress { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .seq button {
+    font: inherit; font-size: 12px; line-height: 20px; padding: 3px 10px;
+    border: 1px solid #c3cfcc; border-radius: 6px;
+    background: var(--surface); color: #2e4044; cursor: pointer;
+  }
+  .seq button:hover { border-color: var(--link); color: var(--link-strong); }
+  .seq button.primary { background: var(--link); border-color: var(--link); color: #fff; }
+  .seq button.primary:hover { background: var(--link-strong); color: #fff; }
+  .seq button:disabled { opacity: 0.4; cursor: default; }
+  .seq button:disabled:hover { border-color: #c3cfcc; color: #2e4044; }
+  .seq .actors { display: grid; margin-top: 12px; }
+  .seq .actor { text-align: center; }
+  .seq .actor .name {
+    display: inline-block; padding: 3px 10px;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: #f7f9f8; font-size: 13px; font-weight: 600;
+  }
+  .seq .actor .state {
+    display: block; margin-top: 3px; min-height: 15px;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 10.5px; color: var(--muted);
+  }
+  .seq .board { position: relative; margin-top: 6px; }
+  .seq .lifeline {
+    position: absolute; top: 0; height: 100%;
+    border-left: 1px dashed var(--line);
+  }
+  .seq .row { position: absolute; left: 0; right: 0; height: 72px; }
+  .seq .row.current::before {
+    content: ""; position: absolute; inset: 4px 0;
+    border-radius: 8px; background: var(--link-soft); opacity: 0.75;
+  }
+  .seq .arrow {
+    position: absolute; top: 47px; height: 0; color: var(--link);
+    border-top: 2px solid currentColor;
+  }
+  .seq .arrow.right::after {
+    content: ""; position: absolute; right: -1px; top: -6px;
+    border: 5px solid transparent; border-left-color: currentColor;
+  }
+  .seq .arrow.left::after {
+    content: ""; position: absolute; left: -1px; top: -6px;
+    border: 5px solid transparent; border-right-color: currentColor;
+  }
+  .seq .dot {
+    position: absolute; top: 43px; width: 9px; height: 9px;
+    border-radius: 50%; background: currentColor; color: var(--link);
+    transform: translateX(-50%);
+  }
+  .seq .label {
+    position: absolute; top: 4px; transform: translateX(-50%);
+    max-width: 94%; text-align: center;
+    font-size: 12px; line-height: 17px; color: var(--muted);
+  }
+  .seq:not(.stepped) .row { opacity: 0.62; }
+  .seq.stepped .row.done { opacity: 0.62; }
+  .seq.stepped .row.current { opacity: 1; }
+  .seq.stepped .row.current .label { color: var(--ink); font-weight: 600; }
+  .seq.stepped .row.future { opacity: 0.3; }
+  .seq.stepped .row.future .arrow { border-top-style: dashed; }
+  .seq.stepped .row.future .dot { display: none; }
+  .seq .note { margin: 8px 0 0; min-height: 18px; font-size: 12.5px; line-height: 19px; color: #2e4044; }
+  .seq .note .tag { margin-right: 6px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  @media (max-width: 520px) {
+    .seq .label { font-size: 11px; line-height: 16px; }
+    .seq .actions { width: 100%; }
+  }
+</style>
+
+<script>
+  const DIAGRAM = {
+    id: "tcp-handshake",
+    title: "TCP 三次握手",
+    actors: ["客户端", "服务器"],
+    steps: [
+      { from: 0, to: 1, label: "SYN, seq=x", note: "客户端请求建连，进入 SYN_SENT", state: ["SYN_SENT", "LISTEN"] },
+      { from: 1, to: 0, label: "SYN+ACK, seq=y ack=x+1", note: "服务器同意，同时同步自己的序号", state: ["SYN_SENT", "SYN_RCVD"] },
+      { from: 0, to: 1, label: "ACK, ack=y+1", note: "双方都确认了对方的序号，连接建立", state: ["ESTABLISHED", "ESTABLISHED"] }
+    ]
+  }
+</script>
+
+<script id="renderer">
+  (function () {
+    var D = DIAGRAM
+    var ROW = 72
+    var actors = Array.isArray(D.actors) ? D.actors : []
+    var steps = Array.isArray(D.steps) ? D.steps : []
+    var count = Math.max(actors.length, 1)
+    var key = "diagram:" + (D.id || "anonymous")
+    var root = document.getElementById("seq")
+    var board = document.getElementById("seq-board")
+    var actorsEl = document.getElementById("seq-actors")
+    var titleEl = document.getElementById("seq-title")
+    var hintEl = document.getElementById("seq-hint")
+    var noteEl = document.getElementById("seq-note")
+    var progressEl = document.getElementById("seq-progress")
+    var playBtn = document.getElementById("seq-play")
+    var prevBtn = document.getElementById("seq-prev")
+    var nextBtn = document.getElementById("seq-next")
+    var stepped = false
+    var current = 0
+
+    function esc(value) {
+      return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
+      })
+    }
+
+    function center(index) {
+      return ((index + 0.5) / count) * 100
+    }
+
+    function savedIndex() {
+      try {
+        var raw = sessionStorage.getItem(key)
+        if (raw === null) return -1
+        var value = Number(raw)
+        return Number.isInteger(value) && value >= 0 && value < steps.length ? value : -1
+      } catch (error) {
+        return -1
+      }
+    }
+
+    function persist() {
+      try {
+        sessionStorage.setItem(key, String(current))
+      } catch (error) {
+        /* 隐私模式下不可写，忽略 */
+      }
+    }
+
+    function build() {
+      titleEl.textContent = D.title || ""
+      titleEl.hidden = !D.title
+      actorsEl.style.gridTemplateColumns = "repeat(" + count + ", 1fr)"
+      actorsEl.innerHTML = actors
+        .map(function (name) {
+          return '<div class="actor"><span class="name">' + esc(name) + '</span><span class="state"></span></div>'
+        })
+        .join("")
+
+      board.style.height = steps.length * ROW + "px"
+      var lanes = ""
+      for (var i = 0; i < actors.length; i += 1) {
+        lanes += '<div class="lifeline" style="left:' + center(i) + '%"></div>'
+      }
+      board.innerHTML =
+        lanes +
+        steps
+          .map(function (step, index) {
+            var from = center(step.from)
+            var to = center(step.to)
+            var left = Math.min(from, to)
+            var width = Math.abs(to - from)
+            var dir = to >= from ? "right" : "left"
+            var label = esc(step.label)
+            var mid = (from + to) / 2
+            var maxWidth = 2 * Math.min(mid, 100 - mid) - 2
+            var arrow = width > 0 ? '<div class="arrow ' + dir + '" style="left:' + left + "%;width:" + width + '%"></div>' : ""
+            return (
+              '<div class="row" data-step="' + index + '" style="top:' + index * ROW + 'px">' +
+              '<div class="label" style="left:' + mid + '%;max-width:' + maxWidth + '%">' + label + "</div>" +
+              arrow +
+              '<div class="dot" style="left:' + to + '%"></div>' +
+              "</div>"
+            )
+          })
+          .join("")
+    }
+
+    function applyState() {
+      var rows = board.querySelectorAll(".row")
+      for (var i = 0; i < rows.length; i += 1) {
+        var row = rows[i]
+        row.classList.toggle("done", stepped && i < current)
+        row.classList.toggle("current", stepped && i === current)
+        row.classList.toggle("future", stepped && i > current)
+      }
+      var cells = actorsEl.querySelectorAll(".actor .state")
+      for (var j = 0; j < cells.length; j += 1) {
+        var states = stepped && steps[current] ? steps[current].state : null
+        cells[j].textContent = Array.isArray(states) && states[j] ? states[j] : ""
+      }
+    }
+
+    function render() {
+      root.classList.toggle("stepped", stepped)
+      progressEl.hidden = !stepped
+      playBtn.hidden = stepped
+      prevBtn.hidden = !stepped
+      nextBtn.hidden = !stepped
+      progressEl.textContent = steps.length ? current + 1 + " / " + steps.length : ""
+      prevBtn.disabled = current <= 0
+      nextBtn.textContent = current >= steps.length - 1 ? "重播" : "下一步"
+      hintEl.textContent = stepped || !steps.length ? "" : "共 " + steps.length + " 步 · 点「从头演示」逐步展开"
+      if (stepped && steps[current]) {
+        noteEl.innerHTML = '<span class="tag">第 ' + (current + 1) + " 步</span>" + esc(steps[current].note)
+      } else {
+        noteEl.innerHTML = ""
+      }
+      applyState()
+    }
+
+    function goTo(index) {
+      if (!steps.length) return
+      stepped = true
+      current = Math.min(steps.length - 1, Math.max(0, index))
+      persist()
+      render()
+    }
+
+    function step(delta) {
+      if (!stepped) {
+        goTo(0)
+        return
+      }
+      goTo(current + delta < 0 ? 0 : (current + delta) % steps.length)
+    }
+
+    playBtn.addEventListener("click", function () {
+      goTo(0)
+    })
+    prevBtn.addEventListener("click", function () {
+      goTo(current - 1)
+    })
+    nextBtn.addEventListener("click", function () {
+      if (current >= steps.length - 1) goTo(0)
+      else goTo(current + 1)
+    })
+    board.addEventListener("click", function (event) {
+      var row = event.target.closest(".row")
+      if (row) goTo(Number(row.getAttribute("data-step")))
+    })
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return
+      event.preventDefault()
+      step(event.key === "ArrowRight" ? 1 : -1)
+    })
+
+    var saved = savedIndex()
+    if (saved >= 0) {
+      stepped = true
+      current = saved
+    }
+
+    build()
+    render()
+  })()
+</script>

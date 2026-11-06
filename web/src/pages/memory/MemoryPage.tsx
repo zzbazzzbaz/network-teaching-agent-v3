@@ -17,11 +17,9 @@ import { toErrorMessage } from '@/api/client';
 import { listMemoryEntries } from '@/api/memory';
 import { listSessions } from '@/api/sessions';
 import type { MemoryEntry } from '@/api/types';
-import { EmptyState, ErrorState } from '@/components/common';
+import { EmptyState, ErrorState, PageShell } from '@/components/common';
 import { MemoryDetail } from '@/features/memory/MemoryDetail';
 import { formatDateTime } from '@/lib/format';
-
-import styles from './MemoryPage.module.css';
 
 const PAGE_SIZE = 20;
 
@@ -74,7 +72,7 @@ export function MemoryPage() {
       render: (title: string, record) => (
         <button
           type="button"
-          className={styles.titleButton}
+          className="cursor-pointer border-0 bg-transparent p-0 text-left text-sm text-brand hover:text-brand-strong hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           onClick={() => updateParam('entry', record.id)}
         >
           {title}
@@ -85,8 +83,9 @@ export function MemoryPage() {
       title: '摘要',
       dataIndex: 'summary',
       ellipsis: true,
+      responsive: ['md'],
       render: (summary: string) => (
-        <Typography.Text type="secondary" className={styles.summary}>
+        <Typography.Text type="secondary" className="text-[13px]">
           {summary || '--'}
         </Typography.Text>
       ),
@@ -102,6 +101,7 @@ export function MemoryPage() {
       dataIndex: 'session_title',
       width: 160,
       ellipsis: true,
+      responsive: ['lg'],
       render: (value: string | null) => (
         <Typography.Text type="secondary">{value ?? '\u2014'}</Typography.Text>
       ),
@@ -110,6 +110,7 @@ export function MemoryPage() {
       title: '更新时间',
       dataIndex: 'updated_at',
       width: 160,
+      responsive: ['md'],
       render: (value: string) => <span className="data-text">{formatDateTime(value)}</span>,
     },
   ];
@@ -117,8 +118,8 @@ export function MemoryPage() {
   const data = listQuery.data;
 
   return (
-    <div className="page-shell">
-      <div className={styles.toolbar}>
+    <PageShell>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 max-[767px]:flex-col max-[767px]:items-stretch">
         <Segmented
           value={kind}
           onChange={(value) => updateParam('tab', String(value) === 'digest' ? 'digest' : null)}
@@ -127,7 +128,7 @@ export function MemoryPage() {
             { label: '摘要', value: 'digest' },
           ]}
         />
-        <div className={styles.filters}>
+        <div className="flex flex-wrap items-center gap-2">
           {kind === 'daily' ? (
             <DatePicker
               allowClear
@@ -152,7 +153,7 @@ export function MemoryPage() {
 
       {data?.truncated ? (
         <Alert
-          className={styles.alert}
+          className="mb-4"
           type="info"
           showIcon
           message="记忆条目较多，当前列表只展示部分结果"
@@ -175,14 +176,16 @@ export function MemoryPage() {
         />
       ) : (
         <>
-          <Table
-            rowKey="id"
-            columns={columns}
-            dataSource={data.items}
-            pagination={false}
-            className={styles.table}
-          />
-          <div className={styles.pagination}>
+          <div className="overflow-hidden rounded-card border border-line bg-surface">
+            <Table
+              rowKey="id"
+              columns={columns}
+              dataSource={data.items}
+              pagination={false}
+              className="bg-surface"
+            />
+          </div>
+          <div className="mt-4 flex justify-end">
             <Pagination
               current={page}
               pageSize={PAGE_SIZE}
@@ -195,6 +198,6 @@ export function MemoryPage() {
       )}
 
       <MemoryDetail entryId={entryId} onClose={() => updateParam('entry', null)} />
-    </div>
+    </PageShell>
   );
 }

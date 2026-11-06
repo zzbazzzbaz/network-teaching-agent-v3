@@ -17,8 +17,6 @@ import { useUploads } from '@/features/upload/use-uploads';
 import { useAuthStore } from '@/stores/auth-store';
 import { useChatStore } from '@/stores/chat-store';
 
-import styles from './ChatPage.module.css';
-
 const PROMPTS = [
   { key: 'tcp', label: 'TCP 三次握手为什么不是两次？' },
   { key: 'congestion', label: '拥塞控制的四个阶段分别做什么？' },
@@ -129,13 +127,13 @@ export function ChatPage() {
 
   return (
     <ChatActionsProvider value={actions}>
-      <div className={styles.page}>
-        <div className={styles.column}>
-          <div className={styles.scrollArea}>
+      <div className="flex min-h-0 flex-1 justify-center overflow-hidden">
+        <div className="flex min-h-0 w-full max-w-chat flex-col px-4 max-[767px]:px-3">
+          <div className="flex min-h-0 flex-1 flex-col">
             {sessionId && chat.loading ? (
               <PageLoading text="正在加载对话" />
             ) : chat.messages.length === 0 ? (
-              <div className={styles.welcome}>
+              <div className="flex max-w-[560px] flex-col gap-6 pt-12 pb-6 max-[767px]:pt-6 max-[767px]:pb-4">
                 <Welcome
                   variant="borderless"
                   title="计算机网络 · 对话式学习"
@@ -159,7 +157,7 @@ export function ChatPage() {
             )}
           </div>
 
-          <div className={styles.composer}>
+          <div className="shrink-0">
             {sessionId ? (
               <ChatComposer
                 value={draft}
@@ -211,8 +209,8 @@ function PendingComposer({
   };
 
   return (
-    <div className={styles.pendingComposer}>
-      <Typography.Text type="secondary" className={styles.pendingHint}>
+    <div className="flex flex-col gap-1.5">
+      <Typography.Text type="secondary" className="text-xs">
         发送后会创建新会话
       </Typography.Text>
       <Sender
@@ -228,12 +226,15 @@ function PendingComposer({
             multiple
             maxCount={4}
             accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
-            placeholder={{ icon: <PlusOutlined />, title: '添加图片' }}
             beforeUpload={(file) => {
               void onFiles([file as unknown as File]);
               return Upload.LIST_IGNORE;
             }}
-          />
+          >
+            <Button size="small" type="text" icon={<PlusOutlined />}>
+              添加图片
+            </Button>
+          </Attachments>
         }
       />
     </div>

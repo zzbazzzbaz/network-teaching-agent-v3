@@ -5,7 +5,6 @@ import type { PendingConfirm } from '@/lib/agentscope/project';
 import { useChatStore } from '@/stores/chat-store';
 
 import { submitConfirmResult } from './submit';
-import styles from './ConfirmCard.module.css';
 
 const TOOL_LABELS: Record<string, string> = {
   quiz_student: '检查题',
@@ -32,8 +31,11 @@ export function ConfirmCard({ pending }: { pending: PendingConfirm }) {
   };
 
   return (
-    <section className={styles.card} aria-label="工具确认">
-      <div className={styles.header}>
+    <section
+      className="mt-3 flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
+      aria-label="工具确认"
+    >
+      <div className="flex items-center gap-2">
         <Typography.Text strong>需要确认</Typography.Text>
       </div>
       <Typography.Text type="secondary">
@@ -41,7 +43,7 @@ export function ConfirmCard({ pending }: { pending: PendingConfirm }) {
         {pending.toolCalls.map((call) => TOOL_LABELS[call.name] ?? '外部工具').join('、')}
       </Typography.Text>
       {entry?.error ? <Alert type="error" showIcon message={entry.error} /> : null}
-      <div className={styles.footer}>
+      <div className="flex justify-end gap-2 max-[767px]:flex-col-reverse">
         <Button onClick={stop}>终止本轮</Button>
         <Button danger loading={submitting} onClick={() => void handleConfirm(false)}>
           拒绝

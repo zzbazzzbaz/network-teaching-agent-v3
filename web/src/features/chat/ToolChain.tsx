@@ -6,8 +6,6 @@ import { useState } from 'react';
 
 import { describeToolCall, describeToolResult, toolStatus } from '@/lib/agentscope/render-policy';
 
-import styles from './ToolChain.module.css';
-
 const RAW_LIMIT = 400;
 
 function ResultBody({ summary, raw }: { summary: string; raw: string | null }) {
@@ -18,8 +16,10 @@ function ResultBody({ summary, raw }: { summary: string; raw: string | null }) {
   const truncated = raw.length > RAW_LIMIT && !expanded;
   const text = truncated ? `${raw.slice(0, RAW_LIMIT)}…` : raw;
   return (
-    <div className={styles.result}>
-      <pre className={styles.raw}>{text}</pre>
+    <div className="flex flex-col gap-1">
+      <pre className="m-0 max-h-80 overflow-y-auto whitespace-pre-wrap break-words rounded-chip bg-surface-sunken px-2.5 py-2 font-code text-xs leading-[1.5]">
+        {text}
+      </pre>
       {raw.length > RAW_LIMIT ? (
         <Button type="link" size="small" onClick={() => setExpanded((value) => !value)}>
           {expanded ? '收起' : '展开全部'}
@@ -49,5 +49,5 @@ export function ToolChain({ calls, results }: ToolChainProps) {
     };
   });
 
-  return <ThoughtChain className={styles.root} items={items} />;
+  return <ThoughtChain className="my-2" items={items} />;
 }

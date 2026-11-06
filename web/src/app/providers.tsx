@@ -1,3 +1,4 @@
+import { StyleProvider } from '@ant-design/cssinjs';
 import { XProvider } from '@ant-design/x';
 import xZhCN from '@ant-design/x/locale/zh_CN';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -75,10 +76,12 @@ const themeConfig = {
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <XProvider theme={themeConfig} locale={locale} direction="ltr">
-        <AntdApp>{children}</AntdApp>
-      </XProvider>
-    </QueryClientProvider>
+    <StyleProvider layer>
+      <QueryClientProvider client={queryClient}>
+        <XProvider theme={themeConfig} locale={locale} direction="ltr">
+          <AntdApp>{children}</AntdApp>
+        </XProvider>
+      </QueryClientProvider>
+    </StyleProvider>
   );
 }

@@ -1,11 +1,9 @@
-import { App, Button, Form, Input, Typography } from 'antd';
+import { App, Button, Form, Input } from 'antd';
 import { useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 
 import { ApiError } from '@/api/client';
 import { useAuthStore } from '@/stores/auth-store';
-
-import styles from './LoginPage.module.css';
 
 interface LoginFormValues {
   username: string;
@@ -45,24 +43,22 @@ export function LoginPage() {
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.panel}>
-        <div className={styles.brand}>
-          <span className={styles.mark}>CN</span>
-          <span className={`data-text ${styles.caption}`}>netclass / 计算机网络</span>
+    <div className="flex min-h-screen items-center justify-center bg-canvas p-6 max-[767px]:items-start max-[767px]:pt-16">
+      <div className="w-full max-w-[400px] rounded-panel border border-line bg-surface p-8 max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-6">
+        <div className="mb-7 flex items-center gap-2.5">
+          <span className="inline-flex size-7 items-center justify-center rounded-chip bg-brand font-code text-xs text-white">
+            CN
+          </span>
+          <span className="data-text text-ink-subtle">netclass / 计算机网络</span>
         </div>
-        <Typography.Title level={1} className={styles.title}>
-          登录
-        </Typography.Title>
-        <Typography.Paragraph type="secondary" className={styles.description}>
-          使用老师分配的账号登录，开始本轮学习。
-        </Typography.Paragraph>
+        <h1 className="mb-1 text-2xl leading-tight font-semibold">登录</h1>
+        <p className="mb-6 text-[13px] text-ink-muted">使用老师分配的账号登录，开始本轮学习。</p>
 
         <Form<LoginFormValues>
           layout="vertical"
           requiredMark={false}
           onFinish={(values) => void handleSubmit(values)}
-          className={styles.form}
+          className="flex flex-col"
         >
           <Form.Item
             label="用户名"
