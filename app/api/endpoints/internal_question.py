@@ -10,8 +10,8 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from app.api.dependencies import InternalUser, SessionDep
-from app.repositories.models import QuestionType
-from app.services import question_service
+from app.api.repositories.models import QuestionType
+from app.api.services import question_service
 from app.shared.dto.internal_question import (
     AnswerWriteRequest,
     AttemptItem,

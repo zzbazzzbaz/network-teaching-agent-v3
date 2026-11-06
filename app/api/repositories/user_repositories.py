@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.repositories.models import User, UserStatus
+from app.api.repositories.models import User, UserStatus
 
 
 async def get_by_username(session: AsyncSession, username: str) -> User | None:

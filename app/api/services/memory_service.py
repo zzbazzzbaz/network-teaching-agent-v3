@@ -5,8 +5,8 @@ from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infra.agent_client import get_agent_client
-from app.repositories import session_repositories
+from app.api.infra.agent_client import get_agent_client
+from app.api.repositories import session_repositories
 from app.shared.dto.memory import (
     MemoryEntryDetailDTO,
     MemoryEntryDTO,

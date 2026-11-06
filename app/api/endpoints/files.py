@@ -5,8 +5,8 @@ from fastapi import APIRouter, Query, status
 from fastapi.responses import RedirectResponse
 
 from app.api.dependencies import CurrentUser, SessionDep
-from app.repositories.models import File
-from app.services import file_service
+from app.api.repositories.models import File
+from app.api.services import file_service
 from app.shared.dto.file import (
     FileDetail,
     FileItem,

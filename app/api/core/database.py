@@ -42,7 +42,7 @@ async def session_scope() -> AsyncGenerator[AsyncSession]:
 
 
 async def create_db_and_tables() -> None:
-    from app.repositories import models  # noqa: F401  注册 metadata
+    from app.api.repositories import models  # noqa: F401  注册 metadata
 
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)

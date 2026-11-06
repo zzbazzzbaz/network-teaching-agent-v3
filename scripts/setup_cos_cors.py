@@ -1,6 +1,6 @@
 """配置 COS 桶的跨域规则, 前端直传前需执行一次。
 
-用法: python -m app.scripts.setup_cos_cors http://localhost:5173 https://your.domain
+用法: python -m scripts.setup_cos_cors http://localhost:5173 https://your.domain
 """
 
 import sys

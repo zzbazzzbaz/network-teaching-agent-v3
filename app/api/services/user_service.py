@@ -3,9 +3,9 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import TokenError, TokenType, create_token, decode_token, verify_password
-from app.repositories import user_repositories
-from app.repositories.models import User, UserStatus
+from app.api.core.security import TokenError, TokenType, create_token, decode_token, verify_password
+from app.api.repositories import user_repositories
+from app.api.repositories.models import User, UserStatus
 
 
 class UserError(Exception):

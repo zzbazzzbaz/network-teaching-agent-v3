@@ -4,9 +4,9 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from app.api.dependencies import CurrentUser, SessionDep
-from app.repositories.models import QuestionType
-from app.repositories.question_repositories import QuestionScope
-from app.services import question_service
+from app.api.repositories.models import QuestionType
+from app.api.repositories.question_repositories import QuestionScope
+from app.api.services import question_service
 from app.shared.dto.question import (
     AttemptListResponse,
     AttemptResponse,

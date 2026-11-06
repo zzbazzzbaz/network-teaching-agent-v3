@@ -4,7 +4,7 @@
 
 ## 项目架构
 
-api端 `app/main.py`
+api端 `app/api/main.py`
 agent端 `app/agent/main.py`
 
 双进程启动，只有api端面向公网，agent端在内网环境，api端代理agent端的流量。

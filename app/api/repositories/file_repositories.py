@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.models import ChatSession, File, FileStatus
+from app.api.repositories.models import ChatSession, File, FileStatus
 
 
 async def create(session: AsyncSession, file: File) -> File:

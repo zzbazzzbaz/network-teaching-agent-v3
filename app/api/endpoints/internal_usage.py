@@ -3,8 +3,8 @@ from datetime import UTC, datetime
 from fastapi import APIRouter
 
 from app.api.dependencies import InternalUser, SessionDep
-from app.repositories import usage_repositories
-from app.repositories.models import ChatSession
+from app.api.repositories import usage_repositories
+from app.api.repositories.models import ChatSession
 from app.shared.dto.internal_usage import ReplyUsageReport
 from app.shared.errors import not_found
 

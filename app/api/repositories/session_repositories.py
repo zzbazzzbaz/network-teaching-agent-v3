@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.models import ChatSession
+from app.api.repositories.models import ChatSession
 
 
 async def create(session: AsyncSession, chat: ChatSession) -> ChatSession:

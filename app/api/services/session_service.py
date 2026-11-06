@@ -6,10 +6,10 @@ from typing import Any
 from agentscope.message import DataBlock, Msg, TextBlock, URLSource
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infra.agent_client import get_agent_client
-from app.repositories import file_repositories, session_repositories, usage_repositories
-from app.repositories.models import AgentKind, ChatSession, FileStatus, User
-from app.services import file_service
+from app.api.infra.agent_client import get_agent_client
+from app.api.repositories import file_repositories, session_repositories, usage_repositories
+from app.api.repositories.models import AgentKind, ChatSession, FileStatus, User
+from app.api.services import file_service
 from app.shared.config import get_settings
 from app.shared.constants import (
     AGENT_CREDENTIAL_ID,

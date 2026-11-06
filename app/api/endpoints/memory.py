@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi import Path as PathParam
 
 from app.api.dependencies import CurrentUser, SessionDep
-from app.services import memory_service
+from app.api.services import memory_service
 from app.shared.dto.memory import MemoryEntryDetailDTO, MemoryEntryListDTO
 from app.shared.errors import (
     RemoteServiceError,

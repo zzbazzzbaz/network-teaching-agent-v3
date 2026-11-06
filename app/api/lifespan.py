@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.core.database import close_db, create_db_and_tables
-from app.infra.agent_client import close_agent_client
+from app.api.core.database import close_db, create_db_and_tables
+from app.api.infra.agent_client import close_agent_client
 
 
 @asynccontextmanager

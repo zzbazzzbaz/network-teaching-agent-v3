@@ -3,9 +3,9 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories import question_repositories
-from app.repositories.models import ChatSession, Question, QuestionAttempt, QuestionType
-from app.repositories.question_repositories import QuestionScope
+from app.api.repositories import question_repositories
+from app.api.repositories.models import ChatSession, Question, QuestionAttempt, QuestionType
+from app.api.repositories.question_repositories import QuestionScope
 
 logger = logging.getLogger(__name__)
 

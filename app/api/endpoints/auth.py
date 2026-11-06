@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter
 
 from app.api.dependencies import CurrentUser, SessionDep
-from app.services import user_service
+from app.api.services import user_service
 from app.shared.dto.auth import (
     AuthResponse,
     LoginRequest,
