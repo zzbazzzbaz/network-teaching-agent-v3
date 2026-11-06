@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -17,6 +19,8 @@ if (typeof crypto !== 'undefined' && typeof crypto.randomUUID !== 'function') {
     },
   });
 }
+
+dayjs.locale('zh-cn');
 
 const container = document.getElementById('root');
 if (!container) {

@@ -69,10 +69,11 @@ export function MemoryPage() {
     {
       title: '标题',
       dataIndex: 'title',
+      ellipsis: true,
       render: (title: string, record) => (
         <button
           type="button"
-          className="cursor-pointer border-0 bg-transparent p-0 text-left text-sm text-brand hover:text-brand-strong hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="block max-w-full cursor-pointer truncate border-0 bg-transparent p-0 text-left text-sm text-brand hover:text-brand-strong hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           onClick={() => updateParam('entry', record.id)}
         >
           {title}
@@ -83,7 +84,7 @@ export function MemoryPage() {
       title: '摘要',
       dataIndex: 'summary',
       ellipsis: true,
-      responsive: ['md'],
+      responsive: ['lg'],
       render: (summary: string) => (
         <Typography.Text type="secondary" className="text-[13px]">
           {summary || '--'}
@@ -101,7 +102,7 @@ export function MemoryPage() {
       dataIndex: 'session_title',
       width: 160,
       ellipsis: true,
-      responsive: ['lg'],
+      responsive: ['xl'],
       render: (value: string | null) => (
         <Typography.Text type="secondary">{value ?? '\u2014'}</Typography.Text>
       ),
@@ -110,7 +111,7 @@ export function MemoryPage() {
       title: '更新时间',
       dataIndex: 'updated_at',
       width: 160,
-      responsive: ['md'],
+      responsive: ['lg'],
       render: (value: string) => <span className="data-text">{formatDateTime(value)}</span>,
     },
   ];

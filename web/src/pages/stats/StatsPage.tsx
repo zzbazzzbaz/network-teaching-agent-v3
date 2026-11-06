@@ -32,7 +32,7 @@ export function StatsPage() {
     {
       title: '日期',
       dataIndex: 'date',
-      width: 130,
+      width: 120,
       render: (value: string) => <span className="data-text">{value}</span>,
     },
     {
@@ -40,6 +40,7 @@ export function StatsPage() {
       dataIndex: 'input_tokens',
       width: 120,
       align: 'right',
+      responsive: ['xl'],
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
@@ -47,6 +48,7 @@ export function StatsPage() {
       dataIndex: 'output_tokens',
       width: 120,
       align: 'right',
+      responsive: ['xl'],
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
@@ -54,19 +56,20 @@ export function StatsPage() {
       dataIndex: 'cache_input_tokens',
       width: 120,
       align: 'right',
+      responsive: ['xl'],
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
       title: '总 tokens',
       dataIndex: 'tokens',
-      width: 120,
+      width: 110,
       align: 'right',
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
       title: '轮次',
       dataIndex: 'rounds',
-      width: 90,
+      width: 80,
       align: 'right',
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
@@ -75,6 +78,7 @@ export function StatsPage() {
       dataIndex: 'cache_hit_rate',
       width: 120,
       align: 'right',
+      responsive: ['lg'],
       render: (value: number | null) => <span className="data-text">{formatPercent(value)}</span>,
     },
   ];
@@ -149,7 +153,10 @@ export function StatsPage() {
               <section className="mt-4 rounded-card border border-line bg-surface px-4 py-1 max-[767px]:px-3">
                 <Collapse
                   ghost
-                  expandIconPosition="end"
+                  expandIconPlacement="end"
+                  classNames={{
+                    header: 'rounded-chip transition-colors hover:bg-surface-sunken/70',
+                  }}
                   styles={{ header: { padding: '12px 0' }, body: { padding: '0 0 16px' } }}
                   items={[
                     {
@@ -164,7 +171,6 @@ export function StatsPage() {
                           columns={columns}
                           dataSource={data.daily}
                           pagination={false}
-                          scroll={{ x: 880 }}
                         />
                       ),
                     },

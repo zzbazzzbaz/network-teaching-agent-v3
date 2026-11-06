@@ -22,6 +22,7 @@ const themeConfig = {
     colorBgContainer: '#FFFFFF',
     colorBorder: '#E4E8ED',
     colorBorderSecondary: '#E4E8ED',
+    controlOutline: 'rgba(18, 88, 107, 0.16)',
     colorSuccessBg: '#E9F3EE',
     colorSuccessBorder: '#BBDCC9',
     colorSuccessText: '#1E7A52',

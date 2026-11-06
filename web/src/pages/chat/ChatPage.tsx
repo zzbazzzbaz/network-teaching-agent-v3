@@ -14,6 +14,7 @@ import { MessageList } from '@/features/chat/MessageList';
 import { setOutbox, takeOutbox } from '@/features/chat/outbox';
 import { useChatSession } from '@/features/chat/use-chat-session';
 import { useUploads } from '@/features/upload/use-uploads';
+import { useIsMobile } from '@/lib/use-media-query';
 import { useAuthStore } from '@/stores/auth-store';
 import { useChatStore } from '@/stores/chat-store';
 
@@ -133,7 +134,7 @@ export function ChatPage() {
             {sessionId && chat.loading ? (
               <PageLoading text="正在加载对话" />
             ) : chat.messages.length === 0 ? (
-              <div className="flex max-w-[560px] flex-col gap-6 pt-12 pb-6 max-[767px]:pt-6 max-[767px]:pb-4">
+              <div className="mx-auto flex max-w-[560px] flex-col gap-6 pt-12 pb-6 max-[767px]:pt-6 max-[767px]:pb-4">
                 <Welcome
                   variant="borderless"
                   title="计算机网络 · 对话式学习"
@@ -194,6 +195,7 @@ function PendingComposer({
   onSubmit: (text: string) => Promise<boolean>;
   onFiles: (files: File[]) => Promise<void>;
 }) {
+  const isMobile = useIsMobile();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -218,7 +220,7 @@ function PendingComposer({
         onChange={onDraftChange}
         onSubmit={() => void handleSubmit()}
         loading={submitting}
-        placeholder="向老师提问，Enter 发送，Shift + Enter 换行"
+        placeholder={isMobile ? '向老师提问…' : '向老师提问，Enter 发送，Shift + Enter 换行'}
         autoSize={{ minRows: 1, maxRows: 8 }}
         aria-label="输入问题"
         header={

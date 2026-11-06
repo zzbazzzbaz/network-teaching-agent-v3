@@ -127,17 +127,18 @@ export function QuestionsPage() {
             { label: '我的', value: 'mine' },
           ]}
         />
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-[767px]:w-full max-[767px]:flex-col max-[767px]:items-stretch">
           <DatePicker
             allowClear
+            className="max-[767px]:w-full"
             placeholder="按日期筛选"
             value={date ? dayjs(date) : null}
             onChange={(value) => updateParam('date', value ? value.format('YYYY-MM-DD') : null)}
           />
           <Select
             allowClear
+            className="w-[140px] max-[767px]:w-full"
             placeholder="全部题型"
-            style={{ width: 140 }}
             value={questionType}
             onChange={(value) => updateParam('type', value ?? null)}
             options={[
@@ -147,10 +148,10 @@ export function QuestionsPage() {
           />
           <Input.Search
             allowClear
+            className="w-[240px] max-[767px]:w-full"
             placeholder="搜索题干"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            style={{ width: 240 }}
           />
         </div>
       </div>

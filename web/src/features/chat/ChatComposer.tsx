@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { UploadTray } from '@/features/upload/UploadTray';
 import type { UseUploadsResult } from '@/features/upload/use-uploads';
 import type { SessionPhase } from '@/lib/agentscope/project';
+import { useIsMobile } from '@/lib/use-media-query';
 
 export interface ChatComposerProps {
   value: string;
@@ -26,8 +27,9 @@ export function ChatComposer({
   phase,
   onStop,
   disabled = false,
-  placeholder = '向老师提问，Enter 发送，Shift + Enter 换行',
+  placeholder,
 }: ChatComposerProps) {
+  const isMobile = useIsMobile();
   const [submitting, setSubmitting] = useState(false);
   const running = phase === 'running';
   const blocked = disabled || phase === 'reconnecting';
@@ -65,7 +67,9 @@ export function ChatComposer({
         loading={running}
         onCancel={onStop}
         disabled={blocked}
-        placeholder={placeholder}
+        placeholder={
+          placeholder ?? (isMobile ? '向老师提问…' : '向老师提问，Enter 发送，Shift + Enter 换行')
+        }
         autoSize={{ minRows: 1, maxRows: 8 }}
         aria-label="输入问题"
         header={

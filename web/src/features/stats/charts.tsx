@@ -28,7 +28,7 @@ function useChartColors() {
 }
 
 const AXIS_PROPS = {
-  tick: { fontSize: 11, fill: '#8A94A1' },
+  tick: { fontSize: 11, fill: '#6B7684' },
   axisLine: false,
   tickLine: false,
 } as const;
@@ -43,9 +43,14 @@ export function DailyTrendChart({ data }: { data: DailyStatsItem[] }) {
   return (
     <div className="min-h-[200px] w-full" role="img" aria-label="每日 tokens 与轮次趋势">
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={colors.line} strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="date" {...AXIS_PROPS} tickFormatter={formatAxisDate} />
+          <XAxis
+            dataKey="date"
+            {...AXIS_PROPS}
+            tickFormatter={formatAxisDate}
+            padding={{ left: 8, right: 8 }}
+          />
           <YAxis
             yAxisId="tokens"
             orientation="left"

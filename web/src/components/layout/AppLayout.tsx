@@ -29,7 +29,7 @@ export function AppLayout() {
           placement="left"
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
-          width={288}
+          size={288}
           closable={false}
           styles={{ body: { padding: 0 } }}
         >

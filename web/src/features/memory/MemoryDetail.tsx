@@ -21,7 +21,7 @@ export function MemoryDetail({ entryId, onClose }: MemoryDetailProps) {
   });
 
   return (
-    <Drawer open={Boolean(entryId)} width={560} title="记忆详情" onClose={onClose} destroyOnHidden>
+    <Drawer open={Boolean(entryId)} size={560} title="记忆详情" onClose={onClose} destroyOnHidden>
       {detailQuery.isLoading ? (
         <Skeleton active paragraph={{ rows: 8 }} />
       ) : detailQuery.isError ? (
