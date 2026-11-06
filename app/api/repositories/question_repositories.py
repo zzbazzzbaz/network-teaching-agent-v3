@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, date, datetime, time, timedelta, timezone
 from enum import StrEnum
 
 from sqlalchemy import func, or_, select
@@ -6,6 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.api.repositories.models import Question, QuestionAttempt, QuestionType
+from app.shared.constants import STATS_TIMEZONE
+
+_LOCAL_TZ = timezone(timedelta(hours=8), STATS_TIMEZONE)
 
 
 class QuestionScope(StrEnum):
@@ -18,11 +22,18 @@ def _escape_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+def _created_date_filters(day: date) -> list[ColumnElement[bool]]:
+    start_at = datetime.combine(day, time.min, tzinfo=_LOCAL_TZ).astimezone(UTC)
+    end_at = datetime.combine(day + timedelta(days=1), time.min, tzinfo=_LOCAL_TZ).astimezone(UTC)
+    return [Question.created_at >= start_at, Question.created_at < end_at]
+
+
 def _question_filters(
     user_id: uuid.UUID,
     scope: QuestionScope,
     query: str | None,
     question_type: QuestionType | None,
+    date: date | None,
 ) -> list[ColumnElement[bool]]:
     filters: list[ColumnElement[bool]] = [Question.deleted_at.is_(None)]
     if scope is QuestionScope.PUBLIC:
@@ -35,6 +46,8 @@ def _question_filters(
         filters.append(Question.question_type == question_type)
     if query:
         filters.append(Question.stem.ilike(f"%{_escape_like(query)}%", escape="\\"))
+    if date is not None:
+        filters.extend(_created_date_filters(date))
     return filters
 
 
@@ -45,10 +58,11 @@ async def list_questions(
     scope: QuestionScope,
     query: str | None,
     question_type: QuestionType | None,
+    date: date | None,
     limit: int,
     offset: int,
 ) -> tuple[list[Question], int]:
-    filters = _question_filters(user_id, scope, query, question_type)
+    filters = _question_filters(user_id, scope, query, question_type, date)
     total = await session.scalar(select(func.count()).select_from(Question).where(*filters))
     statement = (
         select(Question)

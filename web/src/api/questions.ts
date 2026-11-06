@@ -12,6 +12,7 @@ export interface ListQuestionsParams {
   query?: string;
   question_type?: QuestionType;
   scope?: QuestionScope;
+  date?: string;
   limit?: number;
   offset?: number;
 }
@@ -25,6 +26,9 @@ export function listQuestions(params: ListQuestionsParams = {}): Promise<Questio
     search.set('question_type', params.question_type);
   }
   search.set('scope', params.scope ?? 'all');
+  if (params.date) {
+    search.set('date', params.date);
+  }
   search.set('limit', String(params.limit ?? 20));
   search.set('offset', String(params.offset ?? 0));
   return request<QuestionListResponse>(`/questions?${search.toString()}`);

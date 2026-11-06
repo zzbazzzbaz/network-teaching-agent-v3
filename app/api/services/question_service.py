@@ -1,5 +1,6 @@
 import logging
 import uuid
+from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +26,7 @@ async def list_questions(
     scope: QuestionScope,
     query: str | None,
     question_type: QuestionType | None,
+    date: date | None,
     limit: int,
     offset: int,
 ) -> tuple[list[Question], int]:
@@ -34,6 +36,7 @@ async def list_questions(
         scope=scope,
         query=query,
         question_type=question_type,
+        date=date,
         limit=limit,
         offset=offset,
     )

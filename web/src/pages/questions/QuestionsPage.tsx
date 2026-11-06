@@ -1,6 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { Input, List, Pagination, Segmented, Select, Skeleton, Table, Tag, Typography } from 'antd';
+import {
+  DatePicker,
+  Input,
+  List,
+  Pagination,
+  Segmented,
+  Select,
+  Skeleton,
+  Table,
+  Tag,
+  Typography,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -30,6 +42,7 @@ export function QuestionsPage() {
   const questionType =
     typeParam === 'single_choice' || typeParam === 'short_answer' ? typeParam : undefined;
   const query = searchParams.get('q') ?? '';
+  const date = searchParams.get('date') ?? '';
   const page = Math.max(Number(searchParams.get('page') ?? '1'), 1);
 
   const [keyword, setKeyword] = useState(query);
@@ -56,12 +69,13 @@ export function QuestionsPage() {
   }, [keyword, query, searchParams, setSearchParams]);
 
   const listQuery = useQuery({
-    queryKey: ['questions', scope, questionType ?? 'all', query, page],
+    queryKey: ['questions', scope, questionType ?? 'all', query, date, page],
     queryFn: () =>
       listQuestions({
         query: query || undefined,
         question_type: questionType,
         scope,
+        date: date || undefined,
         limit: PAGE_SIZE,
         offset: (page - 1) * PAGE_SIZE,
       }),
@@ -128,6 +142,12 @@ export function QuestionsPage() {
           ]}
         />
         <div className={styles.filters}>
+          <DatePicker
+            allowClear
+            placeholder="按日期筛选"
+            value={date ? dayjs(date) : null}
+            onChange={(value) => updateParam('date', value ? value.format('YYYY-MM-DD') : null)}
+          />
           <Select
             allowClear
             placeholder="全部题型"
