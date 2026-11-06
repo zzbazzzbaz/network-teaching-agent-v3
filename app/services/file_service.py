@@ -8,10 +8,10 @@ from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
 from app.infra import cos
 from app.repositories import file_repositories
 from app.repositories.models import File, FileStatus
+from app.shared.config import get_settings
 
 logger = logging.getLogger(__name__)
 

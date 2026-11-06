@@ -10,7 +10,7 @@ from enum import StrEnum
 
 import jwt
 
-from app.core.config import get_settings
+from app.shared.config import get_settings
 
 _ALGORITHM = "HS256"
 

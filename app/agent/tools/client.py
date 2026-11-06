@@ -2,7 +2,7 @@ import uuid
 
 import httpx
 
-from app.core.config import get_settings
+from app.shared.config import get_settings
 from app.shared.dto.internal_question import (
     AnswerWriteRequest,
     QuestionDetailResponse,

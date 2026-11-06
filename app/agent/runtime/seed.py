@@ -4,8 +4,8 @@ from pathlib import Path
 from agentscope.app.storage import AgentData, AgentRecord, StorageBase
 from agentscope.credential import DashScopeCredential
 
-from app.core.config import Settings
-from app.core.constants import (
+from app.shared.config import Settings
+from app.shared.constants import (
     AGENT_CREDENTIAL_ID,
     SYSTEM_USER_ID,
     TEACH_AGENT_ID,

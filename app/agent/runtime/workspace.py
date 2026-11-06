@@ -2,7 +2,7 @@ from pathlib import Path
 
 from agentscope.app.workspace_manager import IsolationPolicy, LocalWorkspaceManager
 
-from app.core.config import Settings
+from app.shared.config import Settings
 
 TEACHING_WORKSPACE_INSTRUCTIONS = (
     "<workspace>\n"

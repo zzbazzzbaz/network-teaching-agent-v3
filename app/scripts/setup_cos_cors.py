@@ -7,7 +7,7 @@ import sys
 
 from qcloud_cos import CosConfig, CosS3Client
 
-from app.core.config import get_settings
+from app.shared.config import get_settings
 
 
 def main(origins: list[str]) -> None:

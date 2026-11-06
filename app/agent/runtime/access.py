@@ -6,7 +6,7 @@ from agentscope.app.access import (
 )
 from agentscope.app.storage import StorageBase
 
-from app.core.constants import SYSTEM_USER_ID
+from app.shared.constants import SYSTEM_USER_ID
 
 
 class _TeachingAccessPolicy(ResourceAccessPolicyBase):

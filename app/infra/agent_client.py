@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from app.core.config import get_settings
+from app.shared.config import get_settings
 from app.shared.dto.memory import MemoryEntryDetailDTO, MemoryEntryListDTO
 from app.shared.errors import RemoteServiceError
 from app.shared.http import InternalHttpClient

@@ -4,8 +4,8 @@ from datetime import UTC, date, datetime, time, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import STATS_TIMEZONE
 from app.repositories import question_repositories, session_repositories, usage_repositories
+from app.shared.constants import STATS_TIMEZONE
 
 _STATS_TZ = timezone(timedelta(hours=8), STATS_TIMEZONE)
 

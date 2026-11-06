@@ -2,7 +2,7 @@ from agentscope.credential import DashScopeCredential
 from agentscope.embedding import DashScopeEmbeddingModel
 from agentscope.model import DashScopeChatModel
 
-from app.core.config import Settings
+from app.shared.config import Settings
 
 EMBEDDING_DIMENSIONS = 1024
 

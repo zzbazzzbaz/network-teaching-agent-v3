@@ -2,7 +2,7 @@ from agentscope.app.rag import CollectionPerKbManager, LocalBlobStore
 from agentscope.app.storage import StorageBase
 from agentscope.rag import PDFParser, PPTParser, QdrantStore, TextParser, WordParser
 
-from app.core.config import Settings
+from app.shared.config import Settings
 
 
 def build_blob_store(settings: Settings) -> LocalBlobStore:

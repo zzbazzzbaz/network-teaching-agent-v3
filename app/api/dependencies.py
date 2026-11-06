@@ -7,11 +7,11 @@ from fastapi import Depends, Header
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import USER_ID_HEADER
 from app.core.database import session_scope
 from app.core.security import TokenError, TokenType, decode_token
 from app.repositories.models import User, UserStatus
 from app.services import user_service
+from app.shared.constants import USER_ID_HEADER
 from app.shared.errors import forbidden, unauthorized
 
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from app.core.constants import USER_ID_HEADER
+from app.shared.constants import USER_ID_HEADER
 from app.shared.errors import (
     RemoteServiceError,
     RemoteServiceUnavailableError,

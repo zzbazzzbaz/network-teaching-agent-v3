@@ -6,8 +6,8 @@ from sqlalchemy import Date, cast, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import STATS_TIMEZONE
 from app.repositories.models import ChatRound, ReplyUsage
+from app.shared.constants import STATS_TIMEZONE
 
 
 class DailyTokenUsage(NamedTuple):

@@ -9,11 +9,11 @@ from fastapi import APIRouter, Body, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import CurrentUser, SessionDep, StreamUserID
-from app.core.constants import SESSION_PLACEHOLDER_TITLE
 from app.core.database import session_scope
 from app.infra.agent_client import get_agent_client
 from app.repositories.models import ChatSession, UserStatus
 from app.services import session_service, user_service
+from app.shared.constants import SESSION_PLACEHOLDER_TITLE
 from app.shared.dto.session import (
     InterruptResponse,
     MessageListResponse,

@@ -15,7 +15,7 @@ from agentscope.app.deps import get_current_user_id
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi import Path as PathParam
 
-from app.core.config import get_settings
+from app.shared.config import get_settings
 from app.shared.dto.memory import (
     MemoryEntryDetailDTO,
     MemoryEntryDTO,

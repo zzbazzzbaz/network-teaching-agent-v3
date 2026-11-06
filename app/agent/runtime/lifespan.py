@@ -8,7 +8,7 @@ from app.agent.runtime.knowledge import verify_qdrant
 from app.agent.runtime.memory import close_all
 from app.agent.runtime.seed import ensure_seed
 from app.agent.tools.client import close_client
-from app.core.config import Settings
+from app.shared.config import Settings
 
 
 def wrap_lifespan(app: FastAPI, settings: Settings) -> None:

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlmodel import SQLModel
 
-from app.core.config import get_settings
+from app.shared.config import get_settings
 
 engine: AsyncEngine = create_async_engine(
     get_settings().db.url,

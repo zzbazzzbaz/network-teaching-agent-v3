@@ -12,7 +12,7 @@ from agentscope.workspace import LocalWorkspace, WorkspaceBase
 from app.agent.runtime.memory import get_memory
 from app.agent.runtime.workspace import TEACHING_WORKSPACE_INSTRUCTIONS
 from app.agent.tools.client import get_client
-from app.core.config import get_settings
+from app.shared.config import get_settings
 from app.shared.dto.internal_usage import ReplyUsageReport
 
 logger = logging.getLogger(__name__)

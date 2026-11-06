@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 from qcloud_cos import CosConfig, CosS3Client, CosServiceError
 
-from app.core.config import get_settings
+from app.shared.config import get_settings
 
 _settings = get_settings().cos
 

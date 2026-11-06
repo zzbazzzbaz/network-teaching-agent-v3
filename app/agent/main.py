@@ -12,7 +12,7 @@ from app.agent.runtime.lifespan import wrap_lifespan
 from app.agent.runtime.middlewares import agent_middlewares
 from app.agent.runtime.workspace import build_workspace_manager
 from app.agent.tools import agent_tools
-from app.core.config import get_settings
+from app.shared.config import get_settings
 
 
 def create_agent_app() -> FastAPI:
