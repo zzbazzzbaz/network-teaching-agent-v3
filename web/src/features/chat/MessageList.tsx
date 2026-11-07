@@ -117,36 +117,34 @@ export function MessageList({
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div
         ref={boxRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain px-4 py-5 lg:px-8 lg:py-6"
         onScroll={handleScroll}
         aria-live={ariaLive ? 'polite' : undefined}
       >
-        <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-4 py-5 lg:px-8 lg:py-6">
-          {loadingOlder ? (
-            <div className="py-1 text-center text-[11px] text-ink-subtle">正在加载更早的消息</div>
-          ) : null}
-          {messages.map((message, index) => {
-            const last = index === messages.length - 1;
-            return (
-              <div
-                key={message.id}
-                className={
-                  longList
-                    ? '[content-visibility:auto] [contain-intrinsic-size:auto_120px]'
-                    : undefined
-                }
-              >
-                {message.role === 'assistant' ? (
-                  <AssistantMessage message={message} last={last} />
-                ) : message.role === 'user' ? (
-                  <UserMessage message={message} />
-                ) : (
-                  <SystemMessage message={message} />
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {loadingOlder ? (
+          <div className="py-1 text-center text-[11px] text-ink-subtle">正在加载更早的消息</div>
+        ) : null}
+        {messages.map((message, index) => {
+          const last = index === messages.length - 1;
+          return (
+            <div
+              key={message.id}
+              className={
+                longList
+                  ? '[content-visibility:auto] [contain-intrinsic-size:auto_120px]'
+                  : undefined
+              }
+            >
+              {message.role === 'assistant' ? (
+                <AssistantMessage message={message} last={last} />
+              ) : message.role === 'user' ? (
+                <UserMessage message={message} />
+              ) : (
+                <SystemMessage message={message} />
+              )}
+            </div>
+          );
+        })}
       </div>
       {showJump ? (
         <Button

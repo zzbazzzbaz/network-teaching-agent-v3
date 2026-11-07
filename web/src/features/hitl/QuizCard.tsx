@@ -1,6 +1,6 @@
 import type { ToolCallBlock } from '@agentscope-ai/agentscope/message';
 import { DownOutlined } from '@ant-design/icons';
-import { Alert, Button, Input, Radio, Typography } from 'antd';
+import { Alert, Button, Input, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useChatActions } from '@/features/chat/chat-actions';
@@ -14,10 +14,10 @@ const ANSWER_LIMIT = 2000;
 const STALL_MS = 60_000;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-const CARD_CLASS = 'overflow-hidden rounded-card border border-warning/35 bg-warning/[0.04]';
-const HEADER_CLASS = 'flex items-center gap-2 border-b border-warning/25 px-4 py-2';
+const CARD_CLASS = 'overflow-hidden rounded-card border border-line bg-surface';
+const HEADER_CLASS = 'flex items-center gap-2 border-b border-line px-4 py-2';
 const FOOTER_CLASS =
-  'flex items-center justify-end gap-2 border-t border-warning/25 px-4 py-2.5 max-[767px]:flex-col-reverse';
+  'flex items-center justify-end gap-2 border-t border-line px-4 py-2.5 max-[767px]:flex-col-reverse';
 
 function plainStem(stem: string): string {
   return stem
@@ -64,7 +64,6 @@ export function QuizCard({ replyId, toolCall, submittedAnswer = null }: QuizCard
   const submitting = entry?.submitting ?? false;
   const isChoice = question?.question_type === 'single_choice';
   const canSubmit = !submitted && (isChoice ? Boolean(answer) : answer.trim().length > 0);
-  const selectedCorrect = submitted && isChoice && correctOption ? answer === correctOption : null;
 
   useEffect(() => {
     if (!submittedAt || finished) {
@@ -94,8 +93,8 @@ export function QuizCard({ replyId, toolCall, submittedAnswer = null }: QuizCard
   return (
     <section className={CARD_CLASS} aria-label="检查题">
       <div className={HEADER_CLASS}>
-        <span className="size-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
-        <span className="shrink-0 text-[11px] font-medium text-warning">作答检查点</span>
+        <span className="size-1.5 shrink-0 rounded-full bg-ink-subtle/60" aria-hidden="true" />
+        <span className="shrink-0 text-[11.5px] font-medium text-ink-muted">检查题</span>
         {open ? (
           question ? (
             <span className="text-[10.5px] text-ink-subtle">{isChoice ? '单选题' : '简答题'}</span>
@@ -106,19 +105,12 @@ export function QuizCard({ replyId, toolCall, submittedAnswer = null }: QuizCard
           </span>
         )}
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {submitted && selectedCorrect !== null ? (
-            <span className={`text-[10.5px] ${selectedCorrect ? 'text-success' : 'text-danger'}`}>
-              {selectedCorrect ? '回答正确' : '回答错误'}
-            </span>
-          ) : submitted ? (
-            <span className="text-[10.5px] text-ink-subtle">已提交</span>
-          ) : null}
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
             aria-label={open ? '收起' : '展开'}
             aria-expanded={open}
-            className="grid size-5 place-items-center rounded-chip text-ink-subtle transition-colors hover:bg-warning/10 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
+            className="grid size-5 place-items-center rounded-chip text-ink-subtle transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
           >
             <DownOutlined
               className={`text-[10px] transition-transform ${open ? 'rotate-180' : ''}`}
@@ -151,12 +143,7 @@ export function QuizCard({ replyId, toolCall, submittedAnswer = null }: QuizCard
                 <Markdown content={question.stem} />
               </legend>
               {isChoice ? (
-                <Radio.Group
-                  value={answer}
-                  onChange={(event) => setAnswer(event.target.value as string)}
-                  className="flex flex-col"
-                  disabled={submitted || submitting}
-                >
+                <div className="flex flex-col" role="radiogroup" aria-label="选项">
                   {(question.options ?? []).map((option, position) => {
                     const letter = LETTERS[position] ?? String(position + 1);
                     const isCorrectOption = submitted && correctOption === letter;
@@ -164,45 +151,46 @@ export function QuizCard({ replyId, toolCall, submittedAnswer = null }: QuizCard
                     const isWrongPick =
                       submitted && Boolean(correctOption) && isSelected && !isCorrectOption;
                     const tone = isCorrectOption
-                      ? 'bg-success/10'
+                      ? 'bg-success/[0.07]'
                       : isWrongPick
-                        ? 'bg-danger/10'
-                        : '';
+                        ? 'bg-danger/[0.07]'
+                        : isSelected
+                          ? 'bg-surface-sunken/70'
+                          : '';
+                    const locked = submitted || submitting;
                     return (
                       <div
                         key={letter}
+                        role="radio"
+                        aria-checked={isSelected}
+                        aria-label={`${letter} ${optionLabelOf(option, letter)}`}
+                        tabIndex={locked ? -1 : 0}
                         onClick={() => {
-                          if (!submitted && !submitting) {
+                          if (!locked) {
                             setAnswer(letter);
                           }
                         }}
-                        className={`flex items-start gap-3 border-t border-warning/20 px-4 py-2.5 transition-colors hover:bg-warning/5 ${tone} ${submitted || submitting ? '' : 'cursor-pointer'}`}
+                        onKeyDown={(event) => {
+                          if (locked) {
+                            return;
+                          }
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            setAnswer(letter);
+                          }
+                        }}
+                        className={`flex items-start gap-3 border-t border-line px-4 py-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand ${tone} ${locked ? '' : 'cursor-pointer hover:bg-surface-sunken/60'}`}
                       >
-                        <Radio
-                          value={letter}
-                          className="mt-0.5"
-                          aria-label={`${letter} ${optionLabelOf(option, letter)}`}
-                        />
+                        <span className="font-code text-[12px] leading-6 text-ink-subtle">
+                          {letter}
+                        </span>
                         <span className="min-w-0 flex-1 text-[13.5px] leading-6 text-ink">
-                          <span className="mr-1.5 font-code text-ink-subtle">{letter}</span>
                           {optionLabelOf(option, letter)}
                         </span>
-                        {submitted ? (
-                          <span className="flex shrink-0 items-center gap-1.5 pt-0.5 text-[10.5px]">
-                            {isSelected ? (
-                              <span className={isCorrectOption ? 'text-success' : 'text-danger'}>
-                                你的选择
-                              </span>
-                            ) : null}
-                            {isCorrectOption && !isSelected ? (
-                              <span className="text-success">正确答案</span>
-                            ) : null}
-                          </span>
-                        ) : null}
                       </div>
                     );
                   })}
-                </Radio.Group>
+                </div>
               ) : (
                 <div className="px-4 pt-1 pb-3">
                   <Input.TextArea
