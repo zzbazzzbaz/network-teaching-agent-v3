@@ -9,7 +9,7 @@
 - Zustand（流式运行态、认证、界面状态）
 - Ant Design 6 + `@ant-design/x` 2.10 + `@ant-design/x-markdown`
 - `@agentscope-ai/agentscope`（消息与事件协议）
-- Recharts（统计页，按路由懒加载）
+- ECharts（对话配图与统计页图表共用，按需加载）
 
 ## 开发
 
@@ -93,6 +93,11 @@ e2e/            Playwright 用例
 - **消息投影**：`src/lib/agentscope/project.ts` 把 `AgentEvent` 按 `reply_id` 分派给 `appendEvent`，按 `event.id` 去重（保留最近 1000 个），每帧合并一次渲染。
 - **检查题 HITL**：`src/features/hitl` 渲染答题卡与确认卡，提交 `POST /sessions/{id}/events`；`metadata.question` 原样回传 `tool_call.input`，答案字段不进 DOM。
 - **图片上传**：`src/features/upload` 先申请直传地址，再用 XHR PUT 到 COS（原样使用返回 headers），最后 `complete` 确认；仅图片、单条最多 4 张。
+- **对话配图**：`mermaid` / `html` / `echarts` 三种围栏分别渲染成 Mermaid、沙箱 iframe、ECharts；流式未结束时先显示源码，解析失败也回退到源码。规则见 `app/agent/skills/diagrams/SKILL.md`：
+  - Mermaid 固定 `securityLevel: strict`、`htmlLabels: false`、`theme: default`，写错语法时显示源码而不是空白；
+  - HTML 放进 `sandbox="allow-scripts"` 的 `srcDoc` iframe（不开放同源，分步模板写 `sessionStorage` 会被浏览器拒绝，模板自带 try/catch），基础字体、颜色、行高由前端注入，高度由 iframe 内的 `postMessage` 回传，最高 700px；分步模板的脚本因此在 iframe 内运行；
+  - ECharts 只接受合法 JSON option，`title`、`color`、`backgroundColor` 由前端主题接管，使用项目配色和 300px 高度。
+- **统计图表**：`src/features/stats/charts.tsx` 复用 `src/lib/echarts.ts` 的 ECharts core 与主题，`src/lib/use-echart.ts` 统一处理初始化、resize、销毁；原先的 Recharts 已移除，两处图表共用同一份按需加载的 ECharts chunk。
 - **滚动**：`Bubble.List` 关闭内置 `autoScroll`，由 `MessageList` 自行管理贴底、回到底部、向上翻页位置补偿。
 
 ## 部署
@@ -125,15 +130,19 @@ location /api/ {
 - COS 桶配置 CORS：放行前端 origin，方法 `PUT/GET/HEAD`，允许 `Content-Type` 与签名头，暴露 `ETag`。
 - 后端 `API_BASE_URL` 必须是浏览器可达的公网 origin，否则历史图片无法加载。
 
-CSP 建议：
+CSP 建议（包含配图 iframe 所需的放行）：
+
+- HTML 配图使用 `srcDoc` iframe，其文档继承页面 CSP；分步模板的 inline script 需要 `script-src` 放行 inline，iframe 本身需要 `frame-src` 放行 `about:`/`srcdoc`。
+- 若必须保持 `script-src 'self'`，可关闭 HTML 配图的脚本能力（改为 `sandbox=""`），此时分步模板不可用，静态 HTML 版面不受影响。
 
 ```text
 default-src 'self';
-script-src 'self';
+script-src 'self' 'unsafe-inline';
 style-src 'self' 'unsafe-inline';
 img-src 'self' data: blob: https://*.myqcloud.com;
 font-src 'self' data:;
 connect-src 'self' https://*.myqcloud.com;
+frame-src 'self' about:;
 frame-ancestors 'none';
 base-uri 'self';
 ```
@@ -142,11 +151,14 @@ base-uri 'self';
 
 `npm run build` 后统计登录页实际请求的资源：
 
-| 项                         | 原始大小                   | 说明                               |
-| -------------------------- | -------------------------- | ---------------------------------- |
-| 登录页首屏 JS              | ≈ 1.38 MB（gzip ≈ 430 KB） | 主要是 React 19 + antd 6           |
-| 统计路由增量               | 352 KB（gzip 99 KB）       | 含 Recharts                        |
-| 代码高亮 / KaTeX / Mermaid | 按需加载                   | 出现代码块、公式、mermaid 时才拉取 |
+| 项                          | 原始大小                   | 说明                                 |
+| --------------------------- | -------------------------- | ------------------------------------ |
+| 登录页首屏 JS               | ≈ 1.38 MB（gzip ≈ 430 KB） | 主要是 React 19 + antd 6             |
+| 统计路由增量                | 60 KB（gzip 18 KB）        | 不含共享的 ECharts core              |
+| 代码高亮 / KaTeX / Mermaid  | 按需加载                   | 出现代码块、公式、mermaid 时才拉取   |
+| ECharts core（配图 + 统计） | 535 KB（gzip 181 KB）      | 首次出现配图或进入统计页时加载并共享 |
+| 配图独有图表类型            | 53 KB（gzip 19 KB）        | bar / pie / scatter / gauge          |
+| HTML 配图                   | 按需加载                   | 出现 html 围栏时才拉取               |
 
 对话页按 Spec 要求同步加载，因此首屏包含 `@ant-design/x` 与 Markdown 渲染器。若后续需要压到 320 KB gzip 以内，可把 `/chat` 改为路由懒加载，代价是首屏多一次 chunk 往返。
 

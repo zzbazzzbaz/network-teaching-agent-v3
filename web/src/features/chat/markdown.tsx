@@ -4,13 +4,20 @@ import type { MarkedExtension } from 'marked';
 import { Image } from 'antd';
 import { lazy, Suspense, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 
+import { diagramKind } from '@/components/common/diagram-kind';
 import { nodeText } from '@/lib/node-text';
 
 const LazyCodeBlock = lazy(() =>
   import('@/components/common/CodeBlock').then((module) => ({ default: module.CodeBlock })),
 );
 
-function CodeBlock(props: { code: string; lang?: string; mermaid?: boolean }) {
+function CodeBlock(props: {
+  code: string;
+  lang?: string;
+  mermaid?: boolean;
+  html?: boolean;
+  echarts?: boolean;
+}) {
   return (
     <Suspense
       fallback={
@@ -73,10 +80,19 @@ function MarkdownCode(props: ComponentProps) {
       <code className="rounded bg-surface-sunken px-1 py-px text-[0.92em]">{code.trim()}</code>
     );
   }
-  if (lang === 'mermaid') {
-    return <CodeBlock code={code} mermaid={streamStatus === 'done'} />;
+  const language = (lang ?? '').trim().toLowerCase();
+  const kind = diagramKind(language);
+  const ready = streamStatus === 'done';
+  if (kind === 'mermaid') {
+    return <CodeBlock code={code} lang="mermaid" mermaid={ready} />;
   }
-  return <CodeBlock code={code} lang={lang} />;
+  if (kind === 'html') {
+    return <CodeBlock code={code} lang="html" html={ready} />;
+  }
+  if (kind === 'echarts') {
+    return <CodeBlock code={code} lang="json" echarts={ready} />;
+  }
+  return <CodeBlock code={code} lang={language || undefined} />;
 }
 
 function MarkdownPre(props: ComponentProps) {

@@ -1,7 +1,11 @@
 import { CodeHighlighter } from '@ant-design/x';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
+
+import { parseChartOption } from './echarts-option';
 
 const MermaidLazy = lazy(() => import('./mermaid-block'));
+const HtmlLazy = lazy(() => import('./html-block'));
+const EchartsLazy = lazy(() => import('./echarts-block'));
 
 function dedent(code: string): string {
   const lines = code.split('\n');
@@ -15,26 +19,7 @@ function dedent(code: string): string {
   return lines.map((line) => line.slice(min)).join('\n');
 }
 
-export interface CodeBlockProps {
-  code: string;
-  lang?: string;
-  mermaid?: boolean;
-}
-
-export function CodeBlock({ code, lang, mermaid = false }: CodeBlockProps) {
-  if (mermaid) {
-    return (
-      <Suspense
-        fallback={
-          <pre className="my-3 overflow-x-auto rounded-card bg-surface-sunken p-3 font-code text-[13px]">
-            <code>{code}</code>
-          </pre>
-        }
-      >
-        <MermaidLazy code={code} />
-      </Suspense>
-    );
-  }
+function SourceCode({ code, lang }: { code: string; lang?: string }) {
   return (
     <div className="my-3 overflow-x-auto rounded-card border border-line bg-surface-sunken px-3.5 py-3 font-code text-[12.5px] leading-[1.7] [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-[12px] [&_code]:leading-[1.7]">
       <CodeHighlighter lang={lang} header={false}>
@@ -42,4 +27,59 @@ export function CodeBlock({ code, lang, mermaid = false }: CodeBlockProps) {
       </CodeHighlighter>
     </div>
   );
+}
+
+function Loading({ code }: { code: string }) {
+  return (
+    <pre className="my-3 overflow-x-auto rounded-card border border-line bg-surface-sunken p-3 font-code text-[13px] leading-[1.6]">
+      <code>{dedent(code)}</code>
+    </pre>
+  );
+}
+
+export interface CodeBlockProps {
+  code: string;
+  lang?: string;
+  mermaid?: boolean;
+  html?: boolean;
+  echarts?: boolean;
+}
+
+export function CodeBlock({
+  code,
+  lang,
+  mermaid = false,
+  html = false,
+  echarts = false,
+}: CodeBlockProps) {
+  const chartOption = useMemo(() => (echarts ? parseChartOption(code) : null), [code, echarts]);
+
+  if (mermaid) {
+    return (
+      <Suspense fallback={<Loading code={code} />}>
+        <MermaidLazy code={code} />
+      </Suspense>
+    );
+  }
+
+  if (html) {
+    if (!code.trim()) {
+      return null;
+    }
+    return (
+      <Suspense fallback={<Loading code={code} />}>
+        <HtmlLazy code={code} />
+      </Suspense>
+    );
+  }
+
+  if (chartOption) {
+    return (
+      <Suspense fallback={<Loading code={code} />}>
+        <EchartsLazy option={chartOption} />
+      </Suspense>
+    );
+  }
+
+  return <SourceCode code={code} lang={lang} />;
 }
