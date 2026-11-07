@@ -1,10 +1,11 @@
 from typing import Any, Protocol
 
+TEXTBOOK_KB_TOP_K = 5
+TEXTBOOK_KB_SCORE_THRESHOLD: float | None = None
+
 
 class TextbookKnowledgeSettings(Protocol):
     textbook_kb_id: str | None
-    textbook_kb_top_k: int
-    textbook_kb_score_threshold: float | None
 
 
 def build_knowledge_config(settings: TextbookKnowledgeSettings) -> dict[str, Any] | None:
@@ -14,7 +15,7 @@ def build_knowledge_config(settings: TextbookKnowledgeSettings) -> dict[str, Any
         "knowledge_base_ids": [settings.textbook_kb_id],
         "parameters": {
             "mode": "agentic",
-            "top_k": settings.textbook_kb_top_k,
-            "score_threshold": settings.textbook_kb_score_threshold,
+            "top_k": TEXTBOOK_KB_TOP_K,
+            "score_threshold": TEXTBOOK_KB_SCORE_THRESHOLD,
         },
     }

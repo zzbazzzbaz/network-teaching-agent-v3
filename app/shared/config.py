@@ -66,8 +66,6 @@ class Settings(_Base):
     agent_http_max_connections: int
     agent_http_max_keepalive_connections: int
     textbook_kb_id: str | None = None
-    textbook_kb_top_k: int = Field(default=5, ge=1, le=50)
-    textbook_kb_score_threshold: float | None = None
 
     @field_validator("data_root")
     @classmethod
@@ -76,7 +74,7 @@ class Settings(_Base):
             raise ValueError("必须是绝对路径")
         return value.resolve()
 
-    @field_validator("textbook_kb_id", "textbook_kb_score_threshold", mode="before")
+    @field_validator("textbook_kb_id", mode="before")
     @classmethod
     def _blank_to_none(cls, value: object) -> object:
         if value == "":
