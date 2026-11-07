@@ -1,7 +1,5 @@
-import { PlusOutlined } from '@ant-design/icons';
-import { Attachments, Prompts, Sender, Welcome } from '@ant-design/x';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Result, Typography, Upload } from 'antd';
+import { Button, Result } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
@@ -10,13 +8,13 @@ import { createSession, getSession } from '@/api/sessions';
 import { ErrorState, PageLoading } from '@/components/common';
 import { ChatActionsProvider } from '@/features/chat/chat-actions';
 import { ChatComposer } from '@/features/chat/ChatComposer';
+import { ComposerCard } from '@/features/chat/ComposerCard';
 import { MessageList } from '@/features/chat/MessageList';
 import { setOutbox, takeOutbox } from '@/features/chat/outbox';
 import { useChatSession } from '@/features/chat/use-chat-session';
-import { ACCEPTED_IMAGE_TYPES, selectFiles } from '@/features/upload/file-rules';
+import { AttachmentThumbs } from '@/features/upload/AttachmentThumbs';
+import { selectFiles } from '@/features/upload/file-rules';
 import { useUploads } from '@/features/upload/use-uploads';
-import { UPLOAD_MAX_COUNT } from '@/lib/config';
-import { useIsMobile } from '@/lib/use-media-query';
 import { useAuthStore } from '@/stores/auth-store';
 import { useChatStore } from '@/stores/chat-store';
 
@@ -58,6 +56,9 @@ export function ChatPage() {
 
   useEffect(() => {
     if (!sessionId || chat.loading || outboxHandled.current === sessionId) {
+      return;
+    }
+    if (!useChatStore.getState().runtime) {
       return;
     }
     const outbox = takeOutbox();
@@ -154,25 +155,13 @@ export function ChatPage() {
 
   return (
     <ChatActionsProvider value={actions}>
-      <div className="flex min-h-0 flex-1 justify-center overflow-hidden">
-        <div className="flex min-h-0 w-full max-w-chat flex-col px-4 max-[767px]:px-3">
+      <div className="flex min-h-0 flex-1 justify-center overflow-hidden bg-surface">
+        <div className="flex min-h-0 w-full max-w-[900px] flex-col">
           <div className="flex min-h-0 flex-1 flex-col">
             {sessionId && chat.loading ? (
               <PageLoading text="正在加载对话" />
             ) : chat.messages.length === 0 ? (
-              <div className="mx-auto flex max-w-[560px] flex-col gap-6 pt-12 pb-6 max-[767px]:pt-6 max-[767px]:pb-4">
-                <Welcome
-                  variant="borderless"
-                  title="计算机网络 · 对话式学习"
-                  description="问概念、拆协议、做题都可以。发送后会实时看到老师的推理与回答。"
-                />
-                <Prompts
-                  vertical
-                  title="可以从这里开始"
-                  items={PROMPTS.map((item) => ({ key: item.key, label: item.label }))}
-                  onItemClick={(info) => setDraft(String(info.data.label ?? ''))}
-                />
-              </div>
+              <EmptyChat onPick={setDraft} />
             ) : (
               <MessageList
                 messages={chat.messages}
@@ -209,6 +198,38 @@ export function ChatPage() {
   );
 }
 
+function EmptyChat({ onPick }: { onPick: (text: string) => void }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col justify-center px-4 py-10 lg:px-8 lg:py-16">
+      <span className="inline-flex size-7 items-center justify-center self-start rounded-chip bg-brand font-code text-[11px] tracking-[0.5px] text-white">
+        CN
+      </span>
+      <h2 className="mt-5 text-[18px] font-semibold text-ink">从一句话开始</h2>
+      <p className="mt-2 max-w-[38ch] text-[13px] leading-6 text-ink-muted">
+        不用先组织好。把你现在理解到的部分说出来，老师会从那里接着问。
+      </p>
+      <div className="mt-6 w-full max-w-[560px] border-t border-line">
+        {PROMPTS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => onPick(item.label)}
+            className="group flex w-full items-center gap-3 border-b border-line py-3 text-left transition-colors hover:bg-surface-sunken/70"
+          >
+            <span
+              aria-hidden="true"
+              className="size-1.5 shrink-0 rounded-full border border-line-strong transition-colors group-hover:border-brand group-hover:bg-brand"
+            />
+            <span className="min-w-0 flex-1 text-[13px] text-ink-muted group-hover:text-ink">
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface StagedFile {
   uid: string;
   file: File;
@@ -224,7 +245,6 @@ function PendingComposer({
   onDraftChange: (value: string) => void;
   onSubmit: (text: string, files: File[]) => Promise<boolean>;
 }) {
-  const isMobile = useIsMobile();
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<StagedFile[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -285,65 +305,29 @@ function PendingComposer({
 
   const attachments = files.map((item) => ({
     uid: item.uid,
-    name: item.file.name,
-    size: item.file.size,
-    status: 'done' as const,
-    url: item.previewUrl,
-    thumbUrl: item.previewUrl,
+    previewUrl: item.previewUrl,
+    status: 'ready' as const,
   }));
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <Typography.Text type="secondary" className="text-xs">
-        发送后会创建新会话
-      </Typography.Text>
-      <Sender
-        value={draft}
-        onChange={onDraftChange}
-        onSubmit={() => void handleSubmit()}
-        loading={submitting}
-        placeholder={isMobile ? '向老师提问…' : '向老师提问，Enter 发送，Shift + Enter 换行'}
-        autoSize={{ minRows: 1, maxRows: 8 }}
-        aria-label="输入问题"
-        header={
-          files.length === 0 ? (
-            <Attachments
-              multiple
-              maxCount={UPLOAD_MAX_COUNT}
-              accept={ACCEPTED_IMAGE_TYPES}
-              beforeUpload={(file) => {
-                addFiles([file as unknown as File]);
-                return Upload.LIST_IGNORE;
-              }}
-            >
-              <Button size="small" type="text" icon={<PlusOutlined />}>
-                添加图片
-              </Button>
-            </Attachments>
-          ) : (
-            <Attachments
-              items={attachments}
-              multiple
-              maxCount={UPLOAD_MAX_COUNT}
-              accept={ACCEPTED_IMAGE_TYPES}
-              overflow="scrollX"
-              beforeUpload={(file) => {
-                addFiles([file as unknown as File]);
-                return Upload.LIST_IGNORE;
-              }}
-              onRemove={(file) => {
-                removeFile(file.uid);
-                return true;
-              }}
-            />
-          )
-        }
-      />
-      {fileError ? (
-        <Typography.Text type="danger" className="text-xs">
-          {fileError}
-        </Typography.Text>
-      ) : null}
+    <div className="shrink-0 bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] lg:px-8">
+      <div className="mx-auto w-full max-w-[820px]">
+        <p className="mb-2 text-[11.5px] text-ink-subtle">发送后会创建新会话</p>
+        <ComposerCard
+          value={draft}
+          onChange={onDraftChange}
+          onSubmit={() => void handleSubmit()}
+          canSubmit={canSubmit}
+          submitting={submitting}
+          onPickFiles={addFiles}
+          attachments={
+            <AttachmentThumbs items={attachments} disabled={submitting} onRemove={removeFile} />
+          }
+          notice={
+            fileError ? <p className="px-3.5 pt-2 text-[11.5px] text-danger">{fileError}</p> : null
+          }
+        />
+      </div>
     </div>
   );
 }

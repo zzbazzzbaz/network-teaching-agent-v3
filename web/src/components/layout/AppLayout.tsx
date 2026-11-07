@@ -1,4 +1,5 @@
-import { Drawer } from 'antd';
+import { MenuOutlined } from '@ant-design/icons';
+import { Button, Drawer } from 'antd';
 import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
 
@@ -12,7 +13,9 @@ export function AppLayout() {
   const isMobile = useIsMobile();
   const sidebarOpen = useUiStore((state) => state.sidebarOpen);
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
+  const toggleSidebar = useUiStore((state) => state.toggleSidebar);
   const location = useLocation();
+  const isChat = location.pathname.startsWith('/chat');
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -37,8 +40,18 @@ export function AppLayout() {
         </Drawer>
       )}
 
-      <div className="flex h-screen min-w-0 flex-1 flex-col">
-        <AppHeader />
+      <div className="relative flex h-screen min-w-0 flex-1 flex-col">
+        {isChat ? null : <AppHeader />}
+        {isChat && isMobile ? (
+          <Button
+            className="absolute top-2 left-2 z-20 border border-line bg-surface/90 shadow-[0_1px_4px_rgb(16_23_32/10%)] backdrop-blur-sm"
+            type="text"
+            size="small"
+            icon={<MenuOutlined />}
+            onClick={toggleSidebar}
+            aria-label="打开导航"
+          />
+        ) : null}
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <Suspense fallback={<PageLoading text="正在加载页面" />}>
             <Outlet />

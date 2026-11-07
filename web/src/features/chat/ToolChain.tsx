@@ -49,5 +49,9 @@ export function ToolChain({ calls, results }: ToolChainProps) {
     };
   });
 
-  return <ThoughtChain className="my-2" items={items} />;
+  return (
+    <div className="rounded-card border border-line bg-surface px-3 py-2">
+      <ThoughtChain items={items} />
+    </div>
+  );
 }

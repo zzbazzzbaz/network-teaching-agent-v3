@@ -1,9 +1,9 @@
 import type { ToolCallBlock } from '@agentscope-ai/agentscope/message';
-import { Alert, Button, Input, Radio, Space, Typography } from 'antd';
+import { Alert, Button, Input, Radio, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 
-import { Markdown } from '@/features/chat/markdown';
 import { useChatActions } from '@/features/chat/chat-actions';
+import { Markdown } from '@/features/chat/markdown';
 import { quizQuestionFromInput } from '@/lib/agentscope/project';
 import { useChatStore } from '@/stores/chat-store';
 
@@ -12,6 +12,11 @@ import { submitQuizAnswer } from './submit';
 const ANSWER_LIMIT = 2000;
 const STALL_MS = 60_000;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+const CARD_CLASS = 'overflow-hidden rounded-card border border-warning/35 bg-warning/[0.04]';
+const HEADER_CLASS = 'flex items-center gap-2 border-b border-warning/25 px-4 py-2';
+const FOOTER_CLASS =
+  'flex items-center justify-end gap-2 border-t border-warning/25 px-4 py-2.5 max-[767px]:flex-col-reverse';
 
 export interface QuizCardProps {
   replyId: string;
@@ -38,49 +43,58 @@ export function QuizCard({ replyId, toolCall }: QuizCardProps) {
 
   if (toolCall.state === 'finished') {
     return (
-      <div className="mt-3 border-t border-dashed border-line py-1.5">
-        <Typography.Text type="secondary">已作答</Typography.Text>
+      <div className="border-t border-dashed border-line py-1.5 text-[11.5px] text-ink-subtle">
+        已作答
       </div>
     );
   }
 
   if (!question) {
     return (
-      <div className="mt-3 flex flex-col gap-3 rounded-card border border-line border-l-[3px] border-l-brand bg-surface p-4">
-        <Typography.Text strong>题目数据缺失，无法作答</Typography.Text>
-        <Space>
+      <section className={CARD_CLASS} aria-label="检查题">
+        <div className={HEADER_CLASS}>
+          <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
+          <span className="text-[11px] font-medium text-warning">作答检查点</span>
+        </div>
+        <div className="px-4 py-3.5">
+          <Typography.Text strong>题目数据缺失，无法作答</Typography.Text>
+        </div>
+        <div className={FOOTER_CLASS}>
           <Button size="small" onClick={stop}>
             终止本轮
           </Button>
-        </Space>
-      </div>
+        </div>
+      </section>
     );
   }
 
   if (submittedAt) {
     return (
-      <div className="mt-3 flex flex-col gap-3 rounded-card border border-line border-l-[3px] border-l-brand bg-surface p-4">
-        <div className="flex items-center gap-2">
-          <Typography.Text strong>检查题</Typography.Text>
-          <span className="rounded-full border border-line px-2 font-code text-xs text-success">
+      <section className={CARD_CLASS} aria-label="检查题">
+        <div className={HEADER_CLASS}>
+          <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
+          <span className="text-[11px] font-medium text-warning">作答检查点</span>
+          <span className="ml-auto rounded-full border border-success/30 bg-success/5 px-2 font-code text-[10.5px] text-success">
             已提交
           </span>
         </div>
-        <Typography.Text type="secondary">已提交，等待反馈</Typography.Text>
-        {stalled ? (
-          <Alert
-            type="warning"
-            showIcon
-            message="暂未收到反馈"
-            description="可以重新同步一次会话状态，或继续等待。"
-            action={
-              <Button size="small" onClick={() => void resync()}>
-                重新同步
-              </Button>
-            }
-          />
-        ) : null}
-      </div>
+        <div className="flex flex-col gap-3 px-4 py-3.5">
+          <Typography.Text type="secondary">已提交，等待反馈</Typography.Text>
+          {stalled ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="暂未收到反馈"
+              description="可以重新同步一次会话状态，或继续等待。"
+              action={
+                <Button size="small" onClick={() => void resync()}>
+                  重新同步
+                </Button>
+              }
+            />
+          ) : null}
+        </div>
+      </section>
     );
   }
 
@@ -105,52 +119,63 @@ export function QuizCard({ replyId, toolCall }: QuizCardProps) {
   };
 
   return (
-    <section
-      className="mt-3 flex flex-col gap-3 rounded-card border border-line border-l-[3px] border-l-brand bg-surface p-4"
-      aria-label="检查题"
-    >
-      <div className="flex items-center gap-2">
-        <Typography.Text strong>检查题</Typography.Text>
-        <span className="font-code text-xs text-ink-subtle">{isChoice ? '单选题' : '简答题'}</span>
+    <section className={CARD_CLASS} aria-label="检查题">
+      <div className={HEADER_CLASS}>
+        <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
+        <span className="text-[11px] font-medium text-warning">作答检查点</span>
+        <span className="ml-auto text-[10.5px] text-ink-subtle">
+          {isChoice ? '单选题' : '简答题'}
+        </span>
       </div>
-      <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
-        <legend className="w-full p-0 text-[15px] font-medium leading-[1.75] text-ink">
+      <fieldset className="m-0 flex flex-col border-0 p-0">
+        <legend className="w-full px-4 pt-3.5 pb-1 text-[14px] leading-6 font-medium text-ink">
           <Markdown content={question.stem} />
         </legend>
         {isChoice ? (
           <Radio.Group
             value={answer}
             onChange={(event) => setAnswer(event.target.value as string)}
-            className="block"
+            className="flex flex-col"
           >
-            <Space direction="vertical" size={8}>
-              {(question.options ?? []).map((option, position) => {
-                const letter = LETTERS[position] ?? String(position + 1);
-                return (
-                  <Radio key={letter} value={letter}>
-                    <span className="inline-flex items-baseline gap-2.5">
-                      <span className="min-w-3.5 font-code text-ink-muted">{letter}</span>
-                      <span>{option}</span>
-                    </span>
-                  </Radio>
-                );
-              })}
-            </Space>
+            {(question.options ?? []).map((option, position) => {
+              const letter = LETTERS[position] ?? String(position + 1);
+              return (
+                <label
+                  key={letter}
+                  className="flex cursor-pointer items-start gap-3 border-t border-warning/20 px-4 py-2.5 transition-colors hover:bg-warning/5"
+                >
+                  <Radio value={letter} className="mt-0.5" />
+                  <span className="min-w-0 text-[13.5px] leading-6 text-ink">
+                    <span className="mr-1.5 font-code text-ink-subtle">{letter}</span>
+                    {option}
+                  </span>
+                </label>
+              );
+            })}
           </Radio.Group>
         ) : (
-          <Input.TextArea
-            value={answer}
-            onChange={(event) => setAnswer(event.target.value)}
-            placeholder="写下你的理解"
-            autoSize={{ minRows: 3, maxRows: 8 }}
-            maxLength={ANSWER_LIMIT}
-            showCount
-          />
+          <div className="px-4 pt-1 pb-3">
+            <Input.TextArea
+              variant="borderless"
+              value={answer}
+              onChange={(event) => setAnswer(event.target.value)}
+              placeholder="写下你的理解"
+              autoSize={{ minRows: 3, maxRows: 8 }}
+              maxLength={ANSWER_LIMIT}
+              className="rounded-chip border border-line-strong bg-surface px-3 py-2 focus:outline-none"
+            />
+          </div>
         )}
       </fieldset>
-      {entry?.error ? <Alert type="error" showIcon message={entry.error} /> : null}
-      <div className="flex justify-end gap-2 max-[767px]:flex-col-reverse">
-        <Button onClick={stop}>终止本轮</Button>
+      {entry?.error ? (
+        <div className="px-4 pb-3">
+          <Alert type="error" showIcon message={entry.error} />
+        </div>
+      ) : null}
+      <div className={FOOTER_CLASS}>
+        <Button type="text" onClick={stop}>
+          终止本轮
+        </Button>
         <Button type="primary" loading={submitting} disabled={!canSubmit} onClick={handleSubmit}>
           提交作答
         </Button>

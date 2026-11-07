@@ -1,10 +1,10 @@
-import { Sender } from '@ant-design/x';
 import { useState } from 'react';
 
-import { UploadTray } from '@/features/upload/UploadTray';
+import { AttachmentThumbs } from '@/features/upload/AttachmentThumbs';
 import type { UseUploadsResult } from '@/features/upload/use-uploads';
 import type { SessionPhase } from '@/lib/agentscope/project';
-import { useIsMobile } from '@/lib/use-media-query';
+
+import { ComposerCard } from './ComposerCard';
 
 export interface ChatComposerProps {
   value: string;
@@ -14,7 +14,6 @@ export interface ChatComposerProps {
   phase: SessionPhase;
   onStop: () => void;
   disabled?: boolean;
-  placeholder?: string;
 }
 
 const TEXT_LIMIT = 20000;
@@ -27,15 +26,14 @@ export function ChatComposer({
   phase,
   onStop,
   disabled = false,
-  placeholder,
 }: ChatComposerProps) {
-  const isMobile = useIsMobile();
   const [submitting, setSubmitting] = useState(false);
   const running = phase === 'running';
   const blocked = disabled || phase === 'reconnecting';
 
   const canSubmit =
     !blocked &&
+    !running &&
     !submitting &&
     uploads.canSend &&
     (value.trim().length > 0 || uploads.readyIds.length > 0);
@@ -57,39 +55,40 @@ export function ChatComposer({
   };
 
   return (
-    <div className="w-full border-t border-line bg-surface py-3 pb-[calc(12px+env(safe-area-inset-bottom))]">
-      <Sender
-        value={value}
-        onChange={(next) => onChange(next.slice(0, TEXT_LIMIT))}
-        onSubmit={() => {
-          void handleSubmit();
-        }}
-        loading={running}
-        onCancel={onStop}
-        disabled={blocked}
-        placeholder={
-          placeholder ?? (isMobile ? '向老师提问…' : '向老师提问，Enter 发送，Shift + Enter 换行')
-        }
-        autoSize={{ minRows: 1, maxRows: 8 }}
-        aria-label="输入问题"
-        header={
-          <UploadTray
-            items={uploads.items}
-            error={uploads.error}
-            onAdd={uploads.addFiles}
-            onRemove={uploads.removeItem}
-            onRetry={uploads.retryItem}
-            disabled={blocked}
-          />
-        }
-      />
-      <div className="flex items-center justify-between gap-3 px-1 pt-1.5 text-xs text-ink-subtle">
-        <span className="data-text">
-          {value.trim().length} / {TEXT_LIMIT}
-        </span>
+    <div className="shrink-0 bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] lg:px-8">
+      <div className="mx-auto w-full max-w-[820px]">
         {phase === 'reconnecting' ? (
-          <span className="text-warning">正在恢复连接，暂不能发送</span>
+          <p className="mb-2 text-[11.5px] text-warning">正在恢复连接，暂不能发送</p>
         ) : null}
+        <ComposerCard
+          value={value}
+          onChange={(next) => onChange(next.slice(0, TEXT_LIMIT))}
+          onSubmit={() => void handleSubmit()}
+          canSubmit={canSubmit}
+          disabled={blocked}
+          submitting={submitting}
+          running={running}
+          onStop={onStop}
+          onPickFiles={uploads.addFiles}
+          attachments={
+            <AttachmentThumbs
+              items={uploads.items.map((item) => ({
+                uid: item.uid,
+                previewUrl: item.previewUrl,
+                status: item.status,
+                percent: item.percent,
+              }))}
+              disabled={blocked}
+              onRemove={uploads.removeItem}
+              onRetry={uploads.retryItem}
+            />
+          }
+          notice={
+            uploads.error ? (
+              <p className="px-3.5 pt-2 text-[11.5px] text-danger">{uploads.error}</p>
+            ) : null
+          }
+        />
       </div>
     </div>
   );

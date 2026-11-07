@@ -1,48 +1,20 @@
-import { Bubble } from '@ant-design/x';
-import type { BubbleItemType } from '@ant-design/x';
 import { Button } from 'antd';
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentRef,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { UIEvent } from 'react';
 
 import type { ChatMessage } from '@/lib/agentscope/project';
 
 import { AssistantMessage, SystemMessage, UserMessage } from './MessageItem';
 
-function stickToBottom(box: HTMLDivElement | undefined): void {
-  if (box) {
-    box.scrollTop = box.scrollHeight;
-  }
-}
-
 const STICK_THRESHOLD = 120;
 const JUMP_THRESHOLD = 200;
 const LOAD_MORE_THRESHOLD = 80;
 
-const ROLE_CONFIG = {
-  user: {
-    placement: 'end' as const,
-    variant: 'borderless' as const,
-    contentRender: (content: unknown) => <UserMessage message={content as ChatMessage} />,
-  },
-  assistant: {
-    placement: 'start' as const,
-    variant: 'borderless' as const,
-    contentRender: (content: unknown) => <AssistantMessage message={content as ChatMessage} />,
-  },
-  system: {
-    placement: 'start' as const,
-    variant: 'borderless' as const,
-    contentRender: (content: unknown) => <SystemMessage message={content as ChatMessage} />,
-  },
-};
+function stickToBottom(box: HTMLDivElement | null): void {
+  if (box) {
+    box.scrollTop = box.scrollHeight;
+  }
+}
 
 export interface MessageListProps {
   messages: ChatMessage[];
@@ -61,36 +33,15 @@ export function MessageList({
   onLoadOlder,
   ariaLive = true,
 }: MessageListProps) {
-  const listRef = useRef<ComponentRef<typeof Bubble.List>>(null);
+  const boxRef = useRef<HTMLDivElement | null>(null);
   const stickRef = useRef(true);
   const loadingRef = useRef(false);
   const [showJump, setShowJump] = useState(false);
 
-  const items = useMemo<BubbleItemType[]>(
-    () =>
-      messages.map((message) => ({
-        key: message.id,
-        role: message.role,
-        content: message,
-        streaming: message.role === 'assistant' && !message.finished_at,
-      })),
-    [messages],
-  );
-
   const longList = messages.length > 40;
-  const listClassNames = useMemo(
-    () =>
-      longList
-        ? {
-            bubble: '[content-visibility:auto] [contain-intrinsic-size:auto_120px]',
-            scroll: 'pt-2 pb-6',
-          }
-        : { scroll: 'pt-2 pb-6' },
-    [longList],
-  );
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
-    const box = listRef.current?.scrollBoxNativeElement;
+    const box = boxRef.current;
     if (!box) {
       return;
     }
@@ -103,7 +54,7 @@ export function MessageList({
     if (!stickRef.current) {
       return;
     }
-    stickToBottom(listRef.current?.scrollBoxNativeElement);
+    stickToBottom(boxRef.current);
   });
 
   useEffect(() => {
@@ -111,7 +62,7 @@ export function MessageList({
       return;
     }
     const frame = requestAnimationFrame(() => {
-      stickToBottom(listRef.current?.scrollBoxNativeElement);
+      stickToBottom(boxRef.current);
     });
     return () => cancelAnimationFrame(frame);
   });
@@ -123,13 +74,13 @@ export function MessageList({
     stickRef.current = true;
     setShowJump(false);
     const frame = requestAnimationFrame(() => {
-      stickToBottom(listRef.current?.scrollBoxNativeElement);
+      stickToBottom(boxRef.current);
     });
     return () => cancelAnimationFrame(frame);
   }, [stickSignal]);
 
   const handleLoadOlder = useCallback(async () => {
-    const box = listRef.current?.scrollBoxNativeElement;
+    const box = boxRef.current;
     if (!box || loadingRef.current || !hasMore) {
       return;
     }
@@ -140,7 +91,7 @@ export function MessageList({
     } finally {
       loadingRef.current = false;
       requestAnimationFrame(() => {
-        const next = listRef.current?.scrollBoxNativeElement;
+        const next = boxRef.current;
         if (!next) {
           return;
         }
@@ -164,22 +115,42 @@ export function MessageList({
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      {loadingOlder ? (
-        <div className="py-1 text-center text-xs text-ink-subtle">正在加载更早的消息</div>
-      ) : null}
-      <Bubble.List
-        ref={listRef}
-        className="h-full min-h-0 flex-1"
-        classNames={listClassNames}
-        items={items}
-        role={ROLE_CONFIG}
-        autoScroll={false}
+      <div
+        ref={boxRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         onScroll={handleScroll}
         aria-live={ariaLive ? 'polite' : undefined}
-      />
+      >
+        <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-4 py-5 lg:px-8 lg:py-6">
+          {loadingOlder ? (
+            <div className="py-1 text-center text-[11px] text-ink-subtle">正在加载更早的消息</div>
+          ) : null}
+          {messages.map((message, index) => {
+            const last = index === messages.length - 1;
+            return (
+              <div
+                key={message.id}
+                className={
+                  longList
+                    ? '[content-visibility:auto] [contain-intrinsic-size:auto_120px]'
+                    : undefined
+                }
+              >
+                {message.role === 'assistant' ? (
+                  <AssistantMessage message={message} last={last} />
+                ) : message.role === 'user' ? (
+                  <UserMessage message={message} />
+                ) : (
+                  <SystemMessage message={message} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
       {showJump ? (
         <Button
-          className="absolute right-4 bottom-4 z-5 shadow-[0_2px_8px_rgb(16_23_32/12%)] max-[767px]:right-3 max-[767px]:bottom-3"
+          className="absolute bottom-4 left-1/2 z-5 -translate-x-1/2 shadow-[0_2px_8px_rgb(16_23_32/12%)] max-[767px]:bottom-3"
           size="small"
           shape="round"
           onClick={() => scrollToBottom('smooth')}

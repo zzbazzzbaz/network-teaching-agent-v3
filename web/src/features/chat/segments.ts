@@ -88,6 +88,7 @@ export function buildSegments(message: Msg): MessageSegments {
       case 'tool_call': {
         if (block.name === 'quiz_student') {
           quizCalls.push(block);
+          break;
         }
         pendingCalls.push(block);
         break;

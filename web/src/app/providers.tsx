@@ -68,6 +68,15 @@ const themeConfig = {
     Card: {
       paddingLG: 20,
     },
+    Segmented: {
+      trackBg: '#EFF2F4',
+      trackPadding: 2,
+      itemColor: '#55606E',
+      itemHoverBg: '#E4E8ED',
+      itemHoverColor: '#101720',
+      itemSelectedBg: '#FFFFFF',
+      itemSelectedColor: '#101720',
+    },
     Table: {
       headerBg: '#EFF2F4',
       headerSplitColor: 'transparent',

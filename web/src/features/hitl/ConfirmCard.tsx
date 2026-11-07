@@ -32,19 +32,24 @@ export function ConfirmCard({ pending }: { pending: PendingConfirm }) {
 
   return (
     <section
-      className="mt-3 flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
+      className="overflow-hidden rounded-card border border-warning/35 bg-warning/[0.04]"
       aria-label="工具确认"
     >
-      <div className="flex items-center gap-2">
-        <Typography.Text strong>需要确认</Typography.Text>
+      <div className="flex items-center gap-2 border-b border-warning/25 px-4 py-2">
+        <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
+        <span className="text-[11px] font-medium text-warning">需要确认</span>
       </div>
-      <Typography.Text type="secondary">
-        本轮要执行以下操作：
-        {pending.toolCalls.map((call) => TOOL_LABELS[call.name] ?? '外部工具').join('、')}
-      </Typography.Text>
-      {entry?.error ? <Alert type="error" showIcon message={entry.error} /> : null}
-      <div className="flex justify-end gap-2 max-[767px]:flex-col-reverse">
-        <Button onClick={stop}>终止本轮</Button>
+      <div className="flex flex-col gap-3 px-4 py-3.5">
+        <Typography.Text type="secondary" className="text-[13px]">
+          本轮要执行以下操作：
+          {pending.toolCalls.map((call) => TOOL_LABELS[call.name] ?? '外部工具').join('、')}
+        </Typography.Text>
+        {entry?.error ? <Alert type="error" showIcon message={entry.error} /> : null}
+      </div>
+      <div className="flex items-center justify-end gap-2 border-t border-warning/25 px-4 py-2.5 max-[767px]:flex-col-reverse">
+        <Button type="text" onClick={stop}>
+          终止本轮
+        </Button>
         <Button danger loading={submitting} onClick={() => void handleConfirm(false)}>
           拒绝
         </Button>

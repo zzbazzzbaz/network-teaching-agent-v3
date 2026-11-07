@@ -132,7 +132,7 @@ export function Markdown({ content, streaming = false, className }: MarkdownProp
   const config = useMarkdownConfig(content);
   return (
     <div
-      className={`markdown-body ${className ?? ''}`}
+      className={`markdown-body ${streaming ? 'streaming-caret' : ''} ${className ?? ''}`}
       data-streaming={streaming ? 'true' : 'false'}
     >
       <XMarkdown

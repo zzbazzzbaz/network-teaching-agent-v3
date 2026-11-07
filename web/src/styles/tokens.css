@@ -6,6 +6,7 @@
   --ink-600: #55606e;
   --ink-400: #6b7684;
   --line: #e4e8ed;
+  --line-strong: #cfd6dd;
   --brand-600: #12586b;
   --brand-500: #1b7089;
   --brand-50: #eaf2f4;
@@ -23,5 +24,4 @@
 
   --sidebar-width: 264px;
   --content-max: 1100px;
-  --chat-max: 760px;
 }

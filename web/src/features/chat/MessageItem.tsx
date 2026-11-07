@@ -2,10 +2,10 @@ import { Actions } from '@ant-design/x';
 import { Alert, Button, Image, Typography } from 'antd';
 import { useMemo } from 'react';
 
-import { ConfirmCard } from '@/features/hitl/ConfirmCard';
-import { QuizCard } from '@/features/hitl/QuizCard';
 import { ToolChain } from '@/features/chat/ToolChain';
 import { useChatActions } from '@/features/chat/chat-actions';
+import { ConfirmCard } from '@/features/hitl/ConfirmCard';
+import { QuizCard } from '@/features/hitl/QuizCard';
 import type { ChatMessage } from '@/lib/agentscope/project';
 import { useChatStore } from '@/stores/chat-store';
 
@@ -15,16 +15,16 @@ import { buildSegments, messagePlainText } from './segments';
 function ThinkingBlock({ text, streaming }: { text: string; streaming: boolean }) {
   return (
     <details
-      className="my-2 rounded-card bg-surface-sunken px-3 py-2 text-[13px] text-ink-muted"
+      className="rounded-card border border-line bg-surface-sunken/60 px-3 py-2 text-[12.5px] leading-6 text-ink-muted"
       open={streaming}
     >
-      <summary className="cursor-pointer select-none">思考过程</summary>
-      <div className="mt-2 whitespace-pre-wrap leading-[1.7]">{text}</div>
+      <summary className="cursor-pointer select-none text-[12px] text-ink-subtle">思考过程</summary>
+      <div className="mt-2 whitespace-pre-wrap leading-[1.75]">{text}</div>
     </details>
   );
 }
 
-export function AssistantMessage({ message }: { message: ChatMessage }) {
+export function AssistantMessage({ message, last }: { message: ChatMessage; last: boolean }) {
   const { retry } = useChatActions();
   const { segments, quizCalls } = useMemo(() => buildSegments(message), [message]);
   const pendingConfirm = useChatStore((state) => state.runtime?.pendingConfirm ?? null);
@@ -33,74 +33,82 @@ export function AssistantMessage({ message }: { message: ChatMessage }) {
   const isError = message.finished_reason === 'error';
 
   return (
-    <div className="w-full text-ink">
-      {segments.map((segment) => {
-        if (segment.kind === 'text') {
-          return (
-            <Markdown
-              key={segment.key}
-              content={segment.text}
-              streaming={segment.streaming && streaming}
-            />
-          );
-        }
-        if (segment.kind === 'thinking') {
-          return (
-            <ThinkingBlock
-              key={segment.key}
-              text={segment.text}
-              streaming={segment.streaming && streaming}
-            />
-          );
-        }
-        if (segment.kind === 'tools') {
-          return <ToolChain key={segment.key} calls={segment.calls} results={segment.results} />;
-        }
-        return (
-          <Image
-            key={segment.key}
-            src={segment.src}
-            alt={segment.alt}
-            referrerPolicy="no-referrer"
-            style={{ maxWidth: 320 }}
-            className="rounded-card border border-line"
-          />
-        );
-      })}
-
-      {isError ? (
-        <Alert
-          className="mt-3"
-          type="error"
-          showIcon
-          message="本轮生成失败"
-          description={message.error?.message ?? '生成过程中出现错误，可以重试一次。'}
-          action={
-            <Button size="small" onClick={retry}>
-              重试
-            </Button>
+    <div className="relative min-w-0 pl-7 lg:pl-8">
+      {last ? null : (
+        <span aria-hidden="true" className="trace-line absolute top-4 bottom-0 left-[3px] w-px" />
+      )}
+      <span
+        aria-hidden="true"
+        className="absolute top-2 left-0 size-[7px] rounded-full bg-brand ring-2 ring-surface"
+      />
+      <div className="flex min-w-0 flex-col gap-3">
+        {segments.map((segment) => {
+          if (segment.kind === 'text') {
+            return (
+              <Markdown
+                key={segment.key}
+                content={segment.text}
+                streaming={segment.streaming && streaming}
+              />
+            );
           }
-        />
-      ) : null}
+          if (segment.kind === 'thinking') {
+            return (
+              <ThinkingBlock
+                key={segment.key}
+                text={segment.text}
+                streaming={segment.streaming && streaming}
+              />
+            );
+          }
+          if (segment.kind === 'tools') {
+            return <ToolChain key={segment.key} calls={segment.calls} results={segment.results} />;
+          }
+          return (
+            <Image
+              key={segment.key}
+              src={segment.src}
+              alt={segment.alt}
+              referrerPolicy="no-referrer"
+              style={{ maxWidth: 320 }}
+              className="rounded-card border border-line"
+            />
+          );
+        })}
 
-      {quizCalls.map((call) => (
-        <QuizCard key={call.id} replyId={message.id} toolCall={call} />
-      ))}
+        {isError ? (
+          <Alert
+            type="error"
+            showIcon
+            message="本轮生成失败"
+            description={message.error?.message ?? '生成过程中出现错误，可以重试一次。'}
+            action={
+              <Button size="small" onClick={retry}>
+                重试
+              </Button>
+            }
+          />
+        ) : null}
 
-      {pendingConfirm && pendingConfirm.replyId === message.id ? (
-        <ConfirmCard pending={pendingConfirm} />
-      ) : null}
+        {quizCalls.map((call) => (
+          <QuizCard key={call.id} replyId={message.id} toolCall={call} />
+        ))}
 
-      {!streaming && copyText ? (
-        <div className="mt-2 flex min-h-7 items-center gap-3">
-          <Actions.Copy text={copyText} />
-          {message.usage ? (
-            <Typography.Text type="secondary" className="font-code text-xs">
-              {message.usage.input_tokens} / {message.usage.output_tokens} tokens
-            </Typography.Text>
-          ) : null}
-        </div>
-      ) : null}
+        {pendingConfirm && pendingConfirm.replyId === message.id ? (
+          <ConfirmCard pending={pendingConfirm} />
+        ) : null}
+
+        {!streaming && copyText ? (
+          <div className="flex min-h-7 items-center gap-3 text-[11px] text-ink-subtle">
+            <Actions.Copy text={copyText} />
+            {message.usage ? (
+              <Typography.Text type="secondary" className="font-code text-[11px]">
+                {message.usage.input_tokens} / {message.usage.output_tokens} tokens
+              </Typography.Text>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -114,7 +122,7 @@ export function UserMessage({ message }: { message: ChatMessage }) {
           return (
             <div
               key={block.id}
-              className="max-w-[min(86vw,640px)] whitespace-pre-wrap rounded-[14px_14px_4px_14px] bg-brand-soft px-3.5 py-2.5 text-[15px] leading-[1.7] [overflow-wrap:anywhere]"
+              className="ml-auto w-fit max-w-[86%] rounded-card border border-line bg-surface-sunken px-3.5 py-2.5 text-[14px] leading-7 whitespace-pre-wrap text-ink [overflow-wrap:anywhere]"
             >
               {block.text}
             </div>
@@ -139,7 +147,7 @@ export function UserMessage({ message }: { message: ChatMessage }) {
         return null;
       })}
       {message.client_status === 'failed' ? (
-        <div className="flex items-center gap-1 text-xs">
+        <div className="flex items-center gap-1 text-[11px]">
           <Typography.Text type="danger">发送失败</Typography.Text>
           <Button
             type="link"
@@ -157,8 +165,10 @@ export function UserMessage({ message }: { message: ChatMessage }) {
 export function SystemMessage({ message }: { message: ChatMessage }) {
   const text = messagePlainText(message);
   return (
-    <div className="w-full border-l-2 border-line py-1 pl-3 text-[13px]">
-      <Typography.Text type="secondary">{text}</Typography.Text>
+    <div className="border-l-2 border-line py-1 pl-3 text-[12.5px] text-ink-muted">
+      <Typography.Text type="secondary" className="text-[12.5px]">
+        {text}
+      </Typography.Text>
     </div>
   );
 }
