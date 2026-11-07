@@ -4,12 +4,13 @@ import {
   EditOutlined,
   LineChartOutlined,
   LogoutOutlined,
+  MenuFoldOutlined,
   PlusOutlined,
   ReadOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Conversations } from '@ant-design/x';
-import { Button, Dropdown, Modal, Input, Skeleton, Typography, App } from 'antd';
+import { Button, Dropdown, Modal, Input, Skeleton, Tooltip, Typography, App } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
@@ -24,7 +25,13 @@ const ACCOUNT_ITEMS = [
   { key: 'stats', label: '统计', icon: <LineChartOutlined />, path: '/stats' },
 ];
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({
+  onNavigate,
+  onCollapse,
+}: {
+  onNavigate?: () => void;
+  onCollapse: () => void;
+}) {
   const navigate = useNavigate();
   const params = useParams();
   const { modal } = App.useApp();
@@ -128,14 +135,28 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col px-3 pt-4 pb-3">
-      <div className="flex items-center gap-2.5 px-2 pb-4">
-        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-chip bg-brand font-code text-[13px] tracking-[0.5px] text-white">
-          CN
-        </span>
-        <div>
-          <Typography.Text strong>计算机网络</Typography.Text>
-          <div className="text-xs leading-tight text-ink-subtle">教学智能体</div>
+      <div className="flex items-center justify-between gap-2 px-2 pb-4">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-chip bg-brand font-code text-[13px] tracking-[0.5px] text-white">
+            CN
+          </span>
+          <div className="min-w-0">
+            <Typography.Text strong className="block truncate">
+              计算机网络
+            </Typography.Text>
+            <div className="truncate text-xs leading-tight text-ink-subtle">教学智能体</div>
+          </div>
         </div>
+        <Tooltip title="收起侧边栏">
+          <Button
+            className="-mr-1 shrink-0 text-ink-subtle"
+            type="text"
+            size="small"
+            icon={<MenuFoldOutlined />}
+            onClick={onCollapse}
+            aria-label="收起侧边栏"
+          />
+        </Tooltip>
       </div>
 
       <Button
