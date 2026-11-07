@@ -15,6 +15,12 @@ logger = logging.getLogger(__name__)
 _MAX_CACHED = 256
 _WRITE_FLUSH_TIMEOUT_SECS = 30.0
 _WRITE_QUEUE_WARN_SIZE = 8
+_AUTO_MEMORY_JOB = "auto_memory"
+_MEMORY_HINT = (
+    "只记录学生画像、已掌握/未掌握的知识点、薄弱点、学习目标和讲解偏好。"
+    "不要记录待办清单、未回答的问题、会话进度、下一步计划, "
+    "也不要记录智能体的工作流教训。"
+)
 
 _CACHE: OrderedDict[str, _BackgroundWriteReMeMiddleware] = OrderedDict()
 _LOCK = asyncio.Lock()
@@ -80,11 +86,29 @@ class _BackgroundWriteReMeMiddleware(ReMeMiddleware):
         if self._write_worker is None or self._write_worker.done():
             self._write_worker = asyncio.create_task(self._drain_writes())
 
+    async def _persist(self, messages: list[Msg], session_id: str | None) -> None:
+        if not session_id:
+            logger.warning("ReMe write skipped: no session_id captured from the agent.")
+            return
+        try:
+            await self._run_job(
+                _AUTO_MEMORY_JOB,
+                messages=[message.model_dump(mode="json") for message in messages],
+                session_id=session_id,
+                memory_hint=_MEMORY_HINT,
+            )
+        except Exception:
+            logger.warning(
+                "ReMe auto_memory failed: session_id=%s",
+                session_id,
+                exc_info=True,
+            )
+
     async def _drain_writes(self) -> None:
         while True:
             messages, session_id = await self._write_queue.get()
             try:
-                await super()._write_back(messages, session_id)
+                await self._persist(messages, session_id)
             finally:
                 self._write_queue.task_done()
 

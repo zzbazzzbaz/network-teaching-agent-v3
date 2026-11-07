@@ -30,7 +30,11 @@ async def test_write_back_returns_before_job_finishes(
         started.set()
         await release.wait()
 
-    monkeypatch.setattr(ReMeMiddleware, "_write_back", fake_write_back)
+    monkeypatch.setattr(
+        _BackgroundWriteReMeMiddleware,
+        "_persist",
+        fake_write_back,
+    )
 
     memory = _BackgroundWriteReMeMiddleware(workspace_dir=str(tmp_path))
     try:
@@ -44,6 +48,34 @@ async def test_write_back_returns_before_job_finishes(
         await asyncio.wait_for(memory._write_queue.join(), timeout=1)
     finally:
         await memory.close()
+
+
+@pytest.mark.asyncio
+async def test_write_back_passes_student_profile_hint(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    calls: list[tuple[str, dict]] = []
+
+    async def fake_run_job(
+        self: ReMeMiddleware,
+        name: str,
+        **kwargs,
+    ) -> None:
+        calls.append((name, kwargs))
+
+    monkeypatch.setattr(ReMeMiddleware, "_run_job", fake_run_job)
+
+    memory = _BackgroundWriteReMeMiddleware(workspace_dir=str(tmp_path))
+    try:
+        await memory._persist([_msg("turn-1")], "session-1")
+    finally:
+        await memory.close()
+
+    assert calls[0][0] == "auto_memory"
+    assert calls[0][1]["session_id"] == "session-1"
+    assert "学生画像" in calls[0][1]["memory_hint"]
+    assert "会话进度" in calls[0][1]["memory_hint"]
 
 
 @pytest.mark.asyncio
@@ -66,7 +98,11 @@ async def test_write_back_is_serialized_per_user(
             first_started.set()
             await release_first.wait()
 
-    monkeypatch.setattr(ReMeMiddleware, "_write_back", fake_write_back)
+    monkeypatch.setattr(
+        _BackgroundWriteReMeMiddleware,
+        "_persist",
+        fake_write_back,
+    )
 
     memory = _BackgroundWriteReMeMiddleware(workspace_dir=str(tmp_path))
     try:
@@ -101,7 +137,11 @@ async def test_flush_waits_for_pending_writes(
         await release.wait()
         finished.append(messages[0].get_text_content() or "")
 
-    monkeypatch.setattr(ReMeMiddleware, "_write_back", fake_write_back)
+    monkeypatch.setattr(
+        _BackgroundWriteReMeMiddleware,
+        "_persist",
+        fake_write_back,
+    )
 
     memory = _BackgroundWriteReMeMiddleware(workspace_dir=str(tmp_path))
     try:
