@@ -1,5 +1,3 @@
-import asyncio
-import json
 from pathlib import Path
 
 import pytest
@@ -15,23 +13,13 @@ def _text(chunk) -> str:
 
 
 @pytest.fixture
-def library_root(tmp_path: Path) -> Path:
-    root = tmp_path / "library"
+def materials_root(tmp_path: Path) -> Path:
+    root = tmp_path / "materials"
     book = root / "test-book"
-    textbook = book / "textbook"
-    chapter = textbook / "01-章"
-    figures = book / "figures"
-    hidden = book / ".index"
-    for directory in (chapter, figures, hidden):
-        directory.mkdir(parents=True)
-
-    (book / "book.json").write_text(
-        json.dumps({"title": "测试教材", "author": "作者"}, ensure_ascii=False),
-        encoding="utf-8",
-    )
-    (textbook / "00-toc.md").write_text("# 目录\n", encoding="utf-8")
-    (textbook / "many.md").write_text(
-        "第一行\n第二行\n第三行\n第四行\n第五行\n第六行\n",
+    chapter = book / "01-章"
+    chapter.mkdir(parents=True)
+    (book / "00-toc.md").write_text(
+        "# 目录\n\n- 1.1 小节标题(教材 10)\n",
         encoding="utf-8",
     )
     (chapter / "1.1-小节.md").write_text(
@@ -45,175 +33,112 @@ def library_root(tmp_path: Path) -> Path:
         "\n"
         "第一段包含 TCP 拥塞控制。\n"
         "\n"
-        "![图 1-1 示意图](../figures/fig-1-01.jpg)\n"
-        "\n"
-        "第三段。\n",
+        "第二段。\n",
         encoding="utf-8",
     )
-    (figures / "index.md").write_text("# 图注\n", encoding="utf-8")
-    (figures / "fig-1-01.jpg").write_bytes(b"\xff\xd8\xff")
-    (hidden / "pages.json").write_text("{}", encoding="utf-8")
-
-    plain = root / "plain-book"
-    plain.mkdir()
-    (plain / "2.2-无书名.md").write_text(
-        "---\n"
-        'section: "2.2"\n'
-        'title: "无书名"\n'
-        "book_pages: [20, 22]\n"
-        "---\n"
-        "\n"
-        "内容。\n",
+    (chapter / "many.md").write_text(
+        "第一行\n第二行\n第三行\n第四行\n",
         encoding="utf-8",
     )
-
+    hidden = book / ".hidden"
+    hidden.mkdir()
+    (hidden / "secret.md").write_text("隐藏内容\n", encoding="utf-8")
+    (book / "image.png").write_bytes(b"\x89PNG\r\n")
     secret = tmp_path / "secret.md"
-    secret.write_text("不应被读取\n", encoding="utf-8")
+    secret.write_text("不应读取\n", encoding="utf-8")
     (chapter / "escape.md").symlink_to(secret)
     return root
 
 
 @pytest.mark.asyncio
-async def test_ls_root_and_depth(library_root: Path) -> None:
-    tool = MaterialsLs(root=library_root)
+async def test_ls(materials_root: Path) -> None:
+    tool = MaterialsLs(root=materials_root)
 
     root_text = _text(await tool.call(path="/"))
-    assert "资料库 /" in root_text
     assert "test-book/" in root_text
-    assert "测试教材" in root_text
-    assert ".index" not in root_text
+    assert ".hidden" not in root_text
 
-    depth_text = _text(await tool.call(path="/", depth=2))
-    assert "book.json" in depth_text
-    assert "textbook/" in depth_text
-    assert "figures/" in depth_text
+    book_text = _text(await tool.call(path="/test-book"))
+    assert "00-toc.md" in book_text
+    assert "01-章/" in book_text
+    assert "image.png" in book_text
 
-    textbook_text = _text(await tool.call(path="/test-book/textbook"))
-    assert "01-章/" in textbook_text
-    assert "00-toc.md  目录" in textbook_text
-
-    chapter_text = _text(await tool.call(path="/test-book/textbook/01-章"))
+    chapter_text = _text(await tool.call(path="/test-book/01-章"))
     assert "1.1-小节.md" in chapter_text
-    assert "第1章 1.1 小节标题" in chapter_text
-    assert "第10-12页" in chapter_text
-
-    figures_text = _text(await tool.call(path="/test-book/figures"))
-    assert "index.md" in figures_text
-    assert "fig-1-01.jpg" not in figures_text
+    assert "many.md" in chapter_text
 
 
 @pytest.mark.asyncio
-async def test_read_header_content_and_image(library_root: Path) -> None:
-    tool = MaterialsRead(root=library_root)
-    chunk = await tool.call(path="/test-book/textbook/01-章/1.1-小节.md")
+async def test_read_strips_frontmatter(materials_root: Path) -> None:
+    tool = MaterialsRead(root=materials_root)
+    text = _text(await tool.call(path="/test-book/01-章/1.1-小节.md"))
 
-    text = _text(chunk)
-    assert chunk.state != ToolResultState.ERROR
-    assert "【测试教材 | 第1章 1.1 小节标题 | 第10-12页】" in text
-    assert "(第 1-7 行, 共 7 行)" in text
-    assert "第一段包含 TCP 拥塞控制。" in text
-    assert "图 1-1 示意图" in text
-    assert "figures/fig-1-01.jpg" not in text
     assert "section:" not in text
+    assert "book_pages" not in text
+    assert "# 1.1 小节标题" in text
+    assert "TCP 拥塞控制" in text
 
 
 @pytest.mark.asyncio
-async def test_read_offset_and_truncation(library_root: Path) -> None:
-    tool = MaterialsRead(root=library_root)
+async def test_read_offset_and_limit(materials_root: Path) -> None:
+    tool = MaterialsRead(root=materials_root)
     text = _text(
-        await tool.call(path="/test-book/textbook/many.md", offset=2, limit=3),
+        await tool.call(path="/test-book/01-章/many.md", offset=2, limit=2),
     )
 
-    assert "(第 2-4 行, 共 6 行)" in text
-    assert "第二行" in text
-    assert "第四行" in text
-    assert "第五行" not in text
-    assert "[已截断: 用 offset=5 继续, 共 6 行]" in text
+    assert text == "第二行\n第三行"
 
 
 @pytest.mark.asyncio
-async def test_read_basename_fallback(library_root: Path) -> None:
-    tool = MaterialsRead(root=library_root)
-    chunk = await tool.call(path="1.1-小节.md")
+async def test_path_safety(materials_root: Path, tmp_path: Path) -> None:
+    tool = MaterialsRead(root=materials_root)
 
-    assert chunk.state != ToolResultState.ERROR
-    assert "第1章 1.1 小节标题" in _text(chunk)
-
-
-@pytest.mark.asyncio
-async def test_read_book_json(library_root: Path) -> None:
-    tool = MaterialsRead(root=library_root)
-    text = _text(await tool.call(path="/test-book/book.json"))
-
-    assert '"title": "测试教材"' in text
-
-
-@pytest.mark.asyncio
-async def test_book_title_falls_back_to_slug(library_root: Path) -> None:
-    ls_text = _text(await MaterialsLs(root=library_root).call(path="/"))
-    assert "plain-book/" in ls_text
-
-    read_text = _text(
-        await MaterialsRead(root=library_root).call(path="/plain-book/2.2-无书名.md"),
-    )
-    assert "【plain-book | 第2章 2.2 无书名 | 第20-22页】" in read_text
+    assert (await tool.call(path="../secret.md")).state == ToolResultState.ERROR
+    assert (await tool.call(path="/../secret.md")).state == ToolResultState.ERROR
+    assert (
+        await tool.call(path=str(tmp_path / "secret.md"))
+    ).state == ToolResultState.ERROR
+    assert (
+        await tool.call(path="/test-book/01-章/escape.md")
+    ).state == ToolResultState.ERROR
+    assert (await tool.call(path="/test-book/image.png")).state == ToolResultState.ERROR
+    assert (await tool.call(path="/test-book/01-章")).state == ToolResultState.ERROR
 
 
 @pytest.mark.asyncio
-async def test_path_safety(library_root: Path, tmp_path: Path) -> None:
-    tool = MaterialsRead(root=library_root)
+async def test_grep(materials_root: Path) -> None:
+    tool = MaterialsGrep(root=materials_root)
 
-    traversal = await tool.call(path="../secret.md")
-    assert traversal.state == ToolResultState.ERROR
-
-    absolute = await tool.call(path=str(tmp_path / "secret.md"))
-    assert absolute.state == ToolResultState.ERROR
-
-    symlink = await tool.call(path="/test-book/textbook/01-章/escape.md")
-    assert symlink.state == ToolResultState.ERROR
-
-    directory = await tool.call(path="/test-book/textbook")
-    assert directory.state == ToolResultState.ERROR
-
-    binary = await tool.call(path="/test-book/figures/fig-1-01.jpg")
-    assert binary.state == ToolResultState.ERROR
-
-
-@pytest.mark.asyncio
-async def test_grep_hits_and_scope(library_root: Path) -> None:
-    tool = MaterialsGrep(root=library_root)
-    text = _text(
-        await tool.call(
-            query="TCP 拥塞控制",
-            path="/test-book/textbook",
-        ),
-    )
-
-    assert "[1] /test-book/textbook/01-章/1.1-小节.md" in text
-    assert "【测试教材 | 第1章 1.1 小节标题 | 第10-12页】" in text
-    assert "第一段包含 TCP 拥塞控制。" in text
-    assert "第 " in text
-
-    miss = _text(await tool.call(query="不存在的内容", path="/"))
-    assert "未找到匹配内容" in miss
-
-    scoped = _text(await tool.call(query="TCP", path="/test-book/figures"))
-    assert "未找到匹配内容" in scoped
-
-
-@pytest.mark.asyncio
-async def test_grep_is_case_insensitive(library_root: Path) -> None:
-    tool = MaterialsGrep(root=library_root)
     text = _text(await tool.call(query="tcp"))
+    assert "/test-book/01-章/1.1-小节.md:3: 第一段包含 TCP 拥塞控制。" in text
 
-    assert "/test-book/textbook/01-章/1.1-小节.md" in text
+    scoped = _text(
+        await tool.call(query="第二段", path="/test-book/01-章"),
+    )
+    assert "/test-book/01-章/1.1-小节.md:5: 第二段。" in scoped
+
+    limited = _text(
+        await tool.call(query="行", path="/test-book/01-章/many.md", limit=2),
+    )
+    assert len(limited.splitlines()) == 2
+
+    direct = _text(
+        await tool.call(query="第三行", path="/test-book/01-章/many.md"),
+    )
+    assert "/test-book/01-章/many.md:3: 第三行" in direct
+
+    assert "未找到" in _text(await tool.call(query="隐藏内容"))
+    assert "未找到" in _text(await tool.call(query="不应读取"))
 
 
 @pytest.mark.asyncio
-async def test_concurrent_reads(library_root: Path) -> None:
-    tool = MaterialsRead(root=library_root)
-    path = "/test-book/textbook/01-章/1.1-小节.md"
-    chunks = await asyncio.gather(*(tool.call(path=path) for _ in range(20)))
-
-    assert all(chunk.state != ToolResultState.ERROR for chunk in chunks)
-    assert len({_text(chunk) for chunk in chunks}) == 1
+async def test_missing_paths(materials_root: Path) -> None:
+    assert (
+        await MaterialsLs(root=materials_root).call(path="/missing")
+    ).state == ToolResultState.ERROR
+    assert (
+        await MaterialsRead(root=materials_root).call(path="/missing.md")
+    ).state == ToolResultState.ERROR
+    assert (
+        await MaterialsGrep(root=materials_root).call(query="x", path="/missing")
+    ).state == ToolResultState.ERROR
