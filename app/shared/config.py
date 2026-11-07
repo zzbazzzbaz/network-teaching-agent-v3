@@ -71,9 +71,17 @@ class Settings(_Base):
     agent_base_url: str
     api_base_url: str
     data_root: Path
+    materials_dir: Path | None = None
     max_upload_bytes: int
     agent_http_max_connections: int
     agent_http_max_keepalive_connections: int
+
+    @field_validator("materials_dir", mode="before")
+    @classmethod
+    def _blank_materials_dir(cls, value: object) -> object:
+        if value == "":
+            return None
+        return value
 
     @field_validator("data_root")
     @classmethod
