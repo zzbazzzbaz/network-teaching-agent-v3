@@ -6,20 +6,25 @@
 
 ```text
 library/
-└── <book-slug>/
-    ├── book.json
-    ├── textbook/
-    ├── exercises/
-    ├── answers/
-    └── figures/
+└── computer-networks-8e/
+    ├── 00-toc.md
+    ├── 01-概述/
+    ├── ...
+    ├── 09-无线网络和移动网络/
+    ├── appendices/
+    ├── figures/
+    ├── exercises/          # 可选：习题
+    └── answers/            # 可选：答案
 ```
 
-- `<book-slug>` 使用 ASCII，例如 `computer-networks-8e`；显示名写在 `book.json`。
-- `textbook/` 放教材正文，`exercises/` 放习题，`answers/` 放答案，`figures/` 放图片和图注索引。
+- 书目录使用 ASCII slug，例如 `computer-networks-8e`，它同时是虚拟路径里的书标识。
+- 教材正文直接放在书目录下，不再额外套一层 `textbook/`。
+- `figures/` 放图片和图注索引；章节文件里的图片用 `../figures/...` 引用。
+- 习题、答案等可选目录与章节并列，用英文目录名区分。
 - 子目录和文件名可以用中文，保持原书结构即可。
-- 以 `.` 开头的目录和文件不会出现在虚拟文件系统里，用于放索引等生成物。
+- 以 `.` 开头的目录和文件不会出现在虚拟文件系统里。
 
-`book.json`：
+`book.json` 可选，只用于给 `materials_ls` 和引用头部提供显示名；没有时使用目录 slug：
 
 ```json
 {
@@ -53,8 +58,8 @@ book_pages: [225, 229]
 ## 新增一本书
 
 1. 在 `library/` 下建 ASCII slug 目录；
-2. 写 `book.json`；
-3. 把 Markdown 放进 `textbook/`、`exercises/` 等子目录，按上面的 frontmatter 约定补元数据；
+2. 把 Markdown 直接放进书目录，按上面的 frontmatter 约定补元数据；
+3. 需要中文显示名时再放 `book.json`，不需要就不用；
 4. 不需要改代码，agent 通过 `materials_ls`、`materials_read`、`materials_grep` 访问。
 
 ## 部署

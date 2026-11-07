@@ -54,6 +54,19 @@ def library_root(tmp_path: Path) -> Path:
     (figures / "fig-1-01.jpg").write_bytes(b"\xff\xd8\xff")
     (hidden / "pages.json").write_text("{}", encoding="utf-8")
 
+    plain = root / "plain-book"
+    plain.mkdir()
+    (plain / "2.2-无书名.md").write_text(
+        "---\n"
+        'section: "2.2"\n'
+        'title: "无书名"\n'
+        "book_pages: [20, 22]\n"
+        "---\n"
+        "\n"
+        "内容。\n",
+        encoding="utf-8",
+    )
+
     secret = tmp_path / "secret.md"
     secret.write_text("不应被读取\n", encoding="utf-8")
     (chapter / "escape.md").symlink_to(secret)
@@ -133,6 +146,17 @@ async def test_read_book_json(library_root: Path) -> None:
     text = _text(await tool.call(path="/test-book/book.json"))
 
     assert '"title": "测试教材"' in text
+
+
+@pytest.mark.asyncio
+async def test_book_title_falls_back_to_slug(library_root: Path) -> None:
+    ls_text = _text(await MaterialsLs(root=library_root).call(path="/"))
+    assert "plain-book/" in ls_text
+
+    read_text = _text(
+        await MaterialsRead(root=library_root).call(path="/plain-book/2.2-无书名.md"),
+    )
+    assert "【plain-book | 第2章 2.2 无书名 | 第20-22页】" in read_text
 
 
 @pytest.mark.asyncio

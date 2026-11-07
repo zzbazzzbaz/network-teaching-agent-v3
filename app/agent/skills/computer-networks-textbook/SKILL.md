@@ -17,10 +17,9 @@ metadata:
 
 ```text
 /computer-networks-8e/
-├── textbook/
-│   ├── 00-toc.md          # 书本目录（章节结构、页码）
-│   ├── 01-概述/ ... 09-无线网络和移动网络/
-│   └── appendices/
+├── 00-toc.md              # 书本目录（章节结构、页码）
+├── 01-概述/ ... 09-无线网络和移动网络/
+├── appendices/
 └── figures/
     └── index.md           # 图注索引
 ```
@@ -29,11 +28,11 @@ metadata:
 
 ## 2. 检索流程
 
-1. 定位：`materials_ls("/computer-networks-8e/textbook")` 看章节；不确定文件名时用 `materials_grep("拥塞控制", path="/computer-networks-8e/textbook")`；
-2. 读正文：`materials_read("/computer-networks-8e/textbook/05-运输层/5.8.2-TCP的拥塞控制方法.md")`；
+1. 定位：`materials_ls("/computer-networks-8e")` 看章节；不确定文件名时用 `materials_grep("拥塞控制", path="/computer-networks-8e")`；
+2. 读正文：`materials_read("/computer-networks-8e/05-运输层/5.8.2-TCP的拥塞控制方法.md")`；
 3. 引用：只取回答需要的一两段，按工具返回的 `【…】` 头部作答。
 
-章节地图用 `textbook/00-toc.md` 或 `materials_ls`，不要为此读完整章正文。
+章节地图用 `00-toc.md` 或 `materials_ls`，不要为此读完整章正文。
 
 第一轮没命中就换同义词、英文缩写或相邻小节，不要猜。
 
