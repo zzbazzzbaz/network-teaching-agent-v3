@@ -11,7 +11,7 @@ import { describeToolCall, describeToolResult, toolStatus } from '@/lib/agentsco
 
 import { Markdown } from './markdown';
 
-const MEMORY_TOOLS = new Set(['memory_search', 'search_knowledge']);
+const MEMORY_TOOLS = new Set(['memory_search']);
 
 function StatusIcon({ status }: { status: ReturnType<typeof toolStatus> }) {
   if (status === 'loading') {

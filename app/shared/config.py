@@ -51,21 +51,29 @@ class JWTSettings(_Base):
     refresh_token_days: int
 
 
+class TracingSettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="OTEL_")
+
+    enabled: bool = False
+    exporter_otlp_endpoint: str | None = None
+    exporter_otlp_headers: str | None = None
+    service_name: str = "network-agent"
+
+
 class Settings(_Base):
     llm: LLMSettings = Field(default_factory=LLMSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     db: DBSettings = Field(default_factory=DBSettings)
     cos: COSSettings = Field(default_factory=COSSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
+    tracing: TracingSettings = Field(default_factory=TracingSettings)
 
     agent_base_url: str
     api_base_url: str
     data_root: Path
-    qdrant_url: str
     max_upload_bytes: int
     agent_http_max_connections: int
     agent_http_max_keepalive_connections: int
-    textbook_kb_id: str | None = None
 
     @field_validator("data_root")
     @classmethod
@@ -74,13 +82,6 @@ class Settings(_Base):
             raise ValueError("必须是绝对路径")
         return value.resolve()
 
-    @field_validator("textbook_kb_id", mode="before")
-    @classmethod
-    def _blank_to_none(cls, value: object) -> object:
-        if value == "":
-            return None
-        return value
-
     @property
     def workspaces_dir(self) -> Path:
         return self.data_root / "workspaces"
@@ -88,10 +89,6 @@ class Settings(_Base):
     @property
     def memory_dir(self) -> Path:
         return self.data_root / "memory" / "reme"
-
-    @property
-    def kb_blobs_dir(self) -> Path:
-        return self.data_root / "blobs"
 
 
 @lru_cache

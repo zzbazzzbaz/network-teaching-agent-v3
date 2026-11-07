@@ -6,8 +6,9 @@ from typing import ClassVar
 
 from agentscope.agent import Agent
 from agentscope.message import Usage
-from agentscope.middleware import MiddlewareBase
+from agentscope.middleware import MiddlewareBase, TracingMiddleware
 from agentscope.workspace import LocalWorkspace, WorkspaceBase
+from opentelemetry import trace
 
 from app.agent.runtime.memory import get_memory
 from app.agent.runtime.workspace import TEACHING_WORKSPACE_INSTRUCTIONS
@@ -109,6 +110,25 @@ class MemoryOnlyToolsMiddleware(MiddlewareBase):
             yield item
 
 
+class TracingUserMiddleware(MiddlewareBase):
+    """把学生 ID 写入 trace 便于按用户筛选"""
+
+    def __init__(self, user_id: str) -> None:
+        self._user_id = user_id
+
+    async def on_reply(
+        self,
+        agent: Agent,
+        input_kwargs: dict,
+        next_handler: Callable[..., AsyncGenerator],
+    ) -> AsyncGenerator:
+        span = trace.get_current_span()
+        if span.is_recording():
+            span.set_attribute("user.id", self._user_id)
+        async for item in next_handler(**input_kwargs):
+            yield item
+
+
 async def agent_middlewares(
     user_id: str,
     agent_id: str,
@@ -122,4 +142,6 @@ async def agent_middlewares(
         UsageReportMiddleware(user_id, session_id),
         await get_memory(get_settings(), user_id),
         MemoryOnlyToolsMiddleware(),
+        TracingMiddleware(),
+        TracingUserMiddleware(user_id),
     ]

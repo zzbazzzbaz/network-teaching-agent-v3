@@ -34,16 +34,33 @@ services:
       retries: 20
     restart: unless-stopped
 
-  qdrant:
-    image: qdrant/qdrant:v1.20.0
-    container_name: teaching-qdrant
+  phoenix:
+    image: arizephoenix/phoenix:21.0.0
+    container_name: teaching-phoenix
+    environment:
+      PHOENIX_HOST: 0.0.0.0
+      PHOENIX_ENABLE_AUTH: "false"
+      PHOENIX_TELEMETRY_ENABLED: "false"
+      PHOENIX_DISABLE_AGENT_ASSISTANT: "true"
+      PHOENIX_WORKING_DIR: /data
     ports:
-      - "127.0.0.1:6333:6333"
+      - "127.0.0.1:6006:6006"
     volumes:
-      - qdrantdata:/qdrant/storage
+      - phoenixdata:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:6006/healthz')",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
 volumes:
   pgdata:
   redisdata:
-  qdrantdata:
+  phoenixdata:

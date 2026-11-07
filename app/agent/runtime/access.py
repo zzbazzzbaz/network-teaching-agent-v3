@@ -22,9 +22,6 @@ class _TeachingAccessPolicy(ResourceAccessPolicyBase):
         if kind is ResourceKind.AGENT:
             agents = await storage.list_agents(SYSTEM_USER_ID)
             resource_ids = [record.id for record in agents if record.source != "team"]
-        elif kind is ResourceKind.KNOWLEDGE_BASE:
-            knowledge_bases = await storage.list_knowledge_bases(SYSTEM_USER_ID)
-            resource_ids = [record.id for record in knowledge_bases]
         elif kind is ResourceKind.CREDENTIAL:
             credentials = await storage.list_credentials(SYSTEM_USER_ID)
             resource_ids = [record.id for record in credentials]

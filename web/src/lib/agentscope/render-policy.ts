@@ -20,7 +20,6 @@ const TOOL_TITLES: Record<string, string> = {
   [QUIZ_TOOL_NAME]: '检查题',
   get_question: '读取题目',
   memory_search: '检索学习记忆',
-  search_knowledge: '检索知识库',
 };
 
 const MAX_RAW_CHARS = 400;
@@ -77,7 +76,7 @@ export function describeToolCall(block: ToolCallBlock): ToolCallView {
     };
   }
 
-  if (block.name === 'memory_search' || block.name === 'search_knowledge') {
+  if (block.name === 'memory_search') {
     const query = textOf(input?.query) || textOf(input?.keywords) || textOf(input?.question);
     return {
       title,
@@ -111,13 +110,12 @@ export function describeToolResult(block: ToolResultBlock): ToolResultView {
     return { summary: '已读取题目', raw: null, hidden: false };
   }
 
-  if (block.name === 'memory_search' || block.name === 'search_knowledge') {
+  if (block.name === 'memory_search') {
     const entries = splitMemoryEntries(raw);
     if (entries.length === 0) {
       return { summary: '没有命中结果', raw: null, hidden: false };
     }
-    const noun = block.name === 'memory_search' ? '条记忆' : '条资料';
-    return { summary: `检索到 ${entries.length} ${noun}`, raw, hidden: false };
+    return { summary: `检索到 ${entries.length} 条记忆`, raw, hidden: false };
   }
 
   if (!raw) {

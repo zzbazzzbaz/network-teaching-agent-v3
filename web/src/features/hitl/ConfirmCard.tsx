@@ -10,7 +10,6 @@ const TOOL_LABELS: Record<string, string> = {
   quiz_student: '检查题',
   get_question: '读取题目',
   memory_search: '检索学习记忆',
-  search_knowledge: '检索知识库',
 };
 
 export function ConfirmCard({ pending }: { pending: PendingConfirm }) {

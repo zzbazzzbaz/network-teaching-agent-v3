@@ -8,8 +8,8 @@ from fastapi import FastAPI
 from app.agent.endpoints import api_router
 from app.agent.lifespan import wrap_lifespan
 from app.agent.runtime.access import build_access_policy
-from app.agent.runtime.knowledge import build_blob_store, build_kb_manager, build_parsers
 from app.agent.runtime.middlewares import agent_middlewares
+from app.agent.runtime.tracing import setup_tracing
 from app.agent.runtime.workspace import build_workspace_manager
 from app.agent.tools import agent_tools
 from app.shared.config import get_settings
@@ -17,6 +17,7 @@ from app.shared.config import get_settings
 
 def create_agent_app() -> FastAPI:
     settings = get_settings()
+    setup_tracing(settings.tracing)
     storage = RedisStorage(
         host=settings.redis.host,
         port=settings.redis.port,
@@ -35,13 +36,9 @@ def create_agent_app() -> FastAPI:
         storage=storage,
         message_bus=message_bus,
         workspace_manager=build_workspace_manager(settings),
-        knowledge_base_manager=build_kb_manager(settings, storage),
-        knowledge_parsers=build_parsers(),
-        blob_store=build_blob_store(settings),
         resource_access_policy=build_access_policy(),
         extra_agent_middlewares=agent_middlewares,
         extra_agent_tools=agent_tools,
-        enable_index_worker=True,
         enable_scheduler=False,
         enable_channel_worker=False,
         title="计算机网络教学智能体 Agent",

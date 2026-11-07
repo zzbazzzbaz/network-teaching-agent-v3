@@ -10,7 +10,6 @@ from app.api.infra.agent_client import get_agent_client
 from app.api.repositories import file_repositories, session_repositories, usage_repositories
 from app.api.repositories.models import AgentKind, ChatSession, FileStatus, User
 from app.api.services import file_service
-from app.api.services.knowledge_config import build_knowledge_config
 from app.shared.config import get_settings
 from app.shared.constants import (
     AGENT_CREDENTIAL_ID,
@@ -56,7 +55,6 @@ async def create_session(session: AsyncSession, *, user_id: uuid.UUID) -> ChatSe
             "model": settings.llm.chat_model,
             "parameters": {},
         },
-        knowledge_config=build_knowledge_config(settings),
     )
     try:
         session_uuid = uuid.UUID(agent_session_id)
