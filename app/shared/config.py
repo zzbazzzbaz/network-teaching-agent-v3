@@ -51,30 +51,24 @@ class JWTSettings(_Base):
     refresh_token_days: int
 
 
-class TracingSettings(_Base):
-    model_config = SettingsConfigDict(env_prefix="OTEL_")
+class APISettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="API_")
 
-    enabled: bool = False
-    exporter_otlp_endpoint: str | None = None
-    exporter_otlp_headers: str | None = None
-    service_name: str = "network-agent"
+    base_url: str
 
 
-class Settings(_Base):
-    llm: LLMSettings = Field(default_factory=LLMSettings)
-    redis: RedisSettings = Field(default_factory=RedisSettings)
-    db: DBSettings = Field(default_factory=DBSettings)
-    cos: COSSettings = Field(default_factory=COSSettings)
-    jwt: JWTSettings = Field(default_factory=JWTSettings)
-    tracing: TracingSettings = Field(default_factory=TracingSettings)
+class AgentClientSettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="AGENT_")
 
-    agent_base_url: str
-    api_base_url: str
+    base_url: str
+    http_max_connections: int
+    http_max_keepalive_connections: int
+
+
+class StorageSettings(_Base):
     data_root: Path
     materials_dir: Path
     max_upload_bytes: int
-    agent_http_max_connections: int
-    agent_http_max_keepalive_connections: int
 
     @field_validator("data_root")
     @classmethod
@@ -90,6 +84,27 @@ class Settings(_Base):
     @property
     def memory_dir(self) -> Path:
         return self.data_root / "memory" / "reme"
+
+
+class TracingSettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="OTEL_")
+
+    enabled: bool = False
+    exporter_otlp_endpoint: str | None
+    exporter_otlp_headers: str | None
+    service_name: str
+
+
+class Settings(_Base):
+    llm: LLMSettings = Field(default_factory=LLMSettings)
+    redis: RedisSettings = Field(default_factory=RedisSettings)
+    db: DBSettings = Field(default_factory=DBSettings)
+    cos: COSSettings = Field(default_factory=COSSettings)
+    jwt: JWTSettings = Field(default_factory=JWTSettings)
+    api: APISettings = Field(default_factory=APISettings)
+    agent_client: AgentClientSettings = Field(default_factory=AgentClientSettings)
+    storage: StorageSettings = Field(default_factory=StorageSettings)
+    tracing: TracingSettings = Field(default_factory=TracingSettings)
 
 
 @lru_cache

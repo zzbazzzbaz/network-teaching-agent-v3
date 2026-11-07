@@ -73,7 +73,7 @@ _client: InternalApiClient | None = None
 def get_client() -> InternalApiClient:
     global _client
     if _client is None:
-        _client = InternalApiClient(get_settings().api_base_url)
+        _client = InternalApiClient(get_settings().api.base_url)
     return _client
 
 

@@ -27,7 +27,7 @@ async def get_memory(settings: Settings, user_id: str) -> ReMeMiddleware:
             return cached
 
         memory = ReMeMiddleware(
-            workspace_dir=str(settings.memory_dir / user_id),
+            workspace_dir=str(settings.storage.memory_dir / user_id),
             parameters=ReMeMiddleware.Parameters(
                 chat_model=build_chat_model(settings),
                 embedding_model=build_embedding_model(settings),

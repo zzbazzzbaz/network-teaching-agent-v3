@@ -12,13 +12,13 @@ from app.shared.http import InternalHttpClient
 
 class AgentClient:
     def __init__(self) -> None:
-        settings = get_settings()
+        settings = get_settings().agent_client
         self._http = InternalHttpClient(
-            base_url=settings.agent_base_url,
+            base_url=settings.base_url,
             timeout=httpx.Timeout(connect=5.0, read=60.0, write=30.0, pool=5.0),
             limits=httpx.Limits(
-                max_connections=settings.agent_http_max_connections,
-                max_keepalive_connections=settings.agent_http_max_keepalive_connections,
+                max_connections=settings.http_max_connections,
+                max_keepalive_connections=settings.http_max_keepalive_connections,
             ),
         )
         self._stream_timeout = httpx.Timeout(connect=5.0, read=None, write=10.0, pool=5.0)

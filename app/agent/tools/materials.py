@@ -99,7 +99,7 @@ _CONTENT_LOCK = threading.Lock()
 
 
 def materials_root() -> Path:
-    return get_settings().materials_dir.resolve()
+    return get_settings().storage.materials_dir.resolve()
 
 
 def _is_fresh(library: _Library) -> bool:

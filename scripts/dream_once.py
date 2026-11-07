@@ -67,7 +67,7 @@ async def _dream(workspace: Path, date: str, scan_days: int | None) -> None:
 
 async def main() -> None:
     args = _parse_args()
-    targets = _targets(get_settings().memory_dir, args.users)
+    targets = _targets(get_settings().storage.memory_dir, args.users)
     if not targets:
         print("[skip] 没有找到任何学生的记忆目录")
         return

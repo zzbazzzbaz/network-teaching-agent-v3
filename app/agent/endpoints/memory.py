@@ -67,7 +67,7 @@ class MemoryEntryPage:
 
 
 def get_memory_dir() -> Path:
-    return get_settings().memory_dir
+    return get_settings().storage.memory_dir
 
 
 @router.get(

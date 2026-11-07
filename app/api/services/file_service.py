@@ -91,7 +91,7 @@ async def request_upload(
         session, session_id=session_id, user_id=user_id
     ):
         raise SessionNotFoundError
-    if size_bytes <= 0 or size_bytes > get_settings().max_upload_bytes:
+    if size_bytes <= 0 or size_bytes > get_settings().storage.max_upload_bytes:
         raise FileTooLargeError
     name = _clean_name(filename)
     suffix = Path(name).suffix.lower()
@@ -199,7 +199,7 @@ def verify_raw_token(file_id: uuid.UUID, token: str) -> bool:
 
 
 def raw_url(file: File) -> str:
-    base = get_settings().api_base_url.rstrip("/")
+    base = get_settings().api.base_url.rstrip("/")
     return f"{base}/api/files/{file.id}/raw?token={raw_token(file.id)}"
 
 

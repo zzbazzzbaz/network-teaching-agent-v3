@@ -20,7 +20,7 @@ def _discover_skill_paths() -> list[str]:
 def build_workspace_manager(settings: Settings) -> LocalWorkspaceManager:
     """本地目录工作区: 框架按 agent_id 分目录, 无外部依赖。"""
     return LocalWorkspaceManager(
-        str(settings.workspaces_dir),
+        str(settings.storage.workspaces_dir),
         isolation=IsolationPolicy.PER_AGENT,
         skill_paths=_discover_skill_paths(),
         ttl=3600.0,
