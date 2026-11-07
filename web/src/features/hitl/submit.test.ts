@@ -44,7 +44,7 @@ describe('检查题提交', () => {
           type: 'tool_result',
           id: 'call-1',
           name: 'quiz_student',
-          output: 'submitted',
+          output: '学生答案: C',
           state: 'success',
           metadata: {
             answer: 'C',

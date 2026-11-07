@@ -33,7 +33,7 @@ export async function submitQuizAnswer(params: {
           type: 'tool_result',
           id: params.toolCallId,
           name: 'quiz_student',
-          output: 'submitted',
+          output: `学生答案: ${params.answer}`,
           state: 'success',
           metadata: {
             answer: params.answer,

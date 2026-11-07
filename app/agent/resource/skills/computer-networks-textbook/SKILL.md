@@ -1,10 +1,6 @@
 ---
 name: computer-networks-textbook
-description: 计算机网络教材原文与页码，位于只读资料库 /computer-networks-8e/，是课程事实的唯一来源。讲概念、定位小节、引用页码、核对知识点编号时使用。
-metadata:
-  course: 计算机网络
-  scope: teaching
-  source: 计算机网络（第8版） · 谢希仁
+description: 计算机网络教材原文，是课程事实的唯一来源。讲概念、定位小节、引用页码、核对知识点编号时使用。
 ---
 
 # 计算机网络教材

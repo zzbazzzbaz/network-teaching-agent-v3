@@ -107,7 +107,7 @@ async def get_memory(settings: Settings, user_id: str) -> ReMeMiddleware:
             parameters=ReMeMiddleware.Parameters(
                 chat_model=build_chat_model(settings),
                 embedding_model=build_embedding_model(settings),
-                mode="agent_control",
+                mode="both",
                 top_k=5,
             ),
         )
