@@ -1,5 +1,7 @@
 import logging
+from typing import Any, cast
 
+import fastapi
 from agentscope.app import create_app
 from agentscope.app.message_bus import RedisMessageBus
 from agentscope.app.storage import RedisStorage
@@ -13,6 +15,29 @@ from app.agent.runtime.tracing import setup_tracing
 from app.agent.runtime.workspace import build_workspace_manager
 from app.agent.tools import agent_tools
 from app.shared.config import get_settings
+
+
+class _NoTelemetryFastAPI(FastAPI):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault(
+            "telemetry",
+            {
+                "tracing": False,
+                "metrics": False,
+                "logs": False,
+                "operation_spans": False,
+            },
+        )
+        super().__init__(*args, **kwargs)
+
+
+def _create_app(**kwargs: Any) -> FastAPI:
+    original = fastapi.FastAPI
+    fastapi.FastAPI = cast(Any, _NoTelemetryFastAPI)
+    try:
+        return create_app(**kwargs)
+    finally:
+        fastapi.FastAPI = cast(Any, original)
 
 
 def create_agent_app() -> FastAPI:
@@ -32,7 +57,7 @@ def create_agent_app() -> FastAPI:
         password=settings.redis.password,
         max_connections=settings.redis.max_connections,
     )
-    app = create_app(
+    app = _create_app(
         storage=storage,
         message_bus=message_bus,
         workspace_manager=build_workspace_manager(settings),

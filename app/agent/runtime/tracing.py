@@ -2,9 +2,10 @@ import base64
 import logging
 
 from opentelemetry import trace
+from opentelemetry.context import Context
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from app.shared.config import LangfuseSettings
@@ -12,6 +13,18 @@ from app.shared.config import LangfuseSettings
 logger = logging.getLogger(__name__)
 
 _provider: TracerProvider | None = None
+
+
+class UserIdSpanProcessor(SpanProcessor):
+    def on_start(self, span: Span, parent_context: Context | None = None) -> None:
+        parent = trace.get_current_span(parent_context)
+        if isinstance(parent, ReadableSpan):
+            user_id = (parent.attributes or {}).get("user.id")
+            if user_id:
+                span.set_attribute("user.id", user_id)
+
+    def on_end(self, span: ReadableSpan) -> None:
+        pass
 
 
 def _endpoint(settings: LangfuseSettings) -> str:
@@ -43,6 +56,7 @@ def setup_tracing(settings: LangfuseSettings) -> None:
     _provider = TracerProvider(
         resource=Resource.create({SERVICE_NAME: settings.service_name}),
     )
+    _provider.add_span_processor(UserIdSpanProcessor())
     _provider.add_span_processor(
         BatchSpanProcessor(
             OTLPSpanExporter(endpoint=endpoint, headers=_headers(settings)),
