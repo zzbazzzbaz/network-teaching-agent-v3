@@ -2,9 +2,10 @@ import uuid
 from datetime import date
 from enum import StrEnum
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
+from sqlmodel import col, or_, select
 
 from app.api.repositories.models import Question, QuestionAttempt, QuestionType
 from app.shared.time import local_day_end, local_day_start
@@ -22,8 +23,8 @@ def _escape_like(value: str) -> str:
 
 def _created_date_filters(day: date) -> list[ColumnElement[bool]]:
     return [
-        Question.created_at >= local_day_start(day),
-        Question.created_at < local_day_end(day),
+        col(Question.created_at) >= local_day_start(day),
+        col(Question.created_at) < local_day_end(day),
     ]
 
 
@@ -34,17 +35,17 @@ def _question_filters(
     question_type: QuestionType | None,
     date: date | None,
 ) -> list[ColumnElement[bool]]:
-    filters: list[ColumnElement[bool]] = [Question.deleted_at.is_(None)]
+    filters: list[ColumnElement[bool]] = [col(Question.deleted_at).is_(None)]
     if scope is QuestionScope.PUBLIC:
-        filters.append(Question.user_id.is_(None))
+        filters.append(col(Question.user_id).is_(None))
     elif scope is QuestionScope.MINE:
-        filters.append(Question.user_id == user_id)
+        filters.append(col(Question.user_id) == user_id)
     else:
-        filters.append(or_(Question.user_id.is_(None), Question.user_id == user_id))
+        filters.append(or_(col(Question.user_id).is_(None), col(Question.user_id) == user_id))
     if question_type is not None:
-        filters.append(Question.question_type == question_type)
+        filters.append(col(Question.question_type) == question_type)
     if query:
-        filters.append(Question.stem.ilike(f"%{_escape_like(query)}%", escape="\\"))
+        filters.append(col(Question.stem).ilike(f"%{_escape_like(query)}%", escape="\\"))
     if date is not None:
         filters.extend(_created_date_filters(date))
     return filters
@@ -66,7 +67,7 @@ async def list_questions(
     statement = (
         select(Question)
         .where(*filters)
-        .order_by(Question.created_at.desc(), Question.id)
+        .order_by(col(Question.created_at).desc(), col(Question.id))
         .limit(limit)
         .offset(offset)
     )
@@ -110,10 +111,10 @@ async def get_attempt_by_tool_call(
     statement = (
         select(QuestionAttempt)
         .where(
-            QuestionAttempt.user_id == user_id,
-            QuestionAttempt.tool_call_id == tool_call_id,
+            col(QuestionAttempt.user_id) == user_id,
+            col(QuestionAttempt.tool_call_id) == tool_call_id,
         )
-        .order_by(QuestionAttempt.created_at.desc())
+        .order_by(col(QuestionAttempt.created_at).desc())
         .limit(1)
     )
     return await session.scalar(statement)
@@ -142,7 +143,9 @@ async def create_attempt(
 
 async def count_attempts(session: AsyncSession, *, user_id: uuid.UUID) -> int:
     statement = (
-        select(func.count()).select_from(QuestionAttempt).where(QuestionAttempt.user_id == user_id)
+        select(func.count())
+        .select_from(QuestionAttempt)
+        .where(col(QuestionAttempt.user_id) == user_id)
     )
     total = await session.scalar(statement)
     return int(total or 0)
@@ -156,12 +159,15 @@ async def list_attempts(
     limit: int,
     offset: int,
 ) -> tuple[list[QuestionAttempt], int]:
-    filters = [QuestionAttempt.user_id == user_id, QuestionAttempt.question_id == question_id]
+    filters: list[ColumnElement[bool]] = [
+        col(QuestionAttempt.user_id) == user_id,
+        col(QuestionAttempt.question_id) == question_id,
+    ]
     total = await session.scalar(select(func.count()).select_from(QuestionAttempt).where(*filters))
     statement = (
         select(QuestionAttempt)
         .where(*filters)
-        .order_by(QuestionAttempt.created_at.desc(), QuestionAttempt.id)
+        .order_by(col(QuestionAttempt.created_at).desc(), col(QuestionAttempt.id))
         .limit(limit)
         .offset(offset)
     )

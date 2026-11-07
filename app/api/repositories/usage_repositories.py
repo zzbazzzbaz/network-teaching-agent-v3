@@ -2,9 +2,10 @@ import uuid
 from datetime import date, datetime
 from typing import NamedTuple
 
-from sqlalchemy import Date, cast, func, select
+from sqlalchemy import Date, func
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import cast, col, select
 
 from app.api.repositories.models import ChatRound, ReplyUsage
 from app.shared.constants import APP_TIMEZONE
@@ -98,13 +99,13 @@ async def total_tokens(session: AsyncSession, *, user_id: uuid.UUID) -> int:
             func.sum(ReplyUsage.input_tokens + ReplyUsage.output_tokens),
             0,
         )
-    ).where(ReplyUsage.user_id == user_id)
+    ).where(col(ReplyUsage.user_id) == user_id)
     total = await session.scalar(statement)
     return int(total or 0)
 
 
 async def count_rounds(session: AsyncSession, *, user_id: uuid.UUID) -> int:
-    statement = select(func.count()).select_from(ChatRound).where(ChatRound.user_id == user_id)
+    statement = select(func.count()).select_from(ChatRound).where(col(ChatRound.user_id) == user_id)
     total = await session.scalar(statement)
     return int(total or 0)
 
@@ -125,9 +126,9 @@ async def daily_tokens(
             func.coalesce(func.sum(ReplyUsage.cache_input_tokens), 0).label("cache_input_tokens"),
         )
         .where(
-            ReplyUsage.user_id == user_id,
-            ReplyUsage.started_at >= start_at,
-            ReplyUsage.started_at < end_at,
+            col(ReplyUsage.user_id) == user_id,
+            col(ReplyUsage.started_at) >= start_at,
+            col(ReplyUsage.started_at) < end_at,
         )
         .group_by(day)
         .order_by(day)
@@ -155,9 +156,9 @@ async def daily_rounds(
     statement = (
         select(day, func.count().label("rounds"))
         .where(
-            ChatRound.user_id == user_id,
-            ChatRound.created_at >= start_at,
-            ChatRound.created_at < end_at,
+            col(ChatRound.user_id) == user_id,
+            col(ChatRound.created_at) >= start_at,
+            col(ChatRound.created_at) < end_at,
         )
         .group_by(day)
         .order_by(day)

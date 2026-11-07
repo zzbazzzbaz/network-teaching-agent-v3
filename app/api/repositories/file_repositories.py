@@ -1,7 +1,9 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
+from sqlmodel import col, select
 
 from app.api.repositories.models import ChatSession, File, FileStatus
 
@@ -23,9 +25,9 @@ async def session_owned_by(
     user_id: uuid.UUID,
 ) -> bool:
     statement = select(ChatSession.id).where(
-        ChatSession.id == session_id,
-        ChatSession.user_id == user_id,
-        ChatSession.deleted_at.is_(None),
+        col(ChatSession.id) == session_id,
+        col(ChatSession.user_id) == user_id,
+        col(ChatSession.deleted_at).is_(None),
     )
     return await session.scalar(statement) is not None
 
@@ -38,17 +40,17 @@ async def list_by_session(
     limit: int,
     offset: int,
 ) -> tuple[list[File], int]:
-    filters = [
-        File.session_id == session_id,
-        File.user_id == user_id,
-        File.status == FileStatus.READY,
-        File.deleted_at.is_(None),
+    filters: list[ColumnElement[bool]] = [
+        col(File.session_id) == session_id,
+        col(File.user_id) == user_id,
+        col(File.status) == FileStatus.READY,
+        col(File.deleted_at).is_(None),
     ]
     total = await session.scalar(select(func.count()).select_from(File).where(*filters))
     statement = (
         select(File)
         .where(*filters)
-        .order_by(File.created_at.desc(), File.id)
+        .order_by(col(File.created_at).desc(), col(File.id))
         .limit(limit)
         .offset(offset)
     )

@@ -1,8 +1,10 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
+from sqlmodel import col, select
 
 from app.api.repositories.models import ChatSession
 
@@ -20,9 +22,9 @@ async def get_owned(
     user_id: uuid.UUID,
 ) -> ChatSession | None:
     statement = select(ChatSession).where(
-        ChatSession.id == session_id,
-        ChatSession.user_id == user_id,
-        ChatSession.deleted_at.is_(None),
+        col(ChatSession.id) == session_id,
+        col(ChatSession.user_id) == user_id,
+        col(ChatSession.deleted_at).is_(None),
     )
     return await session.scalar(statement)
 
@@ -35,20 +37,20 @@ async def list_owned(
     offset: int,
     include_empty: bool,
 ) -> tuple[list[ChatSession], int]:
-    filters = [
-        ChatSession.user_id == user_id,
-        ChatSession.deleted_at.is_(None),
+    filters: list[ColumnElement[bool]] = [
+        col(ChatSession.user_id) == user_id,
+        col(ChatSession.deleted_at).is_(None),
     ]
     if not include_empty:
-        filters.append(ChatSession.last_message_at.is_not(None))
+        filters.append(col(ChatSession.last_message_at).is_not(None))
 
     total = await session.scalar(select(func.count()).select_from(ChatSession).where(*filters))
     statement = (
         select(ChatSession)
         .where(*filters)
         .order_by(
-            ChatSession.last_message_at.desc().nullslast(),
-            ChatSession.id,
+            col(ChatSession.last_message_at).desc().nullslast(),
+            col(ChatSession.id),
         )
         .limit(limit)
         .offset(offset)
@@ -63,12 +65,12 @@ async def count_started(
     user_id: uuid.UUID,
     include_deleted: bool,
 ) -> int:
-    filters = [
-        ChatSession.user_id == user_id,
-        ChatSession.last_message_at.is_not(None),
+    filters: list[ColumnElement[bool]] = [
+        col(ChatSession.user_id) == user_id,
+        col(ChatSession.last_message_at).is_not(None),
     ]
     if not include_deleted:
-        filters.append(ChatSession.deleted_at.is_(None))
+        filters.append(col(ChatSession.deleted_at).is_(None))
     total = await session.scalar(select(func.count()).select_from(ChatSession).where(*filters))
     return int(total or 0)
 
@@ -101,9 +103,9 @@ async def get_titles(
         return {}
 
     statement = select(ChatSession.id, ChatSession.title).where(
-        ChatSession.id.in_(session_ids),
-        ChatSession.user_id == user_id,
-        ChatSession.deleted_at.is_(None),
+        col(ChatSession.id).in_(session_ids),
+        col(ChatSession.user_id) == user_id,
+        col(ChatSession.deleted_at).is_(None),
     )
     rows = (await session.execute(statement)).all()
     return {row[0]: row[1] for row in rows}
