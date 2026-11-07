@@ -59,10 +59,10 @@ book_pages: [225, 229]
 
 ## 部署
 
-默认读取包内的 `app/agent/resource/library`。生产环境可以挂载外部目录并设置：
+资料库根目录必须通过 `MATERIALS_DIR` 显式配置，没有默认值：
 
 ```text
 MATERIALS_DIR=/srv/teaching-materials
 ```
 
-容器内建议只读挂载。这个目录会被完整暴露给 agent，不要放密钥或运行时数据。
+本地开发可以指向 `app/agent/resource/library` 的绝对路径。容器内建议只读挂载。这个目录会被完整暴露给 agent，不要放密钥或运行时数据。

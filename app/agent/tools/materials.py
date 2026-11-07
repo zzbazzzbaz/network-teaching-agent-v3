@@ -27,7 +27,6 @@ from app.shared.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_LIBRARY_ROOT = Path(__file__).resolve().parents[1] / "resource" / "library"
 READABLE_SUFFIXES = {".md", ".txt", ".json"}
 SEARCHABLE_SUFFIXES = (".md", ".txt")
 MAX_READ_CHARS = 10_000
@@ -100,8 +99,7 @@ _CONTENT_LOCK = threading.Lock()
 
 
 def materials_root() -> Path:
-    configured = get_settings().materials_dir
-    return configured.resolve() if configured is not None else DEFAULT_LIBRARY_ROOT
+    return get_settings().materials_dir.resolve()
 
 
 def _is_fresh(library: _Library) -> bool:
