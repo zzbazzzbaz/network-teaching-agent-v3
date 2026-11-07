@@ -79,12 +79,13 @@ class StorageSettings(_Base):
         return self.data_root / "memory" / "reme"
 
 
-class TracingSettings(_Base):
-    model_config = SettingsConfigDict(env_prefix="OTEL_")
+class LangfuseSettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="LANGFUSE_")
 
-    enabled: bool = False
-    exporter_otlp_endpoint: str | None
-    exporter_otlp_headers: str | None
+    enabled: bool
+    public_key: SecretStr
+    secret_key: SecretStr
+    base_url: str
     service_name: str
 
 
@@ -97,7 +98,7 @@ class Settings(_Base):
     api: APISettings = Field(default_factory=APISettings)
     agent_client: AgentClientSettings = Field(default_factory=AgentClientSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
-    tracing: TracingSettings = Field(default_factory=TracingSettings)
+    langfuse: LangfuseSettings = Field(default_factory=LangfuseSettings)
 
 
 @lru_cache

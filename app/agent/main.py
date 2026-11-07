@@ -17,7 +17,7 @@ from app.shared.config import get_settings
 
 def create_agent_app() -> FastAPI:
     settings = get_settings()
-    setup_tracing(settings.tracing)
+    setup_tracing(settings.langfuse)
     storage = RedisStorage(
         host=settings.redis.host,
         port=settings.redis.port,
