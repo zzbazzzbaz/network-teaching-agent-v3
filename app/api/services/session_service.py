@@ -12,7 +12,7 @@ from app.api.repositories.models import AgentKind, ChatSession, FileStatus, User
 from app.api.services import file_service
 from app.shared.config import get_settings
 from app.shared.constants import (
-    AGENT_CREDENTIAL_ID,
+    CHAT_CREDENTIAL_ID,
     SESSION_PLACEHOLDER_TITLE,
     TEACH_AGENT_ID,
 )
@@ -50,9 +50,9 @@ async def create_session(session: AsyncSession, *, user_id: uuid.UUID) -> ChatSe
         agent_id=TEACH_AGENT_ID,
         name=SESSION_PLACEHOLDER_TITLE,
         chat_model_config={
-            "type": "dashscope_credential",
-            "credential_id": AGENT_CREDENTIAL_ID,
-            "model": settings.llm.chat_model,
+            "type": "deepseek_credential",
+            "credential_id": CHAT_CREDENTIAL_ID,
+            "model": settings.chat.model,
             "parameters": {},
         },
     )

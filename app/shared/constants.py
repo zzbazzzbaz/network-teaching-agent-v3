@@ -6,7 +6,8 @@
 
 SYSTEM_USER_ID = "system"
 TEACH_AGENT_ID = "teach_agent"
-AGENT_CREDENTIAL_ID = "bailian"
+CHAT_CREDENTIAL_ID = "deepseek"
+EMBEDDING_CREDENTIAL_ID = "bailian"
 SESSION_PLACEHOLDER_TITLE = "新对话"
 APP_TIMEZONE = "Asia/Shanghai"
 USER_ID_HEADER = "X-User-ID"

@@ -9,12 +9,18 @@ class _Base(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
-class LLMSettings(_Base):
-    model_config = SettingsConfigDict(env_prefix="LLM_")
+class ChatSettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="CHAT_")
     api_key: SecretStr
     base_url: str
-    chat_model: str
-    embedding_model: str
+    model: str
+
+
+class EmbeddingSettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="EMBEDDING_")
+    api_key: SecretStr
+    base_url: str
+    model: str
 
 
 class RedisSettings(_Base):
@@ -90,7 +96,8 @@ class LangfuseSettings(_Base):
 
 
 class Settings(_Base):
-    llm: LLMSettings = Field(default_factory=LLMSettings)
+    chat: ChatSettings = Field(default_factory=ChatSettings)
+    embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     db: DBSettings = Field(default_factory=DBSettings)
     cos: COSSettings = Field(default_factory=COSSettings)
