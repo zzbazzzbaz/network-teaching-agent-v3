@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -69,13 +69,6 @@ class StorageSettings(_Base):
     data_root: Path
     materials_dir: Path
     max_upload_bytes: int
-
-    @field_validator("data_root")
-    @classmethod
-    def _require_absolute_data_root(cls, value: Path) -> Path:
-        if not value.is_absolute():
-            raise ValueError("必须是绝对路径")
-        return value.resolve()
 
     @property
     def workspaces_dir(self) -> Path:
