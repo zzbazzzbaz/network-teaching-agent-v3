@@ -13,7 +13,9 @@ from app.shared.constants import (
 
 logger = logging.getLogger(__name__)
 
-_PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "teaching_agent.md"
+_PROMPT_PATH = (
+    Path(__file__).resolve().parent.parent / "resource" / "prompts" / "teaching_agent.md"
+)
 
 
 async def ensure_seed(storage: StorageBase, settings: Settings) -> None:
