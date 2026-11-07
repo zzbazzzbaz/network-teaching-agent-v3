@@ -1,10 +1,11 @@
 import type { ToolCallBlock } from '@agentscope-ai/agentscope/message';
+import { DownOutlined } from '@ant-design/icons';
 import { Alert, Button, Input, Radio, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useChatActions } from '@/features/chat/chat-actions';
 import { Markdown } from '@/features/chat/markdown';
-import { quizQuestionFromInput } from '@/lib/agentscope/project';
+import { parseToolInput, quizQuestionFromInput } from '@/lib/agentscope/project';
 import { useChatStore } from '@/stores/chat-store';
 
 import { submitQuizAnswer } from './submit';
@@ -18,92 +19,64 @@ const HEADER_CLASS = 'flex items-center gap-2 border-b border-warning/25 px-4 py
 const FOOTER_CLASS =
   'flex items-center justify-end gap-2 border-t border-warning/25 px-4 py-2.5 max-[767px]:flex-col-reverse';
 
+function plainStem(stem: string): string {
+  return stem
+    .replace(/[*_`#>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function correctOptionOf(input: string): string | null {
+  const raw = parseToolInput(input);
+  const value = raw && typeof raw.correct_option === 'string' ? raw.correct_option.trim() : '';
+  return value ? value.charAt(0).toUpperCase() : null;
+}
+
+function optionLabelOf(option: string, letter: string): string {
+  const prefix = new RegExp(`^${letter}[.、)]\\s*`);
+  return option.replace(prefix, '');
+}
+
 export interface QuizCardProps {
   replyId: string;
   toolCall: ToolCallBlock;
+  submittedAnswer?: string | null;
 }
 
-export function QuizCard({ replyId, toolCall }: QuizCardProps) {
+export function QuizCard({ replyId, toolCall, submittedAnswer = null }: QuizCardProps) {
   const { stop, resync } = useChatActions();
   const entry = useChatStore((state) => state.hitl[toolCall.id]);
   const question = useMemo(() => quizQuestionFromInput(toolCall.input), [toolCall.input]);
+  const correctOption = useMemo(() => correctOptionOf(toolCall.input), [toolCall.input]);
   const [answer, setAnswer] = useState('');
   const [stalled, setStalled] = useState(false);
-
-  const submittedAt = entry?.submittedAt ?? null;
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
-    if (!submittedAt || toolCall.state === 'finished') {
+    if (submittedAnswer && !answer) {
+      setAnswer(submittedAnswer);
+    }
+  }, [submittedAnswer, answer]);
+
+  const submittedAt = entry?.submittedAt ?? null;
+  const finished = toolCall.state === 'finished';
+  const submitted = Boolean(submittedAt) || finished;
+  const submitting = entry?.submitting ?? false;
+  const isChoice = question?.question_type === 'single_choice';
+  const canSubmit = !submitted && (isChoice ? Boolean(answer) : answer.trim().length > 0);
+  const selectedCorrect = submitted && isChoice && correctOption ? answer === correctOption : null;
+
+  useEffect(() => {
+    if (!submittedAt || finished) {
       setStalled(false);
       return;
     }
     const timer = setTimeout(() => setStalled(true), STALL_MS);
     return () => clearTimeout(timer);
-  }, [submittedAt, toolCall.state]);
-
-  if (toolCall.state === 'finished') {
-    return (
-      <div className="border-t border-dashed border-line py-1.5 text-[11.5px] text-ink-subtle">
-        已作答
-      </div>
-    );
-  }
-
-  if (!question) {
-    return (
-      <section className={CARD_CLASS} aria-label="检查题">
-        <div className={HEADER_CLASS}>
-          <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
-          <span className="text-[11px] font-medium text-warning">作答检查点</span>
-        </div>
-        <div className="px-4 py-3.5">
-          <Typography.Text strong>题目数据缺失，无法作答</Typography.Text>
-        </div>
-        <div className={FOOTER_CLASS}>
-          <Button size="small" onClick={stop}>
-            终止本轮
-          </Button>
-        </div>
-      </section>
-    );
-  }
-
-  if (submittedAt) {
-    return (
-      <section className={CARD_CLASS} aria-label="检查题">
-        <div className={HEADER_CLASS}>
-          <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
-          <span className="text-[11px] font-medium text-warning">作答检查点</span>
-          <span className="ml-auto rounded-full border border-success/30 bg-success/5 px-2 font-code text-[10.5px] text-success">
-            已提交
-          </span>
-        </div>
-        <div className="flex flex-col gap-3 px-4 py-3.5">
-          <Typography.Text type="secondary">已提交，等待反馈</Typography.Text>
-          {stalled ? (
-            <Alert
-              type="warning"
-              showIcon
-              message="暂未收到反馈"
-              description="可以重新同步一次会话状态，或继续等待。"
-              action={
-                <Button size="small" onClick={() => void resync()}>
-                  重新同步
-                </Button>
-              }
-            />
-          ) : null}
-        </div>
-      </section>
-    );
-  }
-
-  const isChoice = question.question_type === 'single_choice';
-  const submitting = entry?.submitting ?? false;
-  const canSubmit = isChoice ? Boolean(answer) : answer.trim().length > 0;
+  }, [submittedAt, finished]);
 
   const handleSubmit = async () => {
-    if (!canSubmit || submitting) {
+    if (!question || !canSubmit || submitting) {
       return;
     }
     try {
@@ -121,65 +94,171 @@ export function QuizCard({ replyId, toolCall }: QuizCardProps) {
   return (
     <section className={CARD_CLASS} aria-label="检查题">
       <div className={HEADER_CLASS}>
-        <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
-        <span className="text-[11px] font-medium text-warning">作答检查点</span>
-        <span className="ml-auto text-[10.5px] text-ink-subtle">
-          {isChoice ? '单选题' : '简答题'}
-        </span>
-      </div>
-      <fieldset className="m-0 flex flex-col border-0 p-0">
-        <legend className="w-full px-4 pt-3.5 pb-1 text-[14px] leading-6 font-medium text-ink">
-          <Markdown content={question.stem} />
-        </legend>
-        {isChoice ? (
-          <Radio.Group
-            value={answer}
-            onChange={(event) => setAnswer(event.target.value as string)}
-            className="flex flex-col"
-          >
-            {(question.options ?? []).map((option, position) => {
-              const letter = LETTERS[position] ?? String(position + 1);
-              return (
-                <label
-                  key={letter}
-                  className="flex cursor-pointer items-start gap-3 border-t border-warning/20 px-4 py-2.5 transition-colors hover:bg-warning/5"
-                >
-                  <Radio value={letter} className="mt-0.5" />
-                  <span className="min-w-0 text-[13.5px] leading-6 text-ink">
-                    <span className="mr-1.5 font-code text-ink-subtle">{letter}</span>
-                    {option}
-                  </span>
-                </label>
-              );
-            })}
-          </Radio.Group>
+        <span className="size-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
+        <span className="shrink-0 text-[11px] font-medium text-warning">作答检查点</span>
+        {open ? (
+          question ? (
+            <span className="text-[10.5px] text-ink-subtle">{isChoice ? '单选题' : '简答题'}</span>
+          ) : null
         ) : (
-          <div className="px-4 pt-1 pb-3">
-            <Input.TextArea
-              variant="borderless"
-              value={answer}
-              onChange={(event) => setAnswer(event.target.value)}
-              placeholder="写下你的理解"
-              autoSize={{ minRows: 3, maxRows: 8 }}
-              maxLength={ANSWER_LIMIT}
-              className="rounded-chip border border-line-strong bg-surface px-3 py-2 focus:outline-none"
-            />
-          </div>
+          <span className="min-w-0 flex-1 truncate text-[11px] text-ink-muted">
+            {question ? plainStem(question.stem) : '正在准备检查题'}
+          </span>
         )}
-      </fieldset>
-      {entry?.error ? (
-        <div className="px-4 pb-3">
-          <Alert type="error" showIcon message={entry.error} />
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          {submitted && selectedCorrect !== null ? (
+            <span className={`text-[10.5px] ${selectedCorrect ? 'text-success' : 'text-danger'}`}>
+              {selectedCorrect ? '回答正确' : '回答错误'}
+            </span>
+          ) : submitted ? (
+            <span className="text-[10.5px] text-ink-subtle">已提交</span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            aria-label={open ? '收起' : '展开'}
+            aria-expanded={open}
+            className="grid size-5 place-items-center rounded-chip text-ink-subtle transition-colors hover:bg-warning/10 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
+          >
+            <DownOutlined
+              className={`text-[10px] transition-transform ${open ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
         </div>
-      ) : null}
-      <div className={FOOTER_CLASS}>
-        <Button type="text" onClick={stop}>
-          终止本轮
-        </Button>
-        <Button type="primary" loading={submitting} disabled={!canSubmit} onClick={handleSubmit}>
-          提交作答
-        </Button>
       </div>
+
+      {open ? (
+        !question ? (
+          <>
+            <div className="px-4 py-3.5">
+              <Typography.Text strong>
+                {finished ? '题目数据缺失，无法作答' : '正在准备检查题…'}
+              </Typography.Text>
+            </div>
+            {submitted ? null : (
+              <div className={FOOTER_CLASS}>
+                <Button size="small" onClick={stop}>
+                  终止本轮
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <fieldset className="m-0 flex flex-col border-0 p-0">
+              <legend className="w-full px-4 pt-3.5 pb-1 text-[14px] leading-6 font-medium text-ink">
+                <Markdown content={question.stem} />
+              </legend>
+              {isChoice ? (
+                <Radio.Group
+                  value={answer}
+                  onChange={(event) => setAnswer(event.target.value as string)}
+                  className="flex flex-col"
+                  disabled={submitted || submitting}
+                >
+                  {(question.options ?? []).map((option, position) => {
+                    const letter = LETTERS[position] ?? String(position + 1);
+                    const isCorrectOption = submitted && correctOption === letter;
+                    const isSelected = answer === letter;
+                    const isWrongPick =
+                      submitted && Boolean(correctOption) && isSelected && !isCorrectOption;
+                    const tone = isCorrectOption
+                      ? 'bg-success/10'
+                      : isWrongPick
+                        ? 'bg-danger/10'
+                        : '';
+                    return (
+                      <div
+                        key={letter}
+                        onClick={() => {
+                          if (!submitted && !submitting) {
+                            setAnswer(letter);
+                          }
+                        }}
+                        className={`flex items-start gap-3 border-t border-warning/20 px-4 py-2.5 transition-colors hover:bg-warning/5 ${tone} ${submitted || submitting ? '' : 'cursor-pointer'}`}
+                      >
+                        <Radio
+                          value={letter}
+                          className="mt-0.5"
+                          aria-label={`${letter} ${optionLabelOf(option, letter)}`}
+                        />
+                        <span className="min-w-0 flex-1 text-[13.5px] leading-6 text-ink">
+                          <span className="mr-1.5 font-code text-ink-subtle">{letter}</span>
+                          {optionLabelOf(option, letter)}
+                        </span>
+                        {submitted ? (
+                          <span className="flex shrink-0 items-center gap-1.5 pt-0.5 text-[10.5px]">
+                            {isSelected ? (
+                              <span className={isCorrectOption ? 'text-success' : 'text-danger'}>
+                                你的选择
+                              </span>
+                            ) : null}
+                            {isCorrectOption && !isSelected ? (
+                              <span className="text-success">正确答案</span>
+                            ) : null}
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </Radio.Group>
+              ) : (
+                <div className="px-4 pt-1 pb-3">
+                  <Input.TextArea
+                    variant="borderless"
+                    value={answer}
+                    onChange={(event) => setAnswer(event.target.value)}
+                    placeholder="写下你的理解"
+                    autoSize={{ minRows: 3, maxRows: 8 }}
+                    maxLength={ANSWER_LIMIT}
+                    disabled={submitted || submitting}
+                    className="rounded-chip border border-line-strong bg-surface px-3 py-2 focus:outline-none"
+                  />
+                </div>
+              )}
+            </fieldset>
+
+            {entry?.error ? (
+              <div className="px-4 pb-3">
+                <Alert type="error" showIcon message={entry.error} />
+              </div>
+            ) : null}
+
+            {stalled ? (
+              <div className="px-4 pb-3">
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="暂未收到反馈"
+                  description="可以重新同步一次会话状态，或继续等待。"
+                  action={
+                    <Button size="small" onClick={() => void resync()}>
+                      重新同步
+                    </Button>
+                  }
+                />
+              </div>
+            ) : null}
+
+            {submitted || !question ? null : (
+              <div className={FOOTER_CLASS}>
+                <Button type="text" onClick={stop}>
+                  终止本轮
+                </Button>
+                <Button
+                  type="primary"
+                  loading={submitting}
+                  disabled={!canSubmit}
+                  onClick={handleSubmit}
+                >
+                  提交作答
+                </Button>
+              </div>
+            )}
+          </>
+        )
+      ) : null}
     </section>
   );
 }

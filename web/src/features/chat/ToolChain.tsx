@@ -6,7 +6,10 @@ import { useState } from 'react';
 
 import { describeToolCall, describeToolResult, toolStatus } from '@/lib/agentscope/render-policy';
 
+import { Markdown } from './markdown';
+
 const RAW_LIMIT = 400;
+const MEMORY_TOOLS = new Set(['memory_search', 'search_knowledge']);
 
 function ResultBody({ summary, raw }: { summary: string; raw: string | null }) {
   const [expanded, setExpanded] = useState(false);
@@ -29,29 +32,54 @@ function ResultBody({ summary, raw }: { summary: string; raw: string | null }) {
   );
 }
 
+function MemoryResult({ raw }: { raw: string }) {
+  return (
+    <div className="max-h-80 min-w-0 overflow-x-hidden overflow-y-auto rounded-chip border border-line bg-surface-sunken/40 px-3 py-2">
+      <Markdown
+        content={raw.replace(/^-\s+/, '')}
+        className="text-[13px] leading-6 [&_h1]:mt-0 [&_h1]:mb-2 [&_h1]:text-[14px] [&_h2]:mt-3 [&_h2]:mb-1.5 [&_h2]:text-[13.5px] [&_h3]:text-[13px]"
+      />
+    </div>
+  );
+}
+
 export interface ToolChainProps {
   calls: ToolCallBlock[];
   results: Map<string, ToolResultBlock>;
 }
 
 export function ToolChain({ calls, results }: ToolChainProps) {
+  const expandedKeys: string[] = [];
+
   const items: ThoughtChainItemType[] = calls.map((call) => {
     const callView = describeToolCall(call);
     const result = results.get(call.id);
     const resultView = result ? describeToolResult(result) : null;
+    const memory = MEMORY_TOOLS.has(call.name) && Boolean(resultView?.raw);
+
+    if (memory) {
+      expandedKeys.push(call.id);
+    }
+
     return {
       key: call.id,
       title: callView.title,
-      description: callView.waitingLabel ?? callView.description,
+      description: callView.description,
       status: toolStatus(call, result),
       collapsible: Boolean(resultView),
-      content: resultView ? <ResultBody summary={resultView.summary} raw={resultView.raw} /> : null,
+      content: resultView ? (
+        memory && resultView.raw ? (
+          <MemoryResult raw={resultView.raw} />
+        ) : (
+          <ResultBody summary={resultView.summary} raw={resultView.raw} />
+        )
+      ) : null,
     };
   });
 
   return (
-    <div className="rounded-card border border-line bg-surface px-3 py-2">
-      <ThoughtChain items={items} />
+    <div className="min-w-0 overflow-hidden rounded-card border border-line bg-surface px-3 py-2">
+      <ThoughtChain items={items} defaultExpandedKeys={expandedKeys} />
     </div>
   );
 }

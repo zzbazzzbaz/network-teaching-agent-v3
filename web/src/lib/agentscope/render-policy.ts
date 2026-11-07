@@ -46,6 +46,14 @@ function outputToText(block: ToolResultBlock): string {
   return parts.join('\n');
 }
 
+export function quizSubmittedAnswer(block: ToolResultBlock): string | null {
+  if (block.name !== QUIZ_TOOL_NAME) {
+    return null;
+  }
+  const match = outputToText(block).match(/学生答案[：:]\s*([^\n]+)/);
+  return match ? match[1].trim() : null;
+}
+
 export function describeToolCall(block: ToolCallBlock): ToolCallView {
   const title = titleOf(block.name);
   const input = parseToolInput(block.input);
@@ -85,6 +93,13 @@ export function describeToolCall(block: ToolCallBlock): ToolCallView {
   };
 }
 
+export function splitMemoryEntries(raw: string): string[] {
+  return raw
+    .split(/\n(?=-\s)/)
+    .map((entry) => entry.replace(/^-\s*/, '').trim())
+    .filter((entry) => entry.length > 0 && !entry.startsWith('<!--'));
+}
+
 export function describeToolResult(block: ToolResultBlock): ToolResultView {
   const raw = outputToText(block).trim();
 
@@ -97,8 +112,12 @@ export function describeToolResult(block: ToolResultBlock): ToolResultView {
   }
 
   if (block.name === 'memory_search' || block.name === 'search_knowledge') {
-    const hits = raw ? raw.split('\n').filter((line) => line.trim()).length : 0;
-    return { summary: hits > 0 ? `命中 ${hits} 条` : '没有命中结果', raw: null, hidden: false };
+    const entries = splitMemoryEntries(raw);
+    if (entries.length === 0) {
+      return { summary: '没有命中结果', raw: null, hidden: false };
+    }
+    const noun = block.name === 'memory_search' ? '条记忆' : '条资料';
+    return { summary: `检索到 ${entries.length} ${noun}`, raw, hidden: false };
   }
 
   if (!raw) {

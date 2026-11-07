@@ -14,11 +14,11 @@ export type MessageSegment =
       calls: ToolCallBlock[];
       results: Map<string, ToolResultBlock>;
     }
+  | { kind: 'quiz'; key: string; call: ToolCallBlock }
   | { kind: 'image'; key: string; src: string; alt: string };
 
 export interface MessageSegments {
   segments: MessageSegment[];
-  quizCalls: ToolCallBlock[];
 }
 
 function imageSource(block: DataBlock): string | null {
@@ -40,7 +40,6 @@ export function buildSegments(message: Msg): MessageSegments {
   }
 
   const segments: MessageSegment[] = [];
-  const quizCalls: ToolCallBlock[] = [];
   let pendingCalls: ToolCallBlock[] = [];
   let index = 0;
 
@@ -87,7 +86,8 @@ export function buildSegments(message: Msg): MessageSegments {
       }
       case 'tool_call': {
         if (block.name === 'quiz_student') {
-          quizCalls.push(block);
+          flushTools();
+          segments.push({ kind: 'quiz', key: block.id, call: block });
           break;
         }
         pendingCalls.push(block);
@@ -115,7 +115,7 @@ export function buildSegments(message: Msg): MessageSegments {
 
   flushTools();
 
-  return { segments, quizCalls };
+  return { segments };
 }
 
 export function messagePlainText(message: Msg): string {

@@ -7,6 +7,7 @@ import { useChatActions } from '@/features/chat/chat-actions';
 import { ConfirmCard } from '@/features/hitl/ConfirmCard';
 import { QuizCard } from '@/features/hitl/QuizCard';
 import type { ChatMessage } from '@/lib/agentscope/project';
+import { quizSubmittedAnswer } from '@/lib/agentscope/render-policy';
 import { useChatStore } from '@/stores/chat-store';
 
 import { Markdown } from './markdown';
@@ -26,7 +27,20 @@ function ThinkingBlock({ text, streaming }: { text: string; streaming: boolean }
 
 export function AssistantMessage({ message, last }: { message: ChatMessage; last: boolean }) {
   const { retry } = useChatActions();
-  const { segments, quizCalls } = useMemo(() => buildSegments(message), [message]);
+  const { segments } = useMemo(() => buildSegments(message), [message]);
+  const quizAnswers = useMemo(() => {
+    const answers = new Map<string, string>();
+    for (const block of message.content) {
+      if (block.type !== 'tool_result') {
+        continue;
+      }
+      const answer = quizSubmittedAnswer(block);
+      if (answer) {
+        answers.set(block.id, answer);
+      }
+    }
+    return answers;
+  }, [message]);
   const pendingConfirm = useChatStore((state) => state.runtime?.pendingConfirm ?? null);
   const streaming = !message.finished_at;
   const copyText = messagePlainText(message);
@@ -64,6 +78,16 @@ export function AssistantMessage({ message, last }: { message: ChatMessage; last
           if (segment.kind === 'tools') {
             return <ToolChain key={segment.key} calls={segment.calls} results={segment.results} />;
           }
+          if (segment.kind === 'quiz') {
+            return (
+              <QuizCard
+                key={segment.key}
+                replyId={message.id}
+                toolCall={segment.call}
+                submittedAnswer={quizAnswers.get(segment.call.id) ?? null}
+              />
+            );
+          }
           return (
             <Image
               key={segment.key}
@@ -89,10 +113,6 @@ export function AssistantMessage({ message, last }: { message: ChatMessage; last
             }
           />
         ) : null}
-
-        {quizCalls.map((call) => (
-          <QuizCard key={call.id} replyId={message.id} toolCall={call} />
-        ))}
 
         {pendingConfirm && pendingConfirm.replyId === message.id ? (
           <ConfirmCard pending={pendingConfirm} />
