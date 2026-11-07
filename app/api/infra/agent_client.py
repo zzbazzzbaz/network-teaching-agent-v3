@@ -33,16 +33,20 @@ class AgentClient:
         agent_id: str,
         name: str,
         chat_model_config: dict[str, Any],
+        knowledge_config: dict[str, Any] | None = None,
     ) -> str:
+        body: dict[str, Any] = {
+            "agent_id": agent_id,
+            "name": name,
+            "chat_model_config": chat_model_config,
+        }
+        if knowledge_config is not None:
+            body["knowledge_config"] = knowledge_config
         response = await self._http.request(
             "POST",
             "/sessions/",
             user_id=user_id,
-            json={
-                "agent_id": agent_id,
-                "name": name,
-                "chat_model_config": chat_model_config,
-            },
+            json=body,
         )
         try:
             payload = response.json()
