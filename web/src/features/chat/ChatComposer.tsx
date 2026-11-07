@@ -56,7 +56,7 @@ export function ChatComposer({
 
   return (
     <div className="shrink-0 bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] lg:px-8">
-      <div className="mx-auto w-full max-w-[820px]">
+      <div className="w-full">
         {phase === 'reconnecting' ? (
           <p className="mb-2 text-[11.5px] text-warning">正在恢复连接，暂不能发送</p>
         ) : null}

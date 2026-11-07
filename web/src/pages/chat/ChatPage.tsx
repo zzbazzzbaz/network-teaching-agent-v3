@@ -156,7 +156,7 @@ export function ChatPage() {
   return (
     <ChatActionsProvider value={actions}>
       <div className="flex min-h-0 flex-1 justify-center overflow-hidden bg-surface">
-        <div className="flex min-h-0 w-full max-w-[900px] flex-col">
+        <div className="flex min-h-0 w-full max-w-[1080px] flex-col">
           <div className="flex min-h-0 flex-1 flex-col">
             {sessionId && chat.loading ? (
               <PageLoading text="正在加载对话" />
@@ -311,7 +311,7 @@ function PendingComposer({
 
   return (
     <div className="shrink-0 bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] lg:px-8">
-      <div className="mx-auto w-full max-w-[820px]">
+      <div className="w-full">
         <p className="mb-2 text-[11.5px] text-ink-subtle">发送后会创建新会话</p>
         <ComposerCard
           value={draft}

@@ -62,7 +62,16 @@ function MarkdownCode(props: ComponentProps) {
   const { block, lang, streamStatus, children } = props;
   const code = nodeText(children);
   if (!block) {
-    return <code className="rounded bg-surface-sunken px-1 py-px text-[0.92em]">{children}</code>;
+    if (code.includes('\n')) {
+      return (
+        <span className="my-3 block rounded-card border border-line bg-surface-sunken px-3 py-2.5 font-code text-[12.5px] leading-[1.7] whitespace-pre-wrap break-words">
+          {code.trim()}
+        </span>
+      );
+    }
+    return (
+      <code className="rounded bg-surface-sunken px-1 py-px text-[0.92em]">{code.trim()}</code>
+    );
   }
   if (lang === 'mermaid') {
     return <CodeBlock code={code} mermaid={streamStatus === 'done'} />;
