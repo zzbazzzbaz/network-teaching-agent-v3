@@ -13,10 +13,10 @@ class _TeachingAccessPolicy(ResourceAccessPolicyBase):
     """system 名下的公共资源对所有用户只读。"""
 
     async def list_accessible(
-            self,
-            viewer_id: str,
-            kind: ResourceKind,
-            storage: StorageBase,
+        self,
+        viewer_id: str,
+        kind: ResourceKind,
+        storage: StorageBase,
     ) -> list[ResourceRef]:
         del viewer_id
         if kind is ResourceKind.AGENT:

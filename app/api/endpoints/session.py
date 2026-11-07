@@ -389,9 +389,7 @@ async def submit_event(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="事件格式不正确",
         )
-    if event_type == "USER_CONFIRM_RESULT" and not _non_empty_list(
-        payload.get("confirm_results")
-    ):
+    if event_type == "USER_CONFIRM_RESULT" and not _non_empty_list(payload.get("confirm_results")):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="事件格式不正确",

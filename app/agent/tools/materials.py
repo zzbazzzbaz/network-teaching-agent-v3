@@ -27,10 +27,7 @@ _READ_DESCRIPTION = (
     "读取资料库中的文本文件, 像 cat。path 以 `/` 开头, "
     "支持 .md/.txt/.json, offset 和 limit 控制行范围。"
 )
-_GREP_DESCRIPTION = (
-    "在资料库中搜索字符串, 像 grep。一次搜一个关键词, "
-    "返回 `文件:行号: 内容`。"
-)
+_GREP_DESCRIPTION = "在资料库中搜索字符串, 像 grep。一次搜一个关键词, 返回 `文件:行号: 内容`。"
 
 
 def materials_root() -> Path:
@@ -97,9 +94,7 @@ def _grep(root: Path, path: str, query: str, limit: int) -> str:
             if item.is_file()
             and not item.is_symlink()
             and item.suffix.lower() in SEARCHABLE_SUFFIXES
-            and not any(
-                part.startswith(".") for part in item.relative_to(root).parts
-            )
+            and not any(part.startswith(".") for part in item.relative_to(root).parts)
         ]
 
     needle = query.casefold()
