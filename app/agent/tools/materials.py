@@ -18,14 +18,14 @@ from app.agent.tools.schemas.materials import (
 )
 from app.shared.config import get_settings
 
-READABLE_SUFFIXES = {".md", ".txt", ".json"}
+READABLE_SUFFIXES = {".md", ".txt", ".json", ".html"}
 SEARCHABLE_SUFFIXES = {".md", ".txt"}
 _FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.DOTALL)
 
 _LS_DESCRIPTION = "列出资料库目录, 像 ls。根目录是 `/`。"
 _READ_DESCRIPTION = (
     "读取资料库中的文本文件, 像 cat。path 以 `/` 开头, "
-    "支持 .md/.txt/.json, offset 和 limit 控制行范围。"
+    "支持 .md/.txt/.json/.html, offset 和 limit 控制行范围。"
 )
 _GREP_DESCRIPTION = "在资料库中搜索字符串, 像 grep。一次搜一个关键词, 返回 `文件:行号: 内容`。"
 

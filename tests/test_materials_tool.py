@@ -90,6 +90,19 @@ async def test_read_offset_and_limit(materials_root: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_read_html_template(materials_root: Path) -> None:
+    template = materials_root / ".templates" / "step-demo.html"
+    template.parent.mkdir()
+    template.write_text("<div>模板</div>\n", encoding="utf-8")
+
+    tool = MaterialsRead(root=materials_root)
+    assert (
+        _text(await tool.call(path="/.templates/step-demo.html"))
+        == "<div>模板</div>"
+    )
+
+
+@pytest.mark.asyncio
 async def test_path_safety(materials_root: Path, tmp_path: Path) -> None:
     tool = MaterialsRead(root=materials_root)
 
