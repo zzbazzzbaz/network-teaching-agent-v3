@@ -11,7 +11,7 @@ metadata:
 
 > 教材：计算机网络（第8版），谢希仁。
 
-这里只有教材事实：正文、页码、图注。出题和题库操作走 `quiz_student` / `get_question` 工具，进度和误解记在 `/memory`。
+这里只有教材事实：正文、页码、图注。
 
 ## 1. 资料位置
 
@@ -24,17 +24,12 @@ metadata:
     └── index.md           # 图注索引
 ```
 
-教材正文只读。用 `materials_ls` 浏览目录，`materials_read` 读单节，`materials_grep` 搜索。不要把整章或整本书一次性加载。
+教材正文只读。用 `materials_ls` 浏览目录，`materials_read` 读单节，`materials_grep` 搜索。
 
 ## 2. 检索流程
 
 1. 定位：`materials_ls("/computer-networks-8e")` 看章节；不确定文件名时用 `materials_grep("拥塞控制", path="/computer-networks-8e")`；
 2. 读正文：`materials_read("/computer-networks-8e/05-运输层/5.8.2-TCP的拥塞控制方法.md")`；
-3. 引用：只取回答需要的一两段，按工具返回的 `【…】` 头部作答。
-
-章节地图用 `00-toc.md` 或 `materials_ls`，不要为此读完整章正文。
-
-第一轮没命中就换同义词、英文缩写或相邻小节，不要猜。
 
 ## 3. 页码与引用
 
