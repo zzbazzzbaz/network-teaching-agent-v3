@@ -1,5 +1,6 @@
 import {
   BookOutlined,
+  ControlOutlined,
   DeleteOutlined,
   EditOutlined,
   LineChartOutlined,
@@ -24,6 +25,8 @@ const ACCOUNT_ITEMS = [
   { key: 'questions', label: '题库', icon: <BookOutlined />, path: '/questions' },
   { key: 'stats', label: '统计', icon: <LineChartOutlined />, path: '/stats' },
 ];
+
+const ADMIN_ITEM = { key: 'admin', label: '管理', icon: <ControlOutlined />, path: '/admin' };
 
 export function Sidebar({
   onNavigate,
@@ -72,6 +75,11 @@ export function Sidebar({
         label: session.title,
       })),
     [sessions.items],
+  );
+
+  const accountItems = useMemo(
+    () => (user?.role === 'admin' ? [...ACCOUNT_ITEMS, ADMIN_ITEM] : ACCOUNT_ITEMS),
+    [user?.role],
   );
 
   const handleCreate = () => {
@@ -227,7 +235,7 @@ export function Sidebar({
           trigger={['click']}
           menu={{
             items: [
-              ...ACCOUNT_ITEMS.map((item) => ({
+              ...accountItems.map((item) => ({
                 key: item.key,
                 label: item.label,
                 icon: item.icon,
@@ -241,7 +249,7 @@ export function Sidebar({
                 navigate('/login', { replace: true });
                 return;
               }
-              const target = ACCOUNT_ITEMS.find((item) => item.key === key);
+              const target = accountItems.find((item) => item.key === key);
               if (target) {
                 navigate(target.path);
                 onNavigate?.();

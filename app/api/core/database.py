@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -42,11 +43,28 @@ async def session_scope() -> AsyncGenerator[AsyncSession]:
             await session.commit()
 
 
+_USER_ROLE_DDL = (
+    """
+    DO $$
+    BEGIN
+        CREATE TYPE userrole AS ENUM ('STUDENT', 'ADMIN');
+    EXCEPTION
+        WHEN duplicate_object THEN NULL;
+    END
+    $$;
+    """,
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS role userrole NOT NULL DEFAULT 'STUDENT'",
+    "CREATE INDEX IF NOT EXISTS ix_users_role ON users(role)",
+)
+
+
 async def create_db_and_tables() -> None:
     from app.api.repositories import models  # noqa: F401  注册 metadata
 
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+        for statement in _USER_ROLE_DDL:
+            await conn.execute(text(statement))
 
 
 async def close_db() -> None:

@@ -7,3 +7,4 @@ export * as filesApi from './files';
 export * as memoryApi from './memory';
 export * as questionsApi from './questions';
 export * as statsApi from './stats';
+export * as adminApi from './admin';

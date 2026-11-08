@@ -2,6 +2,8 @@ import type { Msg } from '@agentscope-ai/agentscope/message';
 
 export type AgentKind = 'teach_agent' | 'exp_agent';
 export type QuestionType = 'single_choice' | 'short_answer';
+export type UserRole = 'student' | 'admin';
+export type AdminQuestionScope = 'public' | 'all' | 'user';
 export type FileStatus = 'pending' | 'ready';
 export type SessionStatus = 'running' | 'idle' | 'awaiting_permission' | 'awaiting_external_result';
 
@@ -16,6 +18,7 @@ export interface UserResponse {
   id: string;
   username: string;
   status: 'active' | 'disabled';
+  role: UserRole;
   created_at: string;
 }
 
@@ -184,4 +187,154 @@ export interface UserConfirmResultPayload {
     confirmed: boolean;
     tool_call: { id: string; name: string; input: string; type: 'tool_call' };
   }>;
+}
+
+export interface AdminUserItem {
+  id: string;
+  username: string;
+  role: UserRole;
+  status: 'active' | 'disabled';
+  created_at: string;
+  last_active_at: string | null;
+  sessions: number;
+  rounds: number;
+  tokens: number;
+  answers: number;
+}
+
+export interface AdminUserListResponse {
+  items: AdminUserItem[];
+  total: number;
+}
+
+export interface AdminUserDetail {
+  id: string;
+  username: string;
+  role: UserRole;
+  status: 'active' | 'disabled';
+  created_at: string;
+  last_active_at: string | null;
+}
+
+export interface AdminUserCreateRequest {
+  username: string;
+  password: string;
+  role: UserRole;
+  status: 'active' | 'disabled';
+}
+
+export interface AdminUserUpdateRequest {
+  username?: string;
+  role?: UserRole;
+  status?: 'active' | 'disabled';
+}
+
+export interface AdminOverviewDailyItem {
+  date: string;
+  tokens: number;
+  input_tokens: number;
+  output_tokens: number;
+  cache_input_tokens: number;
+  cache_hit_rate: number | null;
+  rounds: number;
+  answers: number;
+  active_students: number;
+  new_students: number;
+}
+
+export interface AdminOverviewResponse {
+  students_total: number;
+  students_active: number;
+  students_new: number;
+  sessions: number;
+  rounds: number;
+  answers: number;
+  tokens: number;
+  input_tokens: number;
+  output_tokens: number;
+  cache_input_tokens: number;
+  cache_hit_rate: number | null;
+  daily: AdminOverviewDailyItem[];
+}
+
+export interface AdminUserRankingItem {
+  user_id: string;
+  username: string;
+  tokens: number;
+  rounds: number;
+  answers: number;
+  sessions: number;
+  last_active_at: string | null;
+}
+
+export interface AdminUserRankingResponse {
+  items: AdminUserRankingItem[];
+}
+
+export interface AdminQuestionItem {
+  id: string;
+  user_id: string | null;
+  owner_username: string | null;
+  is_public: boolean;
+  stem: string;
+  question_type: QuestionType;
+  options: Record<string, string> | null;
+  answer_text: string;
+  note: string | null;
+  created_at: string;
+  attempt_count: number;
+  student_count: number;
+  correct_rate: number | null;
+}
+
+export interface AdminQuestionListResponse {
+  items: AdminQuestionItem[];
+  total: number;
+}
+
+export interface AdminQuestionDetail {
+  id: string;
+  user_id: string | null;
+  owner_username: string | null;
+  is_public: boolean;
+  stem: string;
+  question_type: QuestionType;
+  options: Record<string, string> | null;
+  answer_text: string;
+  note: string | null;
+  created_at: string;
+  attempt_total: number;
+  student_count: number;
+}
+
+export interface AdminQuestionPayload {
+  stem: string;
+  question_type: QuestionType;
+  options: Record<string, string> | null;
+  answer_text: string;
+  note: string | null;
+}
+
+export interface AdminQuestionUpdatePayload {
+  stem?: string;
+  question_type?: QuestionType;
+  options?: Record<string, string> | null;
+  answer_text?: string;
+  note?: string | null;
+}
+
+export interface AdminAttemptItem {
+  id: string;
+  user_id: string;
+  username: string;
+  answer_text: string;
+  is_correct: boolean | null;
+  created_at: string;
+  session_id: string;
+  session_title: string | null;
+}
+
+export interface AdminAttemptListResponse {
+  items: AdminAttemptItem[];
+  total: number;
 }

@@ -36,6 +36,7 @@ async def list_owned(
     limit: int,
     offset: int,
     include_empty: bool,
+    query: str | None = None,
 ) -> tuple[list[ChatSession], int]:
     filters: list[ColumnElement[bool]] = [
         col(ChatSession.user_id) == user_id,
@@ -43,6 +44,9 @@ async def list_owned(
     ]
     if not include_empty:
         filters.append(col(ChatSession.last_message_at).is_not(None))
+    if query:
+        escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        filters.append(col(ChatSession.title).ilike(f"%{escaped}%", escape="\\"))
 
     total = await session.scalar(select(func.count()).select_from(ChatSession).where(*filters))
     statement = (

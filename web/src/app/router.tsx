@@ -3,6 +3,8 @@ import { createBrowserRouter, Navigate } from 'react-router';
 
 import { RouteErrorBoundary } from '@/app/error-boundary';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { AdminLayout } from '@/features/admin';
+import { RequireAdmin } from '@/features/auth/RequireAdmin';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { ChatPage } from '@/pages/chat/ChatPage';
 import { LoginPage } from '@/pages/login/LoginPage';
@@ -26,6 +28,36 @@ const QuestionDetailPage = lazy(() =>
 
 const StatsPage = lazy(() =>
   import('@/pages/stats/StatsPage').then((module) => ({ default: module.StatsPage })),
+);
+
+const AdminOverviewPage = lazy(() =>
+  import('@/pages/admin/AdminOverviewPage').then((module) => ({
+    default: module.AdminOverviewPage,
+  })),
+);
+
+const AdminUsersPage = lazy(() =>
+  import('@/pages/admin/AdminUsersPage').then((module) => ({
+    default: module.AdminUsersPage,
+  })),
+);
+
+const AdminUserDetailPage = lazy(() =>
+  import('@/pages/admin/AdminUserDetailPage').then((module) => ({
+    default: module.AdminUserDetailPage,
+  })),
+);
+
+const AdminQuestionsPage = lazy(() =>
+  import('@/pages/admin/AdminQuestionsPage').then((module) => ({
+    default: module.AdminQuestionsPage,
+  })),
+);
+
+const AdminQuestionDetailPage = lazy(() =>
+  import('@/pages/admin/AdminQuestionDetailPage').then((module) => ({
+    default: module.AdminQuestionDetailPage,
+  })),
 );
 
 export const router = createBrowserRouter([
@@ -74,6 +106,41 @@ export const router = createBrowserRouter([
         path: 'stats',
         element: <StatsPage />,
         errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: 'admin',
+        element: (
+          <RequireAdmin>
+            <AdminLayout />
+          </RequireAdmin>
+        ),
+        children: [
+          {
+            index: true,
+            element: <AdminOverviewPage />,
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: 'users',
+            element: <AdminUsersPage />,
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: 'users/:userId',
+            element: <AdminUserDetailPage />,
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: 'questions',
+            element: <AdminQuestionsPage />,
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: 'questions/:questionId',
+            element: <AdminQuestionDetailPage />,
+            errorElement: <RouteErrorBoundary />,
+          },
+        ],
       },
       {
         path: '*',

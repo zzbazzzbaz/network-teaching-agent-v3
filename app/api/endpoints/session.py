@@ -26,8 +26,8 @@ from app.shared.dto.session import (
 )
 from app.shared.errors import (
     RemoteServiceError,
+    account_unavailable,
     conflict,
-    forbidden,
     not_found,
     service_unavailable,
     unauthorized,
@@ -279,7 +279,7 @@ async def stream_session(
         except user_service.UserNotFoundError as exc:
             raise unauthorized() from exc
         if user.status is not UserStatus.ACTIVE:
-            raise forbidden()
+            raise account_unavailable()
         try:
             chat = await session_service.get_session(
                 session,

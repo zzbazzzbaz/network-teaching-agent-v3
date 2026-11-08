@@ -3,6 +3,7 @@ import { Alert, Drawer, Skeleton, Tag } from 'antd';
 
 import { toErrorMessage } from '@/api/client';
 import { getMemoryEntry } from '@/api/memory';
+import type { MemoryEntryDetail } from '@/api/types';
 import { ErrorState } from '@/components/common';
 import { Markdown } from '@/features/chat/markdown';
 import { formatDateTime } from '@/lib/format';
@@ -10,12 +11,19 @@ import { formatDateTime } from '@/lib/format';
 export interface MemoryDetailProps {
   entryId: string | null;
   onClose: () => void;
+  fetchEntry?: (entryId: string) => Promise<MemoryEntryDetail>;
+  queryKeyPrefix?: string;
 }
 
-export function MemoryDetail({ entryId, onClose }: MemoryDetailProps) {
+export function MemoryDetail({
+  entryId,
+  onClose,
+  fetchEntry,
+  queryKeyPrefix = 'self',
+}: MemoryDetailProps) {
   const detailQuery = useQuery({
-    queryKey: ['memory-entry', entryId],
-    queryFn: () => getMemoryEntry(entryId as string),
+    queryKey: ['memory-entry', queryKeyPrefix, entryId],
+    queryFn: () => (fetchEntry ?? getMemoryEntry)(entryId as string),
     enabled: Boolean(entryId),
     retry: false,
   });

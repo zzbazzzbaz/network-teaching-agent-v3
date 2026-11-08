@@ -11,6 +11,28 @@ const PAGE_TITLES: Record<string, string> = {
   '/stats': '统计',
 };
 
+function resolveTitle(pathname: string): string {
+  if (pathname === '/admin') {
+    return '管理';
+  }
+  if (pathname === '/admin/users') {
+    return '学生管理';
+  }
+  if (pathname.startsWith('/admin/users/')) {
+    return '学生详情';
+  }
+  if (pathname === '/admin/questions') {
+    return '题目管理';
+  }
+  if (pathname.startsWith('/admin/questions/')) {
+    return '题目详情';
+  }
+  if (pathname.startsWith('/questions/')) {
+    return '题目详情';
+  }
+  return PAGE_TITLES[pathname] ?? '对话';
+}
+
 export function AppHeader() {
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -18,8 +40,7 @@ export function AppHeader() {
   const setSidebarCollapsed = useUiStore((state) => state.setSidebarCollapsed);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
-  const isQuestionDetail = location.pathname.startsWith('/questions/');
-  const pageTitle = isQuestionDetail ? '题目详情' : (PAGE_TITLES[location.pathname] ?? '对话');
+  const pageTitle = resolveTitle(location.pathname);
   const showSidebarToggle = isMobile || sidebarCollapsed;
 
   const openSidebar = () => {

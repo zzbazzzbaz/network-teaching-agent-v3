@@ -6,7 +6,7 @@ from sqlalchemy import Column, Index, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
-from app.shared.enums import AgentKind, FileStatus, QuestionType, UserStatus
+from app.shared.enums import AgentKind, FileStatus, QuestionType, UserRole, UserStatus
 
 
 def _now() -> datetime:
@@ -20,6 +20,7 @@ class User(SQLModel, table=True):
     username: str = Field(max_length=64, unique=True, index=True)
     password_hash: str = Field(max_length=255)
     status: UserStatus = Field(default=UserStatus.ACTIVE)
+    role: UserRole = Field(default=UserRole.STUDENT, index=True)
     created_at: datetime = Field(default_factory=_now)
 
 

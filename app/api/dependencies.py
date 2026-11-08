@@ -9,10 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.core.database import session_scope
 from app.api.core.security import TokenError, TokenType, decode_token
-from app.api.repositories.models import User, UserStatus
+from app.api.repositories.models import User, UserRole, UserStatus
 from app.api.services import user_service
 from app.shared.constants import USER_ID_HEADER
-from app.shared.errors import forbidden, unauthorized
+from app.shared.errors import account_unavailable, forbidden, unauthorized
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +45,21 @@ async def get_current_user(
         raise unauthorized() from exc
     if user.status is not UserStatus.ACTIVE:
         logger.warning("inactive user rejected: user_id=%s", user.id)
-        raise forbidden()
+        raise account_unavailable()
     return user
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_admin_user(current_user: CurrentUser) -> User:
+    if current_user.role is not UserRole.ADMIN:
+        logger.warning("admin access rejected: user_id=%s", current_user.id)
+        raise forbidden()
+    return current_user
+
+
+AdminUser = Annotated[User, Depends(get_admin_user)]
 
 
 async def get_access_user_id(

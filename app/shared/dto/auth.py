@@ -2,7 +2,7 @@ import uuid
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from app.shared.enums import UserStatus
+from app.shared.enums import UserRole, UserStatus
 
 
 class LoginRequest(BaseModel):
@@ -27,4 +27,5 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     username: str
     status: UserStatus
+    role: UserRole
     created_at: AwareDatetime

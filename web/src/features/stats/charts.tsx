@@ -1,12 +1,20 @@
 import { useMemo } from 'react';
 
-import type { DailyStatsItem } from '@/api/types';
 import { useEchart } from '@/lib/use-echart';
 
-import { buildDailyTrendOption } from './chart-option';
+import { buildDailyTrendOption, type TrendPoint } from './chart-option';
 
-export function DailyTrendChart({ data }: { data: DailyStatsItem[] }) {
-  const option = useMemo(() => buildDailyTrendOption(data), [data]);
+export function DailyTrendChart({
+  data,
+  showActiveStudents = false,
+}: {
+  data: TrendPoint[];
+  showActiveStudents?: boolean;
+}) {
+  const option = useMemo(
+    () => buildDailyTrendOption(data, showActiveStudents),
+    [data, showActiveStudents],
+  );
   const mountRef = useEchart(option);
 
   return (

@@ -92,6 +92,7 @@ async def list_sessions(
     limit: int,
     offset: int,
     include_empty: bool,
+    query: str | None = None,
 ) -> tuple[list[ChatSession], int]:
     return await session_repositories.list_owned(
         session,
@@ -99,6 +100,7 @@ async def list_sessions(
         limit=limit,
         offset=offset,
         include_empty=include_empty,
+        query=query,
     )
 
 

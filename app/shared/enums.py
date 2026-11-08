@@ -6,6 +6,11 @@ class UserStatus(StrEnum):
     DISABLED = "disabled"
 
 
+class UserRole(StrEnum):
+    STUDENT = "student"
+    ADMIN = "admin"
+
+
 class AgentKind(StrEnum):
     TEACH = "teach_agent"
     EXP = "exp_agent"

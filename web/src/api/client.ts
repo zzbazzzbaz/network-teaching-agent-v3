@@ -108,10 +108,15 @@ async function performRefresh(): Promise<string> {
   });
   const result = await readResponse(response);
   if (!result.ok) {
-    const reason: AuthFailureReason = result.status === 403 ? 'disabled' : 'expired';
-    writeAuthTokens(null);
-    authFailureHandler(reason);
-    throw new ApiError(result.status, extractDetail(result.payload, result.status));
+    const detail = extractDetail(result.payload, result.status);
+    if (result.status === 403 && detail === '账号不可用') {
+      writeAuthTokens(null);
+      authFailureHandler('disabled');
+    } else if (result.status !== 403) {
+      writeAuthTokens(null);
+      authFailureHandler('expired');
+    }
+    throw new ApiError(result.status, detail);
   }
   const payload = result.payload as {
     access_token: string;
@@ -172,11 +177,12 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   if (!result.ok) {
-    if (result.status === 403 && useAuth) {
+    const detail = extractDetail(result.payload, result.status);
+    if (result.status === 403 && useAuth && detail === '账号不可用') {
       writeAuthTokens(null);
       authFailureHandler('disabled');
     }
-    throw new ApiError(result.status, extractDetail(result.payload, result.status));
+    throw new ApiError(result.status, detail);
   }
 
   return result.payload as T;

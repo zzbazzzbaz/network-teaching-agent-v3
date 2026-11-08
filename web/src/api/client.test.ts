@@ -76,8 +76,8 @@ describe('HTTP 客户端', () => {
     expect(window.localStorage.getItem('app.auth.v1')).toBeNull();
   });
 
-  it('403 视为账号不可用', async () => {
-    const fetchMock = vi.fn(async () => jsonResponse({ detail: '无访问权限' }, 403));
+  it('账号不可用 403 清理令牌并通知登出', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ detail: '账号不可用' }, 403));
     vi.stubGlobal('fetch', fetchMock);
 
     const { request, setAuthFailureHandler } = await import('./client');
@@ -86,5 +86,19 @@ describe('HTTP 客户端', () => {
 
     await expect(request('/sessions')).rejects.toMatchObject({ status: 403 });
     expect(handler).toHaveBeenCalledWith('disabled');
+    expect(window.localStorage.getItem('app.auth.v1')).toBeNull();
+  });
+
+  it('无访问权限 403 保留登录态', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ detail: '无访问权限' }, 403));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { request, setAuthFailureHandler } = await import('./client');
+    const handler = vi.fn();
+    setAuthFailureHandler(handler);
+
+    await expect(request('/admin/users')).rejects.toMatchObject({ status: 403 });
+    expect(handler).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem('app.auth.v1')).not.toBeNull();
   });
 });

@@ -10,7 +10,7 @@ from app.shared.dto.auth import (
     RefreshRequest,
     UserResponse,
 )
-from app.shared.errors import forbidden, unauthorized
+from app.shared.errors import account_unavailable, unauthorized
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ async def refresh(payload: RefreshRequest, session: SessionDep) -> AuthResponse:
         raise unauthorized() from exc
     except user_service.InactiveUserError as exc:
         logger.warning("refresh rejected, inactive user")
-        raise forbidden() from exc
+        raise account_unavailable() from exc
     return AuthResponse(
         access_token=tokens.access_token,
         refresh_token=tokens.refresh_token,
