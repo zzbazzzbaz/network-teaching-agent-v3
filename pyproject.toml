@@ -45,4 +45,14 @@ line-length = 100
 exclude = ["docs"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "ASYNC", "RUF","SIM"]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "ASYNC",
+    "RUF",
+    "SIM",
+    "ARG",
+]

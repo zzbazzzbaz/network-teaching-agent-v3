@@ -8,7 +8,7 @@ from app.api.infra.agent_client import close_agent_client
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
     await create_db_and_tables()
     try:
         yield

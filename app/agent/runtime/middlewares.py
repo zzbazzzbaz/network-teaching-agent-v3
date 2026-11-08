@@ -129,6 +129,7 @@ class TracingUserMiddleware(MiddlewareBase):
         input_kwargs: dict,
         next_handler: Callable[..., AsyncGenerator],
     ) -> AsyncGenerator:
+        del agent
         span = trace.get_current_span()
         if span.is_recording():
             span.set_attribute("user.id", self._user_id)
