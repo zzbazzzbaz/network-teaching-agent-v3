@@ -6,6 +6,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { AdminLayout } from '@/features/admin';
 import { RequireAdmin } from '@/features/auth/RequireAdmin';
 import { RequireAuth } from '@/features/auth/RequireAuth';
+import { RequirePasswordChange } from '@/features/auth/RequirePasswordChange';
+import { ChangePasswordPage } from '@/pages/change-password';
 import { ChatPage } from '@/pages/chat/ChatPage';
 import { LoginPage } from '@/pages/login/LoginPage';
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage';
@@ -72,10 +74,20 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
+    path: '/change-password',
+    element: (
+      <RequireAuth>
+        <ChangePasswordPage />
+      </RequireAuth>
+    ),
+  },
+  {
     path: '/',
     element: (
       <RequireAuth>
-        <AppLayout />
+        <RequirePasswordChange>
+          <AppLayout />
+        </RequirePasswordChange>
       </RequireAuth>
     ),
     children: [

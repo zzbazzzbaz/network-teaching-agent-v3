@@ -9,7 +9,6 @@ from app.api.repositories.models import User
 from app.api.repositories.user_repositories import AdminUserRow, AdminUserSort
 from app.api.services import admin_user_service
 from app.shared.dto.admin import (
-    AdminPasswordResetRequest,
     AdminUserCreateRequest,
     AdminUserDetail,
     AdminUserItem,
@@ -76,8 +75,6 @@ async def create_user(
         user = await admin_user_service.create_user(
             session,
             username=payload.username,
-            password=payload.password,
-            role=payload.role,
             status=payload.status,
         )
     except admin_user_service.UsernameExistsError as exc:
@@ -127,16 +124,11 @@ async def update_user_status(
 @router.post("/{user_id}/password", status_code=204, summary="重置密码")
 async def reset_password(
     user_id: uuid.UUID,
-    payload: AdminPasswordResetRequest,
     session: SessionDep,
     _admin: AdminUser,
 ) -> None:
     try:
-        await admin_user_service.reset_password(
-            session,
-            user_id=user_id,
-            new_password=payload.new_password,
-        )
+        await admin_user_service.reset_password(session, user_id=user_id)
     except admin_user_service.AdminUserNotFoundError as exc:
         raise not_found() from exc
     await session.commit()

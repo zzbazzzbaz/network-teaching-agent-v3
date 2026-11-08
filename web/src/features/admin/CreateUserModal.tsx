@@ -1,14 +1,11 @@
-import { App, Form, Input, Modal, Select } from 'antd';
+import { App, Form, Input, Modal, Select, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 
 import { createUser } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
-import type { UserRole } from '@/api/types';
 
 interface CreateUserFormValues {
   username: string;
-  password: string;
-  role: UserRole;
   status: 'active' | 'disabled';
 }
 
@@ -29,8 +26,6 @@ export function CreateUserModal({ open, onClose, onCreated }: CreateUserModalPro
     }
     form.setFieldsValue({
       username: '',
-      password: '',
-      role: 'student',
       status: 'active',
     });
   }, [open, form]);
@@ -41,8 +36,6 @@ export function CreateUserModal({ open, onClose, onCreated }: CreateUserModalPro
     try {
       await createUser({
         username: values.username.trim(),
-        password: values.password,
-        role: values.role,
         status: values.status,
       });
       message.success('用户已创建');
@@ -79,24 +72,8 @@ export function CreateUserModal({ open, onClose, onCreated }: CreateUserModalPro
           <Input autoComplete="off" placeholder="学号或用户名" />
         </Form.Item>
 
-        <Form.Item
-          label="初始密码"
-          name="password"
-          rules={[
-            { required: true, message: '请输入初始密码' },
-            { min: 6, max: 128, message: '密码为 6-128 个字符' },
-          ]}
-        >
-          <Input.Password autoComplete="new-password" placeholder="至少 6 个字符" />
-        </Form.Item>
-
-        <Form.Item label="角色" name="role" rules={[{ required: true }]}>
-          <Select
-            options={[
-              { label: '学生', value: 'student' },
-              { label: '管理员', value: 'admin' },
-            ]}
-          />
+        <Form.Item label="角色">
+          <Typography.Text>学生</Typography.Text>
         </Form.Item>
 
         <Form.Item label="状态" name="status" rules={[{ required: true }]}>
@@ -108,6 +85,11 @@ export function CreateUserModal({ open, onClose, onCreated }: CreateUserModalPro
           />
         </Form.Item>
       </Form>
+
+      <Typography.Paragraph type="secondary" className="mb-0 text-xs">
+        初始密码为用户名后追加 000000，例如 student01 的初始密码为 student01000000。
+        首次登录后需要修改密码。
+      </Typography.Paragraph>
     </Modal>
   );
 }

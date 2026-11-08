@@ -3,6 +3,7 @@ import {
   ControlOutlined,
   DeleteOutlined,
   EditOutlined,
+  KeyOutlined,
   LineChartOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -240,6 +241,7 @@ export function Sidebar({
                 label: item.label,
                 icon: item.icon,
               })),
+              { key: 'password', label: '修改密码', icon: <KeyOutlined /> },
               { type: 'divider' },
               { key: 'logout', label: '退出登录', icon: <LogoutOutlined />, danger: true },
             ],
@@ -247,6 +249,11 @@ export function Sidebar({
               if (key === 'logout') {
                 logout();
                 navigate('/login', { replace: true });
+                return;
+              }
+              if (key === 'password') {
+                navigate('/change-password');
+                onNavigate?.();
                 return;
               }
               const target = accountItems.find((item) => item.key === key);

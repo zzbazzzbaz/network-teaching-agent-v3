@@ -54,6 +54,10 @@ def bad_request() -> HTTPException:
     return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="请求无法完成")
 
 
+def bad_request_detail(detail: str) -> HTTPException:
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+
 def conflict() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_409_CONFLICT,

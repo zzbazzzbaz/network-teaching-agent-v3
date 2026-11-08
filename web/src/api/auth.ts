@@ -12,3 +12,13 @@ export function login(username: string, password: string): Promise<AuthResponse>
 export function fetchMe(): Promise<UserResponse> {
   return request<UserResponse>('/auth/me');
 }
+
+export function changePassword(
+  oldPassword: string,
+  newPassword: string,
+): Promise<UserResponse> {
+  return request<UserResponse>('/auth/change-password', {
+    method: 'POST',
+    body: { old_password: oldPassword, new_password: newPassword },
+  });
+}

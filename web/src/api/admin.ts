@@ -100,10 +100,9 @@ export function updateUserStatus(
   });
 }
 
-export function resetPassword(userId: string, newPassword: string): Promise<void> {
+export function resetPassword(userId: string): Promise<void> {
   return request<void>(`/admin/users/${encodeURIComponent(userId)}/password`, {
     method: 'POST',
-    body: { new_password: newPassword },
   });
 }
 

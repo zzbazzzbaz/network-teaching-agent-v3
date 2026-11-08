@@ -58,15 +58,15 @@ def test_note_normalization() -> None:
 
 
 def test_admin_user_username_validation() -> None:
-    payload = AdminUserCreateRequest(
-        username="  student01  ",
-        password="secret123",
-        role=UserRole.STUDENT,
-        status=UserStatus.ACTIVE,
-    )
+    payload = AdminUserCreateRequest(username="  student01  ", status=UserStatus.ACTIVE)
     assert payload.username == "student01"
+    assert payload.status is UserStatus.ACTIVE
 
     with pytest.raises(ValidationError):
-        AdminUserCreateRequest(username="st udent", password="secret123")
+        AdminUserCreateRequest(username="st udent")
+    with pytest.raises(ValidationError):
+        AdminUserCreateRequest(username="student01", password="secret123")
+    with pytest.raises(ValidationError):
+        AdminUserCreateRequest(username="student01", role=UserRole.ADMIN)
     with pytest.raises(ValidationError):
         AdminUserStatusRequest(status="unknown")

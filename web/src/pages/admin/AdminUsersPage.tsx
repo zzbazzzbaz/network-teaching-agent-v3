@@ -20,7 +20,12 @@ import { listUsers, updateUserStatus, type AdminUserSort } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
 import type { AdminUserItem, UserRole } from '@/api/types';
 import { EmptyState, ErrorState, PageShell } from '@/components/common';
-import { CreateUserModal, PasswordModal, UserRoleTag, UserStatusTag } from '@/features/admin';
+import {
+  CreateUserModal,
+  useResetPassword,
+  UserRoleTag,
+  UserStatusTag,
+} from '@/features/admin';
 import { formatDateTime, formatNumber } from '@/lib/format';
 import { useIsMobile } from '@/lib/use-media-query';
 import { useAuthStore } from '@/stores/auth-store';
@@ -55,6 +60,7 @@ export function AdminUsersPage() {
   const queryClient = useQueryClient();
   const { message, modal } = App.useApp();
   const currentUser = useAuthStore((state) => state.user);
+  const confirmResetPassword = useResetPassword();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const role = parseRole(searchParams.get('role'));
@@ -65,7 +71,6 @@ export function AdminUsersPage() {
 
   const [keyword, setKeyword] = useState(query);
   const [createOpen, setCreateOpen] = useState(false);
-  const [passwordTarget, setPasswordTarget] = useState<AdminUserItem | null>(null);
 
   useEffect(() => {
     setKeyword(query);
@@ -158,7 +163,7 @@ export function AdminUsersPage() {
     ],
     onClick: ({ key }: { key: string }) => {
       if (key === 'password') {
-        setPasswordTarget(record);
+        confirmResetPassword(record);
         return;
       }
       if (key === 'toggle') {
@@ -342,13 +347,6 @@ export function AdminUsersPage() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={refresh}
-      />
-
-      <PasswordModal
-        open={Boolean(passwordTarget)}
-        userId={passwordTarget?.id ?? null}
-        username={passwordTarget?.username ?? null}
-        onClose={() => setPasswordTarget(null)}
       />
     </PageShell>
   );

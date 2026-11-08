@@ -14,6 +14,8 @@ from app.shared.config import get_settings
 
 _ALGORITHM = "HS256"
 
+DEFAULT_PASSWORD_SUFFIX = "000000"
+
 _SCRYPT_N = 2**14
 _SCRYPT_R = 8
 _SCRYPT_P = 1
@@ -35,6 +37,10 @@ def _b64(raw: bytes) -> str:
 
 def _unb64(text: str) -> bytes:
     return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
+
+
+def default_password(username: str) -> str:
+    return f"{username}{DEFAULT_PASSWORD_SUFFIX}"
 
 
 def hash_password(password: str) -> str:

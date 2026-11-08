@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.core.security import hash_password
+from app.api.core.security import default_password, hash_password
 from app.api.repositories import user_repositories
 from app.api.repositories.models import User, UserRole, UserStatus
 from app.api.repositories.user_repositories import AdminUserRow, AdminUserSort
@@ -75,8 +75,6 @@ async def create_user(
     session: AsyncSession,
     *,
     username: str,
-    password: str,
-    role: UserRole,
     status: UserStatus,
 ) -> User:
     normalized = username.strip()
@@ -86,8 +84,8 @@ async def create_user(
         return await user_repositories.create(
             session,
             username=normalized,
-            password_hash=hash_password(password),
-            role=role,
+            password_hash=hash_password(default_password(normalized)),
+            role=UserRole.STUDENT,
             status=status,
         )
     except IntegrityError as exc:
@@ -123,7 +121,10 @@ async def reset_password(
     session: AsyncSession,
     *,
     user_id: uuid.UUID,
-    new_password: str,
 ) -> None:
     user = await get_user(session, user_id)
-    await user_repositories.set_password(session, user, hash_password(new_password))
+    await user_repositories.set_password(
+        session,
+        user,
+        hash_password(default_password(user.username)),
+    )

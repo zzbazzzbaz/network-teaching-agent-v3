@@ -1,19 +1,18 @@
 import { ArrowLeftOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Card, Skeleton, Space, Tabs, Typography } from 'antd';
-import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 import { getUser, updateUserStatus } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
 import { ErrorState, PageShell } from '@/components/common';
 import {
-  PasswordModal,
   UserMemoryTab,
   UserOverviewTab,
   UserRoleTag,
   UserSessionsTab,
   UserStatusTag,
+  useResetPassword,
 } from '@/features/admin';
 import { formatDateTime } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth-store';
@@ -30,10 +29,9 @@ export function AdminUserDetailPage() {
   const queryClient = useQueryClient();
   const { message, modal } = App.useApp();
   const currentUser = useAuthStore((state) => state.user);
+  const confirmResetPassword = useResetPassword();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = parseTab(searchParams.get('tab'));
-
-  const [passwordOpen, setPasswordOpen] = useState(false);
 
   const userQuery = useQuery({
     queryKey: ['admin-user', userId],
@@ -135,7 +133,7 @@ export function AdminUserDetailPage() {
             </div>
           </div>
           <Space wrap>
-            <Button icon={<LockOutlined />} onClick={() => setPasswordOpen(true)}>
+            <Button icon={<LockOutlined />} onClick={() => confirmResetPassword(user)}>
               重置密码
             </Button>
             <Button
@@ -170,13 +168,6 @@ export function AdminUserDetailPage() {
             children: <UserMemoryTab userId={user.id} />,
           },
         ]}
-      />
-
-      <PasswordModal
-        open={passwordOpen}
-        userId={user.id}
-        username={user.username}
-        onClose={() => setPasswordOpen(false)}
       />
     </PageShell>
   );

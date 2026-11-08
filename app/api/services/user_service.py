@@ -3,7 +3,15 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.core.security import TokenError, TokenType, create_token, decode_token, verify_password
+from app.api.core.security import (
+    TokenError,
+    TokenType,
+    create_token,
+    decode_token,
+    default_password,
+    hash_password,
+    verify_password,
+)
 from app.api.repositories import user_repositories
 from app.api.repositories.models import User, UserStatus
 
@@ -21,6 +29,18 @@ class InactiveUserError(UserError):
 
 
 class UserNotFoundError(UserError):
+    pass
+
+
+class InvalidPasswordError(UserError):
+    pass
+
+
+class SamePasswordError(UserError):
+    pass
+
+
+class DefaultPasswordError(UserError):
     pass
 
 
@@ -68,4 +88,21 @@ async def get_user(session: AsyncSession, user_id: uuid.UUID) -> User:
     user = await user_repositories.get_by_id(session, user_id)
     if user is None:
         raise UserNotFoundError
+    return user
+
+
+async def change_password(
+    session: AsyncSession,
+    *,
+    user: User,
+    old_password: str,
+    new_password: str,
+) -> User:
+    if not verify_password(old_password, user.password_hash):
+        raise InvalidPasswordError
+    if new_password == old_password:
+        raise SamePasswordError
+    if new_password == default_password(user.username):
+        raise DefaultPasswordError
+    await user_repositories.set_password(session, user, hash_password(new_password))
     return user

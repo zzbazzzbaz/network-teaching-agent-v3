@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from typing import Annotated
 
-from pydantic import AwareDatetime, BaseModel, Field, StringConstraints
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints
 
 from app.shared.enums import QuestionType, UserRole, UserStatus
 
@@ -36,18 +36,14 @@ class AdminUserListResponse(BaseModel):
 
 
 class AdminUserCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     username: AdminUsername
-    password: str = Field(min_length=6, max_length=128)
-    role: UserRole = UserRole.STUDENT
     status: UserStatus = UserStatus.ACTIVE
 
 
 class AdminUserStatusRequest(BaseModel):
     status: UserStatus
-
-
-class AdminPasswordResetRequest(BaseModel):
-    new_password: str = Field(min_length=6, max_length=128)
 
 
 class AdminUserDetail(BaseModel):

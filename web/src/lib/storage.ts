@@ -1,4 +1,5 @@
 const AUTH_KEY = 'app.auth.v1';
+const PASSWORD_CHANGE_KEY = 'app.password_change_required.v1';
 
 export interface AuthTokens {
   accessToken: string;
@@ -40,5 +41,25 @@ export function writeAuthTokens(tokens: AuthTokens | null): void {
     window.localStorage.setItem(AUTH_KEY, JSON.stringify(tokens));
   } catch {
     // 隐私模式下 localStorage 写入会抛错，令牌只留在内存里也不阻塞登录
+  }
+}
+
+export function readPasswordChangeRequired(): boolean {
+  try {
+    return window.sessionStorage.getItem(PASSWORD_CHANGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function writePasswordChangeRequired(required: boolean): void {
+  try {
+    if (required) {
+      window.sessionStorage.setItem(PASSWORD_CHANGE_KEY, 'true');
+      return;
+    }
+    window.sessionStorage.removeItem(PASSWORD_CHANGE_KEY);
+  } catch {
+    // sessionStorage 不可用时只在内存中保留标记
   }
 }

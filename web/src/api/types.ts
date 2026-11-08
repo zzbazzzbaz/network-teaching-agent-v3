@@ -218,8 +218,6 @@ export interface AdminUserDetail {
 
 export interface AdminUserCreateRequest {
   username: string;
-  password: string;
-  role: UserRole;
   status: 'active' | 'disabled';
 }
 
