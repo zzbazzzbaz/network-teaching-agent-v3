@@ -2,15 +2,10 @@ import logging
 from pathlib import Path
 
 from agentscope.app.storage import AgentData, AgentRecord, StorageBase
-from agentscope.credential import DashScopeCredential, DeepSeekCredential
 
+from app.agent.runtime.models import build_chat_credential, build_embedding_credential
 from app.shared.config import Settings
-from app.shared.constants import (
-    CHAT_CREDENTIAL_ID,
-    EMBEDDING_CREDENTIAL_ID,
-    SYSTEM_USER_ID,
-    TEACH_AGENT_ID,
-)
+from app.shared.constants import SYSTEM_USER_ID, TEACH_AGENT_ID
 
 logger = logging.getLogger(__name__)
 
@@ -18,21 +13,11 @@ _PROMPT_PATH = Path(__file__).resolve().parent.parent / "resource" / "prompts" /
 
 
 async def ensure_seed(storage: StorageBase, settings: Settings) -> None:
-    bailian_credential = DashScopeCredential(
-        id=EMBEDDING_CREDENTIAL_ID,
-        name="百炼",
-        api_key=settings.embedding.api_key,
-        base_url=settings.embedding.base_url,
-    )
-    await storage.upsert_credential(SYSTEM_USER_ID, bailian_credential)
+    chat_credential = build_chat_credential(settings)
+    embedding_credential = build_embedding_credential(settings)
 
-    deepseek_credential = DeepSeekCredential(
-        id=CHAT_CREDENTIAL_ID,
-        name="DeepSeek 官方",
-        api_key=settings.chat.api_key,
-        base_url=settings.chat.base_url,
-    )
-    await storage.upsert_credential(SYSTEM_USER_ID, deepseek_credential)
+    await storage.upsert_credential(SYSTEM_USER_ID, embedding_credential)
+    await storage.upsert_credential(SYSTEM_USER_ID, chat_credential)
 
     agent = AgentRecord(
         id=TEACH_AGENT_ID,
@@ -46,7 +31,7 @@ async def ensure_seed(storage: StorageBase, settings: Settings) -> None:
     await storage.upsert_agent(SYSTEM_USER_ID, agent)
     logger.info(
         "agent seed ready: chat=%s embedding=%s agent=%s",
-        CHAT_CREDENTIAL_ID,
-        EMBEDDING_CREDENTIAL_ID,
+        chat_credential.id,
+        embedding_credential.id,
         TEACH_AGENT_ID,
     )
