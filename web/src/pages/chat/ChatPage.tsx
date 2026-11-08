@@ -185,6 +185,7 @@ export function ChatPage() {
                 uploads={uploads}
                 phase={phase}
                 onStop={actions.stop}
+                knowledgeBaseIds={sessionQuery.data?.knowledge_base_ids}
                 disabled={chat.loading}
               />
             ) : (
@@ -320,8 +321,6 @@ function PendingComposer({
   return (
     <div className="shrink-0 bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] lg:px-8">
       <div className="w-full">
-        {knowledgePicker}
-        <p className="mb-2 text-[11.5px] text-ink-subtle">发送后会创建新会话</p>
         <ComposerCard
           value={draft}
           onChange={onDraftChange}
@@ -329,6 +328,7 @@ function PendingComposer({
           canSubmit={canSubmit}
           submitting={submitting}
           onPickFiles={addFiles}
+          leading={knowledgePicker}
           attachments={
             <AttachmentThumbs items={attachments} disabled={submitting} onRemove={removeFile} />
           }

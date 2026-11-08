@@ -1,2 +1,2 @@
+export { KnowledgeBadge, KnowledgePicker } from './KnowledgePicker';
 export { KnowledgePanel } from './KnowledgePanel';
-export { KnowledgePicker } from './KnowledgePicker';

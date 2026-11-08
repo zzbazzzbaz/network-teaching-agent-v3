@@ -1,39 +1,41 @@
-import { Tabs, Typography } from 'antd';
+import { Segmented } from 'antd';
+import { useSearchParams } from 'react-router';
 
 import { PageShell } from '@/components/common';
 import { KnowledgePanel } from '@/features/knowledge';
 
 export function KnowledgePage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const visibility = searchParams.get('tab') === 'public' ? 'public' : 'private';
+
+  const changeTab = (value: string | number) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === 'public') {
+      next.set('tab', 'public');
+    } else {
+      next.delete('tab');
+    }
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <PageShell>
-      <Typography.Title level={4} className="mt-0 mb-2">
-        知识库
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" className="mb-5">
-        上传自己的复习资料，或在对话中检索公共资料。公共知识库由管理员维护，只读。
-      </Typography.Paragraph>
-
-      <Tabs
-        items={[
-          {
-            key: 'private',
-            label: '我的知识库',
-            children: (
-              <KnowledgePanel
-                scope="mine"
-                visibility="private"
-                canCreate
-                canEdit
-                canUpload
-              />
-            ),
-          },
-          {
-            key: 'public',
-            label: '公共知识库',
-            children: <KnowledgePanel scope="mine" visibility="public" />,
-          },
-        ]}
+      <KnowledgePanel
+        scope="mine"
+        visibility={visibility}
+        canCreate={visibility === 'private'}
+        canEdit={visibility === 'private'}
+        canUpload={visibility === 'private'}
+        toolbar={
+          <Segmented
+            value={visibility}
+            onChange={changeTab}
+            options={[
+              { label: '我的知识库', value: 'private' },
+              { label: '公共知识库', value: 'public' },
+            ]}
+          />
+        }
       />
     </PageShell>
   );

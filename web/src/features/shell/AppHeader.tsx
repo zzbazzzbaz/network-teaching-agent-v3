@@ -7,6 +7,7 @@ import { useUiStore } from '@/stores/ui-store';
 
 const PAGE_TITLES: Record<string, string> = {
   '/memory': '记忆',
+  '/knowledge': '知识库',
   '/questions': '题库',
   '/stats': '统计',
 };
@@ -26,6 +27,9 @@ function resolveTitle(pathname: string): string {
   }
   if (pathname === '/admin/questions') {
     return '题目管理';
+  }
+  if (pathname === '/admin/knowledge') {
+    return '公共知识库';
   }
   if (pathname.startsWith('/admin/questions/')) {
     return '题目详情';

@@ -12,6 +12,7 @@ export interface ComposerCardProps {
   canSubmit: boolean;
   attachments?: ReactNode;
   notice?: ReactNode;
+  leading?: ReactNode;
   onPickFiles: (files: File[]) => void;
   disabled?: boolean;
   submitting?: boolean;
@@ -26,6 +27,7 @@ export function ComposerCard({
   canSubmit,
   attachments,
   notice,
+  leading,
   onPickFiles,
   disabled = false,
   submitting = false,
@@ -56,27 +58,30 @@ export function ComposerCard({
         className="resize-none px-3.5 pt-3 pb-1 text-[15px] leading-6 focus:outline-none"
       />
       <div className="flex items-center justify-between gap-1 px-2 pb-2">
-        <Upload
-          multiple
-          maxCount={UPLOAD_MAX_COUNT}
-          accept={ACCEPTED_IMAGE_TYPES}
-          showUploadList={false}
-          disabled={disabled}
-          beforeUpload={(file) => {
-            onPickFiles([file as unknown as File]);
-            return Upload.LIST_IGNORE;
-          }}
-        >
-          <Button
-            type="text"
-            size="small"
-            icon={<PictureOutlined />}
-            aria-label="添加图片"
-            title="添加图片"
+        <div className="flex min-w-0 items-center gap-1">
+          <Upload
+            multiple
+            maxCount={UPLOAD_MAX_COUNT}
+            accept={ACCEPTED_IMAGE_TYPES}
+            showUploadList={false}
             disabled={disabled}
-          />
-        </Upload>
-        <div className="flex items-center gap-1">
+            beforeUpload={(file) => {
+              onPickFiles([file as unknown as File]);
+              return Upload.LIST_IGNORE;
+            }}
+          >
+            <Button
+              type="text"
+              size="small"
+              icon={<PictureOutlined />}
+              aria-label="添加图片"
+              title="添加图片"
+              disabled={disabled}
+            />
+          </Upload>
+          {leading}
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
           {running && onStop ? (
             <Button
               type="primary"

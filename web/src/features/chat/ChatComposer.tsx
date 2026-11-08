@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { KnowledgeBadge } from '@/features/knowledge';
 import { AttachmentThumbs } from '@/features/upload/AttachmentThumbs';
 import type { UseUploadsResult } from '@/features/upload/use-uploads';
 import type { SessionPhase } from '@/lib/agentscope/project';
@@ -13,6 +14,7 @@ export interface ChatComposerProps {
   uploads: UseUploadsResult;
   phase: SessionPhase;
   onStop: () => void;
+  knowledgeBaseIds?: string[];
   disabled?: boolean;
 }
 
@@ -25,6 +27,7 @@ export function ChatComposer({
   uploads,
   phase,
   onStop,
+  knowledgeBaseIds,
   disabled = false,
 }: ChatComposerProps) {
   const [submitting, setSubmitting] = useState(false);
@@ -70,6 +73,7 @@ export function ChatComposer({
           running={running}
           onStop={onStop}
           onPickFiles={uploads.addFiles}
+          leading={knowledgeBaseIds ? <KnowledgeBadge ids={knowledgeBaseIds} /> : null}
           attachments={
             <AttachmentThumbs
               items={uploads.items.map((item) => ({

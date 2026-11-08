@@ -20,6 +20,7 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 
 import { toErrorMessage } from '@/api/client';
 import {
@@ -63,6 +64,7 @@ export interface KnowledgePanelProps {
   canCreate?: boolean;
   canEdit?: boolean;
   canUpload?: boolean;
+  toolbar?: ReactNode;
 }
 
 export function KnowledgePanel({
@@ -72,6 +74,7 @@ export function KnowledgePanel({
   canCreate = false,
   canEdit = false,
   canUpload = false,
+  toolbar,
 }: KnowledgePanelProps) {
   const queryClient = useQueryClient();
   const { message, modal } = App.useApp();
@@ -298,7 +301,7 @@ export function KnowledgePanel({
     {
       title: '类型',
       dataIndex: 'visibility',
-      width: 90,
+      width: 80,
       render: (value: string) =>
         value === 'public' ? <Tag color="blue">公共</Tag> : <Tag>私人</Tag>,
     },
@@ -318,20 +321,20 @@ export function KnowledgePanel({
     {
       title: '状态',
       dataIndex: 'status_counts',
-      width: 140,
+      width: 120,
       render: (_value, record) => <StatusSummary item={record} />,
     },
     {
       title: '更新时间',
       dataIndex: 'updated_at',
       width: 160,
-      responsive: ['lg'],
+      responsive: ['xl'],
       render: (value: string) => <span className="data-text">{formatDateTime(value)}</span>,
     },
     {
       title: '操作',
       key: 'actions',
-      width: 190,
+      width: 150,
       render: (_value, record) => (
         <Space size={4} onClick={(event) => event.stopPropagation()}>
           <Button size="small" type="link" onClick={() => setSelected(record)}>
@@ -427,10 +430,12 @@ export function KnowledgePanel({
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Typography.Text type="secondary">
-          共 {formatNumber(items.length)} 个知识库
-        </Typography.Text>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 max-[767px]:flex-col max-[767px]:items-stretch">
+        {toolbar ?? (
+          <Typography.Text type="secondary">
+            共 {formatNumber(items.length)} 个知识库
+          </Typography.Text>
+        )}
         {canCreate ? (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             新建知识库
