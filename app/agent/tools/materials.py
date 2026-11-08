@@ -23,12 +23,19 @@ READABLE_SUFFIXES = {".md", ".txt", ".json", ".html"}
 SEARCHABLE_SUFFIXES = {".md", ".txt"}
 _FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.DOTALL)
 
-_LS_DESCRIPTION = "列出资料库目录, 像 ls。根目录是 `/`。"
-_READ_DESCRIPTION = (
-    "读取资料库中的文本文件, 像 cat。path 以 `/` 开头, "
-    "支持 .md/.txt/.json/.html, offset 和 limit 控制行范围。"
+_LS_DESCRIPTION = (
+    "列出资料库中某个目录的内容, 类似 ls。目录名以 `/` 结尾; 路径不确定时先用它逐层确认, 再读文件。"
 )
-_GREP_DESCRIPTION = "在资料库中搜索字符串, 像 grep。一次搜一个关键词, 返回 `文件:行号: 内容`。"
+_READ_DESCRIPTION = (
+    "按行读取资料库中的单个文本文件, 类似 cat, 会去掉文件顶部的 YAML frontmatter。"
+    "支持 .md/.txt/.json/.html, 只能读文件不能读目录; "
+    "只读当前问题需要的一两节, 不要整章或整本加载。"
+)
+_GREP_DESCRIPTION = (
+    "在资料库中做不区分大小写的字面子串搜索, 类似 grep, 不是正则。"
+    "已知关键词但不确定文件位置时, 先用它定位, 再用 materials_read 读命中处。"
+    "返回 `文件路径:行号: 内容`; 没有命中时返回「未找到」。"
+)
 
 
 def materials_root() -> Path:
@@ -54,9 +61,9 @@ def _virtual(root: Path, path: Path) -> str:
 def _ls(root: Path, path: str) -> str:
     target = _resolve(root, path)
     if not target.exists():
-        raise ValueError(f"路径不存在: {path}")
+        raise ValueError(f"路径不存在: {path}; 用 materials_ls 从 `/` 开始逐层确认")
     if not target.is_dir():
-        raise ValueError(f"不是目录: {path}")
+        raise ValueError(f"不是目录: {path}; 读取文件请用 materials_read")
     names = [
         f"{child.name}/" if child.is_dir() else child.name
         for child in sorted(
@@ -71,11 +78,14 @@ def _ls(root: Path, path: str) -> str:
 def _read(root: Path, path: str, offset: int, limit: int) -> str:
     target = _resolve(root, path)
     if not target.exists():
-        raise ValueError(f"文件不存在: {path}")
+        raise ValueError(f"文件不存在: {path}; 用 materials_ls 或 materials_grep 确认路径")
     if not target.is_file():
-        raise ValueError(f"不是文件: {path}")
+        raise ValueError(f"不是文件: {path}; 这是目录, 用 materials_ls 查看其内容")
     if target.suffix.lower() not in READABLE_SUFFIXES:
-        raise ValueError(f"不支持的文件类型: {target.suffix}")
+        raise ValueError(
+            f"不支持的文件类型: {target.suffix or '无后缀'}; "
+            "materials_read 仅支持 .md/.txt/.json/.html",
+        )
     lines = _read_text(target).splitlines()
     return "\n".join(lines[offset - 1 : offset - 1 + limit])
 
@@ -83,10 +93,12 @@ def _read(root: Path, path: str, offset: int, limit: int) -> str:
 def _grep(root: Path, path: str, query: str, limit: int) -> str:
     target = _resolve(root, path)
     if not target.exists():
-        raise ValueError(f"路径不存在: {path}")
+        raise ValueError(f"路径不存在: {path}; 用 materials_ls 确认搜索范围")
     if target.is_file():
         if target.suffix.lower() not in SEARCHABLE_SUFFIXES:
-            raise ValueError(f"不支持的文件类型: {target.suffix}")
+            raise ValueError(
+                f"不支持的文件类型: {target.suffix or '无后缀'}; materials_grep 仅搜索 .md/.txt",
+            )
         files = [target]
     else:
         files = [
