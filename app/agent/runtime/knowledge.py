@@ -4,13 +4,8 @@ from agentscope.app.rag.knowledge_base_manager import (
     CollectionPerKbManager,
     KnowledgeBaseNotFoundError,
 )
-from agentscope.app.storage import (
-    ChunkerConfig,
-    EmbeddingModelConfig,
-    StorageBase,
-)
+from agentscope.app.storage import StorageBase
 from agentscope.rag import (
-    ApproxTokenChunker,
     KnowledgeBase,
     ParserBase,
     PDFParser,
@@ -21,12 +16,7 @@ from agentscope.rag import (
 )
 
 from app.shared.config import Settings
-from app.shared.constants import (
-    EMBEDDING_CREDENTIAL_ID,
-    EMBEDDING_CREDENTIAL_TYPE,
-    EMBEDDING_DIMENSIONS,
-    SYSTEM_USER_ID,
-)
+from app.shared.constants import EMBEDDING_CREDENTIAL_ID, SYSTEM_USER_ID
 
 
 class SharedCredentialCollectionPerKbManager(CollectionPerKbManager):
@@ -67,16 +57,6 @@ class SharedCredentialCollectionPerKbManager(CollectionPerKbManager):
         )
 
 
-def build_embedding_model_config(settings: Settings) -> EmbeddingModelConfig:
-    return EmbeddingModelConfig(
-        type=EMBEDDING_CREDENTIAL_TYPE,
-        credential_id=EMBEDDING_CREDENTIAL_ID,
-        model=settings.embedding.model,
-        dimensions=EMBEDDING_DIMENSIONS,
-        parameters={},
-    )
-
-
 def build_knowledge_base_manager(
     storage: StorageBase,
     settings: Settings,
@@ -98,7 +78,3 @@ def build_knowledge_blob_store(settings: Settings) -> LocalBlobStore:
 
 def build_knowledge_parsers() -> list[ParserBase]:
     return [TextParser(), PDFParser(), WordParser(), PPTParser()]
-
-
-def build_default_chunker_config() -> ChunkerConfig:
-    return ChunkerConfig(type=ApproxTokenChunker.chunker_type, parameters={})
