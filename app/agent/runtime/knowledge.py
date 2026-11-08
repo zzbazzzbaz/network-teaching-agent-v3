@@ -19,7 +19,7 @@ from app.shared.config import Settings
 from app.shared.constants import EMBEDDING_CREDENTIAL_ID, SYSTEM_USER_ID
 
 
-class SharedCredentialCollectionPerKbManager(CollectionPerKbManager):
+class _SharedCredentialCollectionPerKbManager(CollectionPerKbManager):
     """所有知识库统一使用 system 名下的 embedding credential。"""
 
     async def get_knowledge(
@@ -60,10 +60,10 @@ class SharedCredentialCollectionPerKbManager(CollectionPerKbManager):
 def build_knowledge_base_manager(
     storage: StorageBase,
     settings: Settings,
-) -> SharedCredentialCollectionPerKbManager:
+) -> _SharedCredentialCollectionPerKbManager:
     api_key = settings.qdrant.api_key
     value = api_key.get_secret_value() if api_key is not None else ""
-    return SharedCredentialCollectionPerKbManager(
+    return _SharedCredentialCollectionPerKbManager(
         storage=storage,
         vector_store=QdrantStore(
             url=settings.qdrant.url,
