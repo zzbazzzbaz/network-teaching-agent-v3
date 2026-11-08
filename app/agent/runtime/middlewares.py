@@ -97,9 +97,9 @@ class MemoryOnlyToolsMiddleware(MiddlewareBase):
         "TaskGet",
         "TaskList",
         "TaskUpdate",
-        "reset_tools",
         "ToolStop",
     ]
+    _STRIP_TOOL_GROUPS: ClassVar[list[str]] = ["schedule_tools"]
 
     async def on_reply(
         self,
@@ -108,6 +108,11 @@ class MemoryOnlyToolsMiddleware(MiddlewareBase):
         next_handler: Callable[..., AsyncGenerator],
     ) -> AsyncGenerator:
         await agent.toolkit.remove_tool(self._STRIP_TOOLS)
+        agent.toolkit.tool_groups = [
+            group
+            for group in agent.toolkit.tool_groups
+            if group.name not in self._STRIP_TOOL_GROUPS
+        ]
         async for item in next_handler(**input_kwargs):
             yield item
 
