@@ -41,8 +41,8 @@ class DBSettings(_Base):
 class QdrantSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="QDRANT_")
 
-    url: str = "http://127.0.0.1:6333"
-    api_key: SecretStr | None = None
+    url: str
+    api_key: SecretStr | None
 
 
 class COSSettings(_Base):
@@ -82,7 +82,7 @@ class StorageSettings(_Base):
     data_root: Path
     materials_dir: Path
     max_upload_bytes: int
-    knowledge_max_upload_bytes: int = 30 * 1024 * 1024
+    knowledge_max_upload_bytes: int
 
     @property
     def workspaces_dir(self) -> Path:
