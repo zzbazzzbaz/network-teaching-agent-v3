@@ -80,7 +80,6 @@ class AgentClientSettings(_Base):
 
 class StorageSettings(_Base):
     data_root: Path
-    materials_dir: Path
     max_upload_bytes: int
     knowledge_max_upload_bytes: int
 

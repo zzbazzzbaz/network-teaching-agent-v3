@@ -16,7 +16,8 @@ from app.agent.tools.schemas.materials import (
     MaterialsLsInput,
     MaterialsReadInput,
 )
-from app.shared.config import get_settings
+
+MATERIALS_ROOT = Path(__file__).resolve().parents[1] / "resource" / "materials"
 
 READABLE_SUFFIXES = {".md", ".txt", ".json", ".html"}
 SEARCHABLE_SUFFIXES = {".md", ".txt"}
@@ -31,7 +32,7 @@ _GREP_DESCRIPTION = "在资料库中搜索字符串, 像 grep。一次搜一个�
 
 
 def materials_root() -> Path:
-    return get_settings().storage.materials_dir.resolve()
+    return MATERIALS_ROOT
 
 
 def _resolve(root: Path, path: str) -> Path:
