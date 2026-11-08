@@ -130,41 +130,15 @@ export function AdminQuestionsPage() {
       ),
     },
     {
-      title: '来源',
-      dataIndex: 'owner_username',
-      width: 110,
-      render: (_value, record) => (
-        <Tag color={record.is_public ? 'blue' : 'default'}>
-          {record.is_public ? '公共' : record.owner_username}
-        </Tag>
-      ),
-    },
-    {
       title: '题型',
       dataIndex: 'question_type',
-      width: 80,
-      render: (value: QuestionType) => <Tag>{TYPE_LABELS[value]}</Tag>,
-    },
-    {
-      title: '作答次数',
-      dataIndex: 'attempt_count',
-      width: 100,
-      align: 'right',
-      render: (value: number) => <span className="data-text">{value}</span>,
-    },
-    {
-      title: '学生数',
-      dataIndex: 'student_count',
       width: 90,
-      align: 'right',
-      responsive: ['lg'],
-      render: (value: number) => <span className="data-text">{value}</span>,
+      render: (value: QuestionType) => <Tag>{TYPE_LABELS[value]}</Tag>,
     },
     {
       title: '创建时间',
       dataIndex: 'created_at',
-      width: 160,
-      responsive: ['xl'],
+      width: 170,
       render: (value: string) => <span className="data-text">{formatDateTime(value)}</span>,
     },
   ];
@@ -258,9 +232,6 @@ export function AdminQuestionsPage() {
             >
               <div className="w-full">
                 <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                  <Tag color={item.is_public ? 'blue' : 'default'}>
-                    {item.is_public ? '公共' : item.owner_username}
-                  </Tag>
                   <Tag>{TYPE_LABELS[item.question_type]}</Tag>
                   <span className="data-text text-ink-subtle">
                     {formatDateTime(item.created_at)}
@@ -273,10 +244,6 @@ export function AdminQuestionsPage() {
                 >
                   {item.stem}
                 </Typography.Paragraph>
-                <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-subtle">
-                  <span>作答 {item.attempt_count}</span>
-                  <span>学生 {item.student_count}</span>
-                </div>
               </div>
             </List.Item>
           )}

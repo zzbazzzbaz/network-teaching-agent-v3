@@ -194,48 +194,16 @@ export function AdminUsersPage() {
       render: (value: 'active' | 'disabled') => <UserStatusTag status={value} />,
     },
     {
-      title: '注册时间',
-      dataIndex: 'created_at',
-      width: 160,
-      responsive: ['xl'],
-      render: (value: string) => <span className="data-text">{formatDateTime(value)}</span>,
-    },
-    {
       title: '最近活跃',
       dataIndex: 'last_active_at',
-      width: 160,
-      responsive: ['lg'],
+      width: 170,
       render: (value: string | null) => <span className="data-text">{formatDateTime(value)}</span>,
-    },
-    {
-      title: '会话',
-      dataIndex: 'sessions',
-      width: 80,
-      align: 'right',
-      render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
-    },
-    {
-      title: '轮次',
-      dataIndex: 'rounds',
-      width: 80,
-      align: 'right',
-      responsive: ['lg'],
-      render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
       title: 'tokens',
       dataIndex: 'tokens',
-      width: 110,
+      width: 120,
       align: 'right',
-      responsive: ['xl'],
-      render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
-    },
-    {
-      title: '作答',
-      dataIndex: 'answers',
-      width: 80,
-      align: 'right',
-      responsive: ['lg'],
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
@@ -339,11 +307,8 @@ export function AdminUsersPage() {
                   <UserStatusTag status={item.status} />
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-subtle">
-                  <span>会话 {formatNumber(item.sessions)}</span>
-                  <span>轮次 {formatNumber(item.rounds)}</span>
-                  <span>tokens {formatNumber(item.tokens)}</span>
-                  <span>作答 {formatNumber(item.answers)}</span>
                   <span>最近活跃 {formatDateTime(item.last_active_at)}</span>
+                  <span>tokens {formatNumber(item.tokens)}</span>
                 </div>
               </div>
             </List.Item>
