@@ -17,7 +17,11 @@ def wrap_lifespan(app: FastAPI, settings: Settings) -> None:
     async def lifespan(app: FastAPI) -> AsyncGenerator[Any]:
         async with original(app) as state:
             try:
-                await ensure_seed(app.state.storage, settings)
+                await ensure_seed(
+                    app.state.storage,
+                    settings,
+                    app.state.knowledge_base_manager,
+                )
                 yield state
             finally:
                 await close_client()

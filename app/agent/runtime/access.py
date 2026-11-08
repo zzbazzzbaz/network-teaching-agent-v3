@@ -25,6 +25,9 @@ class _TeachingAccessPolicy(ResourceAccessPolicyBase):
         elif kind is ResourceKind.CREDENTIAL:
             credentials = await storage.list_credentials(SYSTEM_USER_ID)
             resource_ids = [record.id for record in credentials]
+        elif kind is ResourceKind.KNOWLEDGE_BASE:
+            knowledge_bases = await storage.list_knowledge_bases(SYSTEM_USER_ID)
+            resource_ids = [record.id for record in knowledge_bases]
         else:
             return []
 

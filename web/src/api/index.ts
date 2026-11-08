@@ -6,5 +6,6 @@ export * as messagesApi from './messages';
 export * as filesApi from './files';
 export * as memoryApi from './memory';
 export * as questionsApi from './questions';
+export * as knowledgeApi from './knowledge';
 export * as statsApi from './stats';
 export * as adminApi from './admin';

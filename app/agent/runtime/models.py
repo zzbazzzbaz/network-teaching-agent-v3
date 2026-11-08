@@ -3,9 +3,11 @@ from agentscope.embedding import DashScopeEmbeddingModel
 from agentscope.model import DeepSeekChatModel
 
 from app.shared.config import Settings
-from app.shared.constants import CHAT_CREDENTIAL_ID, EMBEDDING_CREDENTIAL_ID
-
-EMBEDDING_DIMENSIONS = 1024
+from app.shared.constants import (
+    CHAT_CREDENTIAL_ID,
+    EMBEDDING_CREDENTIAL_ID,
+    EMBEDDING_DIMENSIONS,
+)
 
 
 def build_chat_credential(settings: Settings) -> DeepSeekCredential:

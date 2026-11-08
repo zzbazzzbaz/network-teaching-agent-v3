@@ -7,6 +7,7 @@ import { getUser, updateUserStatus } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
 import { ErrorState, PageShell } from '@/components/common';
 import {
+  UserKnowledgeTab,
   UserMemoryTab,
   UserOverviewTab,
   UserRoleTag,
@@ -17,10 +18,12 @@ import {
 import { formatDateTime } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth-store';
 
-type TabKey = 'overview' | 'sessions' | 'memory';
+type TabKey = 'overview' | 'sessions' | 'memory' | 'knowledge';
 
 function parseTab(value: string | null): TabKey {
-  return value === 'sessions' || value === 'memory' ? value : 'overview';
+  return value === 'sessions' || value === 'memory' || value === 'knowledge'
+    ? value
+    : 'overview';
 }
 
 export function AdminUserDetailPage() {
@@ -166,6 +169,11 @@ export function AdminUserDetailPage() {
             key: 'memory',
             label: '记忆',
             children: <UserMemoryTab userId={user.id} />,
+          },
+          {
+            key: 'knowledge',
+            label: '知识库',
+            children: <UserKnowledgeTab userId={user.id} />,
           },
         ]}
       />

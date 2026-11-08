@@ -1,0 +1,104 @@
+from agentscope.app._service._embedding import build_embedding_model
+from agentscope.app.rag.blob_store import LocalBlobStore
+from agentscope.app.rag.knowledge_base_manager import (
+    CollectionPerKbManager,
+    KnowledgeBaseNotFoundError,
+)
+from agentscope.app.storage import (
+    ChunkerConfig,
+    EmbeddingModelConfig,
+    StorageBase,
+)
+from agentscope.rag import (
+    ApproxTokenChunker,
+    KnowledgeBase,
+    ParserBase,
+    PDFParser,
+    PPTParser,
+    QdrantStore,
+    TextParser,
+    WordParser,
+)
+
+from app.shared.config import Settings
+from app.shared.constants import (
+    EMBEDDING_CREDENTIAL_ID,
+    EMBEDDING_CREDENTIAL_TYPE,
+    EMBEDDING_DIMENSIONS,
+    SYSTEM_USER_ID,
+)
+
+
+class SharedCredentialCollectionPerKbManager(CollectionPerKbManager):
+    """所有知识库统一使用 system 名下的 embedding credential。"""
+
+    async def get_knowledge(
+        self,
+        user_id: str,
+        knowledge_base_id: str,
+    ) -> KnowledgeBase:
+        record = await self._storage.get_knowledge_base(user_id, knowledge_base_id)
+        if record is None:
+            raise KnowledgeBaseNotFoundError(
+                f"Knowledge base {knowledge_base_id!r} not found.",
+            )
+
+        config = record.data.embedding_model_config
+        credential = await self._storage.get_credential(
+            SYSTEM_USER_ID,
+            EMBEDDING_CREDENTIAL_ID,
+        )
+        if credential is None:
+            raise KnowledgeBaseNotFoundError(
+                f"Credential {EMBEDDING_CREDENTIAL_ID!r} for "
+                f"knowledge base {knowledge_base_id!r} not found.",
+            )
+
+        return KnowledgeBase(
+            name=record.data.name,
+            description=record.data.description,
+            embedding_model=build_embedding_model(
+                credential_record=credential,
+                config=config,
+            ),
+            vector_store=self._vector_store,
+            collection=record.data.collection_name,
+            metadata_filter=None,
+        )
+
+
+def build_embedding_model_config(settings: Settings) -> EmbeddingModelConfig:
+    return EmbeddingModelConfig(
+        type=EMBEDDING_CREDENTIAL_TYPE,
+        credential_id=EMBEDDING_CREDENTIAL_ID,
+        model=settings.embedding.model,
+        dimensions=EMBEDDING_DIMENSIONS,
+        parameters={},
+    )
+
+
+def build_knowledge_base_manager(
+    storage: StorageBase,
+    settings: Settings,
+) -> SharedCredentialCollectionPerKbManager:
+    api_key = settings.qdrant.api_key
+    value = api_key.get_secret_value() if api_key is not None else ""
+    return SharedCredentialCollectionPerKbManager(
+        storage=storage,
+        vector_store=QdrantStore(
+            url=settings.qdrant.url,
+            api_key=value or None,
+        ),
+    )
+
+
+def build_knowledge_blob_store(settings: Settings) -> LocalBlobStore:
+    return LocalBlobStore(root_dir=settings.storage.knowledge_blobs_dir)
+
+
+def build_knowledge_parsers() -> list[ParserBase]:
+    return [TextParser(), PDFParser(), WordParser(), PPTParser()]
+
+
+def build_default_chunker_config() -> ChunkerConfig:
+    return ChunkerConfig(type=ApproxTokenChunker.chunker_type, parameters={})

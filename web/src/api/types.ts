@@ -26,8 +26,82 @@ export interface SessionItem {
   id: string;
   agent_kind: AgentKind;
   title: string;
+  knowledge_base_ids: string[];
   last_message_at: string | null;
   created_at: string;
+}
+
+export type KnowledgeVisibility = 'private' | 'public';
+export type KnowledgeDocumentStatus =
+  | 'pending'
+  | 'parsing'
+  | 'chunking'
+  | 'indexing'
+  | 'ready'
+  | 'error';
+
+export interface KnowledgeStatusCounts {
+  pending: number;
+  parsing: number;
+  chunking: number;
+  indexing: number;
+  ready: number;
+  error: number;
+}
+
+export interface KnowledgeBaseItem {
+  id: string;
+  name: string;
+  description: string;
+  visibility: KnowledgeVisibility;
+  editable: boolean;
+  document_count: number;
+  chunk_count: number;
+  status_counts: KnowledgeStatusCounts;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeBaseListResponse {
+  items: KnowledgeBaseItem[];
+  total: number;
+}
+
+export interface KnowledgeBaseCreateRequest {
+  name: string;
+  description?: string;
+}
+
+export interface KnowledgeBaseUpdateRequest {
+  name?: string;
+  description?: string;
+}
+
+export interface KnowledgeDocumentItem {
+  id: string;
+  filename: string;
+  size: number;
+  content_type: string | null;
+  status: KnowledgeDocumentStatus;
+  error: string | null;
+  chunk_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeDocumentListResponse {
+  items: KnowledgeDocumentItem[];
+  total: number;
+}
+
+export interface KnowledgeDocumentStatusResponse {
+  items: KnowledgeDocumentItem[];
+}
+
+export interface KnowledgeDocumentUploadResponse {
+  id: string;
+  filename: string;
+  status: KnowledgeDocumentStatus;
 }
 
 export interface SessionListResponse {

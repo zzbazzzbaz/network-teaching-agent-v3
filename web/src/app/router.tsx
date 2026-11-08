@@ -16,6 +16,12 @@ const MemoryPage = lazy(() =>
   import('@/pages/memory/MemoryPage').then((module) => ({ default: module.MemoryPage })),
 );
 
+const KnowledgePage = lazy(() =>
+  import('@/pages/knowledge/KnowledgePage').then((module) => ({
+    default: module.KnowledgePage,
+  })),
+);
+
 const QuestionsPage = lazy(() =>
   import('@/pages/questions/QuestionsPage').then((module) => ({
     default: module.QuestionsPage,
@@ -59,6 +65,12 @@ const AdminSessionDetailPage = lazy(() =>
 const AdminQuestionsPage = lazy(() =>
   import('@/pages/admin/AdminQuestionsPage').then((module) => ({
     default: module.AdminQuestionsPage,
+  })),
+);
+
+const AdminKnowledgePage = lazy(() =>
+  import('@/pages/admin/AdminKnowledgePage').then((module) => ({
+    default: module.AdminKnowledgePage,
   })),
 );
 
@@ -111,6 +123,11 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundary />,
       },
       {
+        path: 'knowledge',
+        element: <KnowledgePage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
         path: 'questions',
         element: <QuestionsPage />,
         errorElement: <RouteErrorBoundary />,
@@ -151,6 +168,11 @@ export const router = createBrowserRouter([
           {
             path: 'users/:userId/sessions/:sessionId',
             element: <AdminSessionDetailPage />,
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: 'knowledge',
+            element: <AdminKnowledgePage />,
             errorElement: <RouteErrorBoundary />,
           },
           {

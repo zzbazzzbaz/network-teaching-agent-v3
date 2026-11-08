@@ -3,6 +3,7 @@ export { CreateUserModal } from './CreateUserModal';
 export { MetricCard } from './MetricCard';
 export { QuestionFormModal } from './QuestionFormModal';
 export { ReadonlyMessages } from './ReadonlyMessages';
+export { UserKnowledgeTab } from './UserKnowledgeTab';
 export { UserMemoryTab } from './UserMemoryTab';
 export { UserOverviewTab } from './UserOverviewTab';
 export { UserSessionsTab } from './UserSessionsTab';

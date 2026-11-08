@@ -43,7 +43,7 @@ async def session_scope() -> AsyncGenerator[AsyncSession]:
             await session.commit()
 
 
-_USER_ROLE_DDL = (
+_MIGRATION_DDL = (
     """
     DO $$
     BEGIN
@@ -55,6 +55,10 @@ _USER_ROLE_DDL = (
     """,
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS role userrole NOT NULL DEFAULT 'STUDENT'",
     "CREATE INDEX IF NOT EXISTS ix_users_role ON users(role)",
+    """
+    ALTER TABLE sessions
+    ADD COLUMN IF NOT EXISTS knowledge_base_ids jsonb NOT NULL DEFAULT '[]'::jsonb
+    """,
 )
 
 
@@ -63,7 +67,7 @@ async def create_db_and_tables() -> None:
 
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-        for statement in _USER_ROLE_DDL:
+        for statement in _MIGRATION_DDL:
             await conn.execute(text(statement))
 
 

@@ -23,6 +23,7 @@ const TOOL_TITLES: Record<string, string> = {
   materials_ls: '浏览资料',
   materials_read: '读取资料',
   materials_grep: '检索资料',
+  search_knowledge: '检索知识库',
 };
 
 const MAX_RAW_CHARS = 400;
@@ -81,6 +82,15 @@ export function describeToolCall(block: ToolCallBlock): ToolCallView {
 
   if (block.name === 'memory_search') {
     const query = textOf(input?.query) || textOf(input?.keywords) || textOf(input?.question);
+    return {
+      title,
+      description: query ? `「${query}」` : '检索中',
+      waitingLabel: null,
+    };
+  }
+
+  if (block.name === 'search_knowledge') {
+    const query = textOf(input?.query) || textOf(input?.question);
     return {
       title,
       description: query ? `「${query}」` : '检索中',

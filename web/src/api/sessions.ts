@@ -17,8 +17,14 @@ export function listSessions(params: ListSessionsParams = {}): Promise<SessionLi
   return request<SessionListResponse>(`/sessions?${search.toString()}`);
 }
 
-export function createSession(): Promise<SessionItem> {
-  return request<SessionItem>('/sessions', { method: 'POST' });
+export function createSession(knowledgeBaseIds?: string[]): Promise<SessionItem> {
+  return request<SessionItem>('/sessions', {
+    method: 'POST',
+    body:
+      knowledgeBaseIds === undefined
+        ? {}
+        : { knowledge_base_ids: knowledgeBaseIds },
+  });
 }
 
 export function getSession(sessionId: string): Promise<SessionItem> {

@@ -10,8 +10,13 @@ class SessionItem(BaseModel):
     id: uuid.UUID
     agent_kind: AgentKind
     title: str
+    knowledge_base_ids: list[str] = Field(default_factory=list)
     last_message_at: AwareDatetime | None
     created_at: AwareDatetime
+
+
+class CreateSessionRequest(BaseModel):
+    knowledge_base_ids: list[str] | None = None
 
 
 class SessionListResponse(BaseModel):

@@ -15,6 +15,7 @@ from app.api.repositories.models import ChatSession, UserStatus
 from app.api.services import session_service, user_service
 from app.shared.constants import SESSION_PLACEHOLDER_TITLE
 from app.shared.dto.session import (
+    CreateSessionRequest,
     InterruptResponse,
     MessageListResponse,
     RenameSessionRequest,
@@ -46,6 +47,7 @@ def _to_item(chat: ChatSession) -> SessionItem:
         id=chat.id,
         agent_kind=chat.agent_kind,
         title=chat.title or SESSION_PLACEHOLDER_TITLE,
+        knowledge_base_ids=chat.knowledge_base_ids or [],
         last_message_at=chat.last_message_at,
         created_at=chat.created_at,
     )
@@ -83,9 +85,27 @@ def _normalize_event_cursor(value: str | None) -> str | None:
     status_code=status.HTTP_201_CREATED,
     summary="创建会话",
 )
-async def create_session(session: SessionDep, current_user: CurrentUser) -> SessionItem:
+async def create_session(
+    session: SessionDep,
+    current_user: CurrentUser,
+    payload: Annotated[CreateSessionRequest | None, Body()] = None,
+) -> SessionItem:
     try:
-        chat = await session_service.create_session(session, user_id=current_user.id)
+        chat = await session_service.create_session(
+            session,
+            user_id=current_user.id,
+            knowledge_base_ids=payload.knowledge_base_ids if payload else None,
+        )
+    except session_service.InvalidKnowledgeSelectionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=exc.detail,
+        ) from exc
+    except session_service.KnowledgeUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="知识库服务暂不可用",
+        ) from exc
     except session_service.InvalidAgentResponseError as exc:
         raise service_unavailable() from exc
     except RemoteServiceError as exc:

@@ -40,6 +40,7 @@ def _to_item(chat: ChatSession) -> SessionItem:
         id=chat.id,
         agent_kind=chat.agent_kind,
         title=chat.title or SESSION_PLACEHOLDER_TITLE,
+        knowledge_base_ids=chat.knowledge_base_ids or [],
         last_message_at=chat.last_message_at,
         created_at=chat.created_at,
     )

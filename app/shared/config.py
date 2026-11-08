@@ -38,6 +38,13 @@ class DBSettings(_Base):
     url: str
 
 
+class QdrantSettings(_Base):
+    model_config = SettingsConfigDict(env_prefix="QDRANT_")
+
+    url: str = "http://127.0.0.1:6333"
+    api_key: SecretStr | None = None
+
+
 class COSSettings(_Base):
     model_config = SettingsConfigDict(env_prefix="COS_")
 
@@ -75,6 +82,7 @@ class StorageSettings(_Base):
     data_root: Path
     materials_dir: Path
     max_upload_bytes: int
+    knowledge_max_upload_bytes: int = 30 * 1024 * 1024
 
     @property
     def workspaces_dir(self) -> Path:
@@ -83,6 +91,10 @@ class StorageSettings(_Base):
     @property
     def memory_dir(self) -> Path:
         return self.data_root / "memory" / "reme"
+
+    @property
+    def knowledge_blobs_dir(self) -> Path:
+        return self.data_root / "knowledge" / "blobs"
 
 
 class LangfuseSettings(_Base):
@@ -100,6 +112,7 @@ class Settings(_Base):
     embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     db: DBSettings = Field(default_factory=DBSettings)
+    qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     cos: COSSettings = Field(default_factory=COSSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
     api: APISettings = Field(default_factory=APISettings)

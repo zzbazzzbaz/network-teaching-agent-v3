@@ -31,6 +31,10 @@ class ChatSession(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
     agent_kind: AgentKind = Field(default=AgentKind.TEACH)
     title: str | None = Field(default=None, max_length=255)
+    knowledge_base_ids: list[str] = Field(
+        default_factory=list,
+        sa_column=Column(JSONB, nullable=False, server_default="[]"),
+    )
     last_message_at: datetime | None = Field(default=None)
     created_at: datetime = Field(default_factory=_now)
     deleted_at: datetime | None = Field(default=None)

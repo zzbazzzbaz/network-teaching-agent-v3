@@ -9,10 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.infra.agent_client import get_agent_client
 from app.api.repositories import file_repositories, session_repositories, usage_repositories
 from app.api.repositories.models import AgentKind, ChatSession, FileStatus, User
-from app.api.services import file_service
+from app.api.services import file_service, knowledge_service
 from app.shared.config import get_settings
 from app.shared.constants import (
     CHAT_CREDENTIAL_ID,
+    MAX_SESSION_KNOWLEDGE_BASES,
     SESSION_PLACEHOLDER_TITLE,
     TEACH_AGENT_ID,
 )
@@ -42,20 +43,72 @@ class InvalidAgentResponseError(SessionError):
     pass
 
 
-async def create_session(session: AsyncSession, *, user_id: uuid.UUID) -> ChatSession:
+class InvalidKnowledgeSelectionError(SessionError):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
+class KnowledgeUnavailableError(SessionError):
+    pass
+
+
+def _bind_knowledge(
+    knowledge_base_ids: list[str] | None,
+) -> list[str]:
+    if knowledge_base_ids is None:
+        return []
+    normalized = list(dict.fromkeys(knowledge_base_ids))
+    if len(normalized) > MAX_SESSION_KNOWLEDGE_BASES:
+        raise InvalidKnowledgeSelectionError(
+            f"最多绑定 {MAX_SESSION_KNOWLEDGE_BASES} 个知识库",
+        )
+    return normalized
+
+
+async def create_session(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    knowledge_base_ids: list[str] | None = None,
+) -> ChatSession:
     settings = get_settings()
     client = get_agent_client()
-    agent_session_id = await client.create_session(
-        user_id=str(user_id),
-        agent_id=TEACH_AGENT_ID,
-        name=SESSION_PLACEHOLDER_TITLE,
-        chat_model_config={
-            "type": "deepseek_credential",
-            "credential_id": CHAT_CREDENTIAL_ID,
-            "model": settings.chat.model,
-            "parameters": {},
-        },
+
+    if knowledge_base_ids is None:
+        try:
+            knowledge_base_ids = await knowledge_service.list_visible_base_ids(str(user_id))
+        except knowledge_service.KnowledgeError as exc:
+            raise KnowledgeUnavailableError from exc
+        knowledge_base_ids = knowledge_base_ids[:MAX_SESSION_KNOWLEDGE_BASES]
+
+    bound_ids = _bind_knowledge(knowledge_base_ids)
+    knowledge_config = (
+        {
+            "knowledge_base_ids": bound_ids,
+            "parameters": {"mode": "agentic", "top_k": 5},
+        }
+        if bound_ids
+        else None
     )
+
+    try:
+        agent_session_id = await client.create_session(
+            user_id=str(user_id),
+            agent_id=TEACH_AGENT_ID,
+            name=SESSION_PLACEHOLDER_TITLE,
+            chat_model_config={
+                "type": "deepseek_credential",
+                "credential_id": CHAT_CREDENTIAL_ID,
+                "model": settings.chat.model,
+                "parameters": {},
+            },
+            knowledge_config=knowledge_config,
+        )
+    except RemoteServiceError as exc:
+        if exc.status_code == 404 and bound_ids:
+            raise InvalidKnowledgeSelectionError("知识库不可用") from exc
+        raise
     try:
         session_uuid = uuid.UUID(agent_session_id)
     except ValueError as exc:
@@ -67,6 +120,7 @@ async def create_session(session: AsyncSession, *, user_id: uuid.UUID) -> ChatSe
         user_id=user_id,
         agent_kind=AgentKind.TEACH,
         title=SESSION_PLACEHOLDER_TITLE,
+        knowledge_base_ids=bound_ids,
     )
     try:
         await session_repositories.create(session, chat)

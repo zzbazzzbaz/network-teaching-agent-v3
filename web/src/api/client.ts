@@ -24,6 +24,7 @@ export function setAuthFailureHandler(handler: (reason: AuthFailureReason) => vo
 
 export interface RequestOptions extends Omit<RequestInit, 'body' | 'headers'> {
   body?: unknown;
+  formData?: FormData;
   headers?: Record<string, string>;
   auth?: boolean;
 }
@@ -45,7 +46,7 @@ export function getApiBase(): string {
 function buildHeaders(options: RequestOptions, token: string | null): Headers {
   const headers = new Headers(options.headers);
   headers.set('Accept', 'application/json');
-  if (options.body !== undefined) {
+  if (options.body !== undefined && options.formData === undefined) {
     headers.set('Content-Type', 'application/json');
   }
   if (token) {
@@ -146,10 +147,11 @@ async function send(
   token: string | null,
 ): Promise<RawResponse> {
   const startedAt = performance.now();
+  const { formData, body, ...init } = options;
   const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
+    ...init,
     headers: buildHeaders(options, token),
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: formData ?? (body === undefined ? undefined : JSON.stringify(body)),
   });
   const result = await readResponse(response);
   const elapsed = Math.round(performance.now() - startedAt);
@@ -186,6 +188,36 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   return result.payload as T;
+}
+
+async function sendBlob(path: string, token: string | null): Promise<Response> {
+  return fetch(`${API_BASE}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+}
+
+export async function requestBlob(path: string): Promise<Blob> {
+  let token = getAccessToken();
+  let response = await sendBlob(path, token);
+  if (response.status === 401) {
+    try {
+      token = await refreshAccessToken();
+    } catch {
+      throw new ApiError(401, '登录已过期，请重新登录');
+    }
+    response = await sendBlob(path, token);
+  }
+  if (!response.ok) {
+    const text = await response.text();
+    let payload: unknown;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = text;
+    }
+    throw new ApiError(response.status, extractDetail(payload, response.status));
+  }
+  return response.blob();
 }
 
 export function toErrorMessage(error: unknown, fallback = '请求失败，请稍后重试'): string {

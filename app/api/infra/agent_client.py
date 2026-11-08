@@ -33,12 +33,15 @@ class AgentClient:
         agent_id: str,
         name: str,
         chat_model_config: dict[str, Any],
+        knowledge_config: dict[str, Any] | None = None,
     ) -> str:
         body: dict[str, Any] = {
             "agent_id": agent_id,
             "name": name,
             "chat_model_config": chat_model_config,
         }
+        if knowledge_config is not None:
+            body["knowledge_config"] = knowledge_config
         response = await self._http.request(
             "POST",
             "/sessions/",
@@ -147,6 +150,149 @@ class AgentClient:
             user_id=user_id,
         )
         return MemoryEntryDetailDTO.model_validate(response.json())
+
+    async def list_knowledge_bases(
+        self,
+        *,
+        user_id: str,
+        knowledge_base_id: str | None = None,
+        page: int = 1,
+        page_size: int = 128,
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {"page": page, "page_size": page_size}
+        if knowledge_base_id:
+            params["id"] = knowledge_base_id
+        response = await self._http.request(
+            "GET",
+            "/knowledge_bases/",
+            user_id=user_id,
+            params=params,
+        )
+        return response.json()
+
+    async def create_knowledge_base(
+        self,
+        *,
+        user_id: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        response = await self._http.request(
+            "POST",
+            "/knowledge_bases/",
+            user_id=user_id,
+            json=payload,
+        )
+        return response.json()
+
+    async def update_knowledge_base(
+        self,
+        *,
+        user_id: str,
+        knowledge_base_id: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        response = await self._http.request(
+            "PATCH",
+            f"/knowledge_bases/{knowledge_base_id}",
+            user_id=user_id,
+            json=payload,
+        )
+        return response.json()
+
+    async def delete_knowledge_base(
+        self,
+        *,
+        user_id: str,
+        knowledge_base_id: str,
+    ) -> None:
+        await self._http.request(
+            "DELETE",
+            f"/knowledge_bases/{knowledge_base_id}",
+            user_id=user_id,
+        )
+
+    async def list_knowledge_documents(
+        self,
+        *,
+        user_id: str,
+        knowledge_base_id: str,
+        page: int = 1,
+        page_size: int = 128,
+    ) -> dict[str, Any]:
+        response = await self._http.request(
+            "GET",
+            f"/knowledge_bases/{knowledge_base_id}/documents",
+            user_id=user_id,
+            params={"page": page, "page_size": page_size},
+        )
+        return response.json()
+
+    async def list_knowledge_document_status(
+        self,
+        *,
+        user_id: str,
+        knowledge_base_id: str,
+        document_ids: list[str],
+    ) -> dict[str, Any]:
+        response = await self._http.request(
+            "GET",
+            f"/knowledge_bases/{knowledge_base_id}/documents/status",
+            user_id=user_id,
+            params={"ids": ",".join(document_ids)},
+        )
+        return response.json()
+
+    async def upload_knowledge_document(
+        self,
+        *,
+        user_id: str,
+        knowledge_base_id: str,
+        filename: str,
+        content: bytes,
+        content_type: str,
+    ) -> dict[str, Any]:
+        response = await self._http.request(
+            "POST",
+            f"/knowledge_bases/{knowledge_base_id}/documents",
+            user_id=user_id,
+            files={"file": (filename, content, content_type)},
+            data={"content_type": content_type},
+            timeout=httpx.Timeout(connect=5.0, read=120.0, write=120.0, pool=5.0),
+        )
+        return response.json()
+
+    async def delete_knowledge_document(
+        self,
+        *,
+        user_id: str,
+        knowledge_base_id: str,
+        document_id: str,
+    ) -> None:
+        await self._http.request(
+            "DELETE",
+            f"/knowledge_bases/{knowledge_base_id}/documents/{document_id}",
+            user_id=user_id,
+        )
+
+    @asynccontextmanager
+    async def stream_knowledge_document(
+        self,
+        *,
+        user_id: str,
+        knowledge_base_id: str,
+        document_id: str,
+        download: bool,
+    ) -> AsyncGenerator[httpx.Response]:
+        params = {"download": "true"} if download else {}
+        async with self._http.stream(
+            "GET",
+            f"/knowledge_bases/{knowledge_base_id}/documents/{document_id}",
+            user_id=user_id,
+            params=params,
+            headers={"Accept-Encoding": "identity"},
+            timeout=httpx.Timeout(connect=5.0, read=None, write=30.0, pool=5.0),
+        ) as response:
+            yield response
 
     async def get_status(
         self,

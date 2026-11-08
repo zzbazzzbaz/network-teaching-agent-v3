@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Button, Result } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 import { ApiError } from '@/api/client';
@@ -12,6 +13,7 @@ import { ComposerCard } from '@/features/chat/ComposerCard';
 import { MessageList } from '@/features/chat/MessageList';
 import { setOutbox, takeOutbox } from '@/features/chat/outbox';
 import { useChatSession } from '@/features/chat/use-chat-session';
+import { KnowledgePicker } from '@/features/knowledge';
 import { AttachmentThumbs } from '@/features/upload/AttachmentThumbs';
 import { selectFiles } from '@/features/upload/file-rules';
 import { useUploads } from '@/features/upload/use-uploads';
@@ -30,6 +32,7 @@ export function ChatPage() {
   const user = useAuthStore((state) => state.user);
   const [draft, setDraft] = useState('');
   const [stickSignal, setStickSignal] = useState(0);
+  const [knowledgeIds, setKnowledgeIds] = useState<string[] | null>(null);
   const outboxHandled = useRef<string | null>(null);
 
   const sessionQuery = useQuery({
@@ -110,7 +113,7 @@ export function ChatPage() {
     if (!text.trim() && files.length === 0) {
       return false;
     }
-    const created = await createSession();
+    const created = await createSession(knowledgeIds ?? undefined);
     if (!created) {
       return false;
     }
@@ -189,6 +192,9 @@ export function ChatPage() {
                 draft={draft}
                 onDraftChange={setDraft}
                 onSubmit={handleNewChatSubmit}
+                knowledgePicker={
+                  <KnowledgePicker value={knowledgeIds} onChange={setKnowledgeIds} />
+                }
               />
             )}
           </div>
@@ -240,10 +246,12 @@ function PendingComposer({
   draft,
   onDraftChange,
   onSubmit,
+  knowledgePicker,
 }: {
   draft: string;
   onDraftChange: (value: string) => void;
   onSubmit: (text: string, files: File[]) => Promise<boolean>;
+  knowledgePicker?: ReactNode;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<StagedFile[]>([]);
@@ -312,6 +320,7 @@ function PendingComposer({
   return (
     <div className="shrink-0 bg-surface px-4 pt-2 pb-[max(16px,env(safe-area-inset-bottom))] lg:px-8">
       <div className="w-full">
+        {knowledgePicker}
         <p className="mb-2 text-[11.5px] text-ink-subtle">发送后会创建新会话</p>
         <ComposerCard
           value={draft}
