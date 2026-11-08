@@ -129,8 +129,8 @@ async def get_memory(settings: Settings, user_id: str) -> ReMeMiddleware:
         memory = _BackgroundWriteReMeMiddleware(
             workspace_dir=str(settings.storage.memory_dir / user_id),
             parameters=ReMeMiddleware.Parameters(
-                chat_model=build_chat_model(settings),
-                embedding_model=build_embedding_model(settings),
+                chat_model=build_chat_model(settings, user_id=user_id),
+                embedding_model=build_embedding_model(settings, user_id=user_id),
                 mode="both",
                 top_k=5,
             ),

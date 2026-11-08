@@ -17,7 +17,7 @@ from app.agent.runtime.knowledge import (
     build_knowledge_parsers,
 )
 from app.agent.runtime.middlewares import agent_middlewares
-from app.agent.runtime.tracing import setup_tracing
+from app.agent.runtime.observability import setup_tracing
 from app.agent.runtime.workspace import build_workspace_manager
 from app.agent.tools import agent_tools
 from app.shared.config import get_settings

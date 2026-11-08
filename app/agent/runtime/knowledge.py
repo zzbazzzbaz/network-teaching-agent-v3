@@ -15,6 +15,7 @@ from agentscope.rag import (
     WordParser,
 )
 
+from app.agent.runtime.models import build_knowledge_embedding_model
 from app.shared.config import Settings
 from app.shared.constants import EMBEDDING_CREDENTIAL_ID, SYSTEM_USER_ID
 
@@ -47,9 +48,12 @@ class _SharedCredentialCollectionPerKbManager(CollectionPerKbManager):
         return KnowledgeBase(
             name=record.data.name,
             description=record.data.description,
-            embedding_model=build_embedding_model(
-                credential_record=credential,
-                config=config,
+            embedding_model=build_knowledge_embedding_model(
+                build_embedding_model(
+                    credential_record=credential,
+                    config=config,
+                ),
+                user_id=user_id,
             ),
             vector_store=self._vector_store,
             collection=record.data.collection_name,

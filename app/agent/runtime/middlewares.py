@@ -8,9 +8,9 @@ from agentscope.agent import Agent
 from agentscope.message import Usage
 from agentscope.middleware import MiddlewareBase, TracingMiddleware
 from agentscope.workspace import LocalWorkspace, WorkspaceBase
-from opentelemetry import trace
 
 from app.agent.runtime.memory import get_memory
+from app.agent.runtime.observability import TracingUserMiddleware
 from app.agent.runtime.workspace import TEACHING_WORKSPACE_INSTRUCTIONS
 from app.agent.tools.client import get_client
 from app.shared.config import get_settings
@@ -113,26 +113,6 @@ class MemoryOnlyToolsMiddleware(MiddlewareBase):
             for group in agent.toolkit.tool_groups
             if group.name not in self._STRIP_TOOL_GROUPS
         ]
-        async for item in next_handler(**input_kwargs):
-            yield item
-
-
-class TracingUserMiddleware(MiddlewareBase):
-    """把学生 ID 写入 agent trace"""
-
-    def __init__(self, user_id: str) -> None:
-        self._user_id = user_id
-
-    async def on_reply(
-        self,
-        agent: Agent,
-        input_kwargs: dict,
-        next_handler: Callable[..., AsyncGenerator],
-    ) -> AsyncGenerator:
-        del agent
-        span = trace.get_current_span()
-        if span.is_recording():
-            span.set_attribute("user.id", self._user_id)
         async for item in next_handler(**input_kwargs):
             yield item
 
