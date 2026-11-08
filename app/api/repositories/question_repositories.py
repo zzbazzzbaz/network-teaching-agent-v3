@@ -35,7 +35,6 @@ class AdminQuestionScope(StrEnum):
 class QuestionAttemptStats:
     attempt_count: int
     student_count: int
-    correct_count: int
 
 
 def _escape_like(value: str) -> str:
@@ -254,11 +253,7 @@ async def attempt_stats(
             col(QuestionAttempt.question_id),
             func.count().label("attempt_count"),
             func.count(func.distinct(col(QuestionAttempt.user_id))).label("student_count"),
-            func.count()
-            .filter(col(QuestionAttempt.answer_text) == col(Question.answer_text))
-            .label("correct_count"),
         )
-        .join(Question, col(Question.id) == col(QuestionAttempt.question_id))
         .where(col(QuestionAttempt.question_id).in_(question_ids))
         .group_by(col(QuestionAttempt.question_id))
     )
@@ -267,7 +262,6 @@ async def attempt_stats(
         row[0]: QuestionAttemptStats(
             attempt_count=int(row[1]),
             student_count=int(row[2]),
-            correct_count=int(row[3]),
         )
         for row in rows
     }
@@ -281,7 +275,7 @@ async def get_attempt_stats(
     stats = await attempt_stats(session, question_ids=[question_id])
     return stats.get(
         question_id,
-        QuestionAttemptStats(attempt_count=0, student_count=0, correct_count=0),
+        QuestionAttemptStats(attempt_count=0, student_count=0),
     )
 
 

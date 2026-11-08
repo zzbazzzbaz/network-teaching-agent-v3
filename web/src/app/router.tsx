@@ -48,6 +48,12 @@ const AdminUserDetailPage = lazy(() =>
   })),
 );
 
+const AdminSessionDetailPage = lazy(() =>
+  import('@/pages/admin/AdminSessionDetailPage').then((module) => ({
+    default: module.AdminSessionDetailPage,
+  })),
+);
+
 const AdminQuestionsPage = lazy(() =>
   import('@/pages/admin/AdminQuestionsPage').then((module) => ({
     default: module.AdminQuestionsPage,
@@ -128,6 +134,11 @@ export const router = createBrowserRouter([
           {
             path: 'users/:userId',
             element: <AdminUserDetailPage />,
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: 'users/:userId/sessions/:sessionId',
+            element: <AdminSessionDetailPage />,
             errorElement: <RouteErrorBoundary />,
           },
           {

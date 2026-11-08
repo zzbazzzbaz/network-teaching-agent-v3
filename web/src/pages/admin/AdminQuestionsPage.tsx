@@ -23,7 +23,7 @@ import { toErrorMessage } from '@/api/client';
 import type { AdminQuestionItem, AdminQuestionScope, QuestionType } from '@/api/types';
 import { EmptyState, ErrorState, PageShell } from '@/components/common';
 import { QuestionFormModal } from '@/features/admin/QuestionFormModal';
-import { formatDateTime, formatPercent, truncate } from '@/lib/format';
+import { formatDateTime, truncate } from '@/lib/format';
 import { useIsMobile } from '@/lib/use-media-query';
 
 const PAGE_SIZE = 20;
@@ -161,14 +161,6 @@ export function AdminQuestionsPage() {
       render: (value: number) => <span className="data-text">{value}</span>,
     },
     {
-      title: '正确率',
-      dataIndex: 'correct_rate',
-      width: 90,
-      align: 'right',
-      responsive: ['lg'],
-      render: (value: number | null) => <span className="data-text">{formatPercent(value)}</span>,
-    },
-    {
       title: '创建时间',
       dataIndex: 'created_at',
       width: 160,
@@ -284,7 +276,6 @@ export function AdminQuestionsPage() {
                 <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-subtle">
                   <span>作答 {item.attempt_count}</span>
                   <span>学生 {item.student_count}</span>
-                  <span>正确率 {formatPercent(item.correct_rate)}</span>
                 </div>
               </div>
             </List.Item>

@@ -124,8 +124,16 @@ export function AdminOverviewPage() {
         <>
           <div className="mb-6 grid grid-cols-2 gap-3 min-[1200px]:grid-cols-4">
             <MetricCard label="学生总数" value={formatNumber(data.students_total)} />
-            <MetricCard label="活跃学生" value={formatNumber(data.students_active)} />
-            <MetricCard label="新增学生" value={formatNumber(data.students_new)} />
+            <MetricCard
+              label="活跃学生"
+              value={formatNumber(data.students_active)}
+              tooltip="所选时间范围内至少产生过 1 个对话轮次的学生数（去重），不含管理员。登录、查看记忆等行为不计入。"
+            />
+            <MetricCard
+              label="新增学生"
+              value={formatNumber(data.students_new)}
+              tooltip="所选时间范围内新注册的学生数，按账号注册时间统计，不含管理员。"
+            />
             <MetricCard label="活跃会话" value={formatNumber(data.sessions)} />
             <MetricCard label="对话轮次" value={formatNumber(data.rounds)} />
             <MetricCard label="作答数" value={formatNumber(data.answers)} />

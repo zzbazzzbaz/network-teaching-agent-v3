@@ -120,7 +120,7 @@ async def list_questions(
             owners.get(question.user_id) if question.user_id is not None else None,
             stats.get(
                 question.id,
-                QuestionAttemptStats(attempt_count=0, student_count=0, correct_count=0),
+                QuestionAttemptStats(attempt_count=0, student_count=0),
             ),
         )
         for question in questions
@@ -263,12 +263,11 @@ async def list_attempts(
     question_id: uuid.UUID,
     limit: int,
     offset: int,
-) -> tuple[Question, list[tuple[QuestionAttempt, str, str]], int]:
+) -> tuple[list[tuple[QuestionAttempt, str, str]], int]:
     question = await get_question(session, question_id)
-    attempts, total = await question_repositories.list_attempts_admin(
+    return await question_repositories.list_attempts_admin(
         session,
         question_id=question.id,
         limit=limit,
         offset=offset,
     )
-    return question, attempts, total

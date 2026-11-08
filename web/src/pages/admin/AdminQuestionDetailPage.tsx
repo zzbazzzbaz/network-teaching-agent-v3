@@ -125,19 +125,6 @@ export function AdminQuestionDetailPage() {
       ),
     },
     {
-      title: '对错',
-      dataIndex: 'is_correct',
-      width: 80,
-      render: (value: boolean | null) =>
-        value === null ? (
-          <span className="text-ink-subtle">—</span>
-        ) : value ? (
-          <Tag color="green">正确</Tag>
-        ) : (
-          <Tag color="red">错误</Tag>
-        ),
-    },
-    {
       title: '时间',
       dataIndex: 'created_at',
       width: 160,
@@ -151,7 +138,7 @@ export function AdminQuestionDetailPage() {
       responsive: ['lg'],
       render: (value: string | null, record) => (
         <Link
-          to={`/admin/users/${record.user_id}?tab=sessions`}
+          to={`/admin/users/${record.user_id}/sessions/${record.session_id}`}
           className="text-ink-muted hover:text-brand"
         >
           {value ?? '\u2014'}

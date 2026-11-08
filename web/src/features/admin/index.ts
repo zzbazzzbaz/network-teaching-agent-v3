@@ -1,9 +1,9 @@
 export { AdminLayout } from './AdminLayout';
+export { CreateUserModal } from './CreateUserModal';
 export { MetricCard } from './MetricCard';
 export { PasswordModal } from './PasswordModal';
 export { QuestionFormModal } from './QuestionFormModal';
 export { ReadonlyMessages } from './ReadonlyMessages';
-export { UserFormModal } from './UserFormModal';
 export { UserMemoryTab } from './UserMemoryTab';
 export { UserOverviewTab } from './UserOverviewTab';
 export { UserSessionsTab } from './UserSessionsTab';

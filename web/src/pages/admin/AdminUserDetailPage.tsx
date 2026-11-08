@@ -1,15 +1,14 @@
-import { ArrowLeftOutlined, EditOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Card, Skeleton, Space, Tabs, Typography } from 'antd';
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
-import { getUser, updateUser } from '@/api/admin';
+import { getUser, updateUserStatus } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
 import { ErrorState, PageShell } from '@/components/common';
 import {
   PasswordModal,
-  UserFormModal,
   UserMemoryTab,
   UserOverviewTab,
   UserRoleTag,
@@ -34,7 +33,6 @@ export function AdminUserDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = parseTab(searchParams.get('tab'));
 
-  const [formOpen, setFormOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
 
   const userQuery = useQuery({
@@ -59,7 +57,7 @@ export function AdminUserDetailPage() {
     const disable = user.status === 'active';
     const apply = async () => {
       try {
-        await updateUser(user.id, { status: disable ? 'disabled' : 'active' });
+        await updateUserStatus(user.id, disable ? 'disabled' : 'active');
         message.success(disable ? '用户已禁用' : '用户已启用');
         refresh();
       } catch (error) {
@@ -137,9 +135,6 @@ export function AdminUserDetailPage() {
             </div>
           </div>
           <Space wrap>
-            <Button icon={<EditOutlined />} onClick={() => setFormOpen(true)}>
-              编辑
-            </Button>
             <Button icon={<LockOutlined />} onClick={() => setPasswordOpen(true)}>
               重置密码
             </Button>
@@ -175,14 +170,6 @@ export function AdminUserDetailPage() {
             children: <UserMemoryTab userId={user.id} />,
           },
         ]}
-      />
-
-      <UserFormModal
-        open={formOpen}
-        user={user}
-        isSelf={isSelf}
-        onClose={() => setFormOpen(false)}
-        onSaved={refresh}
       />
 
       <PasswordModal

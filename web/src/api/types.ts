@@ -223,10 +223,8 @@ export interface AdminUserCreateRequest {
   status: 'active' | 'disabled';
 }
 
-export interface AdminUserUpdateRequest {
-  username?: string;
-  role?: UserRole;
-  status?: 'active' | 'disabled';
+export interface AdminUserStatusRequest {
+  status: 'active' | 'disabled';
 }
 
 export interface AdminOverviewDailyItem {
@@ -284,7 +282,6 @@ export interface AdminQuestionItem {
   created_at: string;
   attempt_count: number;
   student_count: number;
-  correct_rate: number | null;
 }
 
 export interface AdminQuestionListResponse {
@@ -328,7 +325,6 @@ export interface AdminAttemptItem {
   user_id: string;
   username: string;
   answer_text: string;
-  is_correct: boolean | null;
   created_at: string;
   session_id: string;
   session_title: string | null;

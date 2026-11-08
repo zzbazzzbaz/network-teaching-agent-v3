@@ -18,6 +18,9 @@ function resolveTitle(pathname: string): string {
   if (pathname === '/admin/users') {
     return '学生管理';
   }
+  if (pathname.startsWith('/admin/users/') && pathname.includes('/sessions/')) {
+    return '会话详情';
+  }
   if (pathname.startsWith('/admin/users/')) {
     return '学生详情';
   }

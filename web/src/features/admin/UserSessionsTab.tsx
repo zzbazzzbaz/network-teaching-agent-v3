@@ -1,80 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import { Drawer, Input, List, Pagination, Skeleton, Typography } from 'antd';
+import { Input, List, Pagination, Skeleton, Typography } from 'antd';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 
-import { getUserSession, listUserMessages, listUserSessions } from '@/api/admin';
+import { listUserSessions } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
-import type { SessionItem } from '@/api/types';
 import { EmptyState, ErrorState } from '@/components/common';
 import { formatDateTime } from '@/lib/format';
 
-import { ReadonlyMessages } from './ReadonlyMessages';
-
 const PAGE_SIZE = 20;
 
-function SessionMessagesDrawer({
-  userId,
-  session,
-  onClose,
-}: {
-  userId: string;
-  session: SessionItem | null;
-  onClose: () => void;
-}) {
-  const sessionId = session?.id ?? null;
-
-  const detailQuery = useQuery({
-    queryKey: ['admin-user-session', userId, sessionId],
-    queryFn: () => getUserSession(userId, sessionId as string),
-    enabled: Boolean(sessionId),
-    retry: false,
-  });
-
-  const messagesQuery = useQuery({
-    queryKey: ['admin-user-messages', userId, sessionId],
-    queryFn: () => listUserMessages(userId, sessionId as string, undefined, 200),
-    enabled: Boolean(sessionId) && detailQuery.isSuccess,
-    retry: false,
-  });
-
-  return (
-    <Drawer
-      open={Boolean(session)}
-      size={760}
-      title={detailQuery.data?.title ?? session?.title ?? '会话消息'}
-      onClose={onClose}
-      destroyOnHidden
-    >
-      {messagesQuery.isLoading ? (
-        <Skeleton active paragraph={{ rows: 10 }} />
-      ) : messagesQuery.isError ? (
-        <ErrorState
-          title="消息加载失败"
-          message={toErrorMessage(messagesQuery.error, '对话服务暂不可用')}
-          onRetry={() => void messagesQuery.refetch()}
-          compact
-        />
-      ) : (messagesQuery.data?.messages.length ?? 0) === 0 ? (
-        <EmptyState title="暂无消息" description="这个会话还没有可展示的消息。" />
-      ) : (
-        <>
-          {messagesQuery.data?.has_more ? (
-            <Typography.Text type="secondary" className="mb-4 block text-xs">
-              仅展示最近 200 条消息
-            </Typography.Text>
-          ) : null}
-          <ReadonlyMessages messages={messagesQuery.data?.messages ?? []} />
-        </>
-      )}
-    </Drawer>
-  );
-}
-
 export function UserSessionsTab({ userId }: { userId: string }) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
-  const [active, setActive] = useState<SessionItem | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -129,7 +69,7 @@ export function UserSessionsTab({ userId }: { userId: string }) {
                 <List.Item
                   className="cursor-pointer transition-colors hover:bg-surface-sunken/60"
                   style={{ padding: '12px 16px' }}
-                  onClick={() => setActive(item)}
+                  onClick={() => navigate(`/admin/users/${userId}/sessions/${item.id}`)}
                 >
                   <div className="w-full">
                     <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
@@ -157,8 +97,6 @@ export function UserSessionsTab({ userId }: { userId: string }) {
           </div>
         </>
       )}
-
-      <SessionMessagesDrawer userId={userId} session={active} onClose={() => setActive(null)} />
     </div>
   );
 }

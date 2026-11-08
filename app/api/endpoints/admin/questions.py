@@ -25,14 +25,6 @@ from app.shared.errors import not_found
 router = APIRouter(prefix="/questions", tags=["管理-题目"])
 
 
-def _correct_rate(question: Question, stats: QuestionAttemptStats) -> float | None:
-    if question.question_type is not QuestionType.SINGLE_CHOICE:
-        return None
-    if stats.attempt_count <= 0:
-        return None
-    return round(stats.correct_count / stats.attempt_count, 4)
-
-
 def _to_item(
     question: Question,
     owner_username: str | None,
@@ -51,7 +43,6 @@ def _to_item(
         created_at=question.created_at,
         attempt_count=stats.attempt_count,
         student_count=stats.student_count,
-        correct_rate=_correct_rate(question, stats),
     )
 
 
@@ -114,7 +105,7 @@ async def create_question(
     except admin_question_service.QuestionValidationError as exc:
         raise _validation_error(exc) from exc
     await session.commit()
-    return _detail(question, None, QuestionAttemptStats(0, 0, 0))
+    return _detail(question, None, QuestionAttemptStats(0, 0))
 
 
 @router.get("/{question_id}", response_model=AdminQuestionDetail, summary="题目详情")
@@ -195,7 +186,7 @@ async def list_attempts(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> AdminAttemptListResponse:
     try:
-        question, attempts, total = await admin_question_service.list_attempts(
+        attempts, total = await admin_question_service.list_attempts(
             session,
             question_id=question_id,
             limit=limit,
@@ -210,11 +201,6 @@ async def list_attempts(
             user_id=attempt.user_id,
             username=username,
             answer_text=attempt.answer_text,
-            is_correct=(
-                attempt.answer_text == question.answer_text
-                if question.question_type is QuestionType.SINGLE_CHOICE
-                else None
-            ),
             created_at=attempt.created_at,
             session_id=attempt.session_id,
             session_title=session_title,

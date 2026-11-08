@@ -14,7 +14,7 @@ from app.shared.dto.admin import (
     AdminUserDetail,
     AdminUserItem,
     AdminUserListResponse,
-    AdminUserUpdateRequest,
+    AdminUserStatusRequest,
 )
 from app.shared.enums import UserRole, UserStatus
 from app.shared.errors import not_found
@@ -99,27 +99,22 @@ async def get_user(
     return _detail(user, last_active_at)
 
 
-@router.patch("/{user_id}", response_model=AdminUserDetail, summary="修改用户")
-async def update_user(
+@router.patch("/{user_id}/status", response_model=AdminUserDetail, summary="修改用户状态")
+async def update_user_status(
     user_id: uuid.UUID,
-    payload: AdminUserUpdateRequest,
+    payload: AdminUserStatusRequest,
     session: SessionDep,
     admin: AdminUser,
 ) -> AdminUserDetail:
-    fields = payload.model_fields_set
     try:
-        user = await admin_user_service.update_user(
+        user = await admin_user_service.update_status(
             session,
             operator=admin,
             user_id=user_id,
-            username=payload.username if "username" in fields else None,
-            role=payload.role if "role" in fields else None,
-            status=payload.status if "status" in fields else None,
+            status=payload.status,
         )
     except admin_user_service.AdminUserNotFoundError as exc:
         raise not_found() from exc
-    except admin_user_service.UsernameExistsError as exc:
-        raise _username_exists() from exc
     except admin_user_service.SelfAdminChangeError as exc:
         raise HTTPException(status_code=409, detail="不能修改自己的管理员权限") from exc
     except admin_user_service.LastAdminError as exc:

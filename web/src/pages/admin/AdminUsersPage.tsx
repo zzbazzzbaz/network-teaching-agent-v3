@@ -16,11 +16,11 @@ import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { listUsers, updateUser, type AdminUserSort } from '@/api/admin';
+import { listUsers, updateUserStatus, type AdminUserSort } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
 import type { AdminUserItem, UserRole } from '@/api/types';
 import { EmptyState, ErrorState, PageShell } from '@/components/common';
-import { PasswordModal, UserFormModal, UserRoleTag, UserStatusTag } from '@/features/admin';
+import { CreateUserModal, PasswordModal, UserRoleTag, UserStatusTag } from '@/features/admin';
 import { formatDateTime, formatNumber } from '@/lib/format';
 import { useIsMobile } from '@/lib/use-media-query';
 import { useAuthStore } from '@/stores/auth-store';
@@ -64,8 +64,7 @@ export function AdminUsersPage() {
   const page = Math.max(Number(searchParams.get('page') ?? '1'), 1);
 
   const [keyword, setKeyword] = useState(query);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<AdminUserItem | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const [passwordTarget, setPasswordTarget] = useState<AdminUserItem | null>(null);
 
   useEffect(() => {
@@ -125,7 +124,7 @@ export function AdminUsersPage() {
     const disable = record.status === 'active';
     const apply = async () => {
       try {
-        await updateUser(record.id, { status: disable ? 'disabled' : 'active' });
+        await updateUserStatus(record.id, disable ? 'disabled' : 'active');
         message.success(disable ? '用户已禁用' : '用户已启用');
         refresh();
       } catch (error) {
@@ -148,7 +147,6 @@ export function AdminUsersPage() {
 
   const rowMenu = (record: AdminUserItem) => ({
     items: [
-      { key: 'edit', label: '编辑' },
       { key: 'password', label: '重置密码' },
       { type: 'divider' as const },
       {
@@ -159,11 +157,6 @@ export function AdminUsersPage() {
       },
     ],
     onClick: ({ key }: { key: string }) => {
-      if (key === 'edit') {
-        setEditing(record);
-        setFormOpen(true);
-        return;
-      }
       if (key === 'password') {
         setPasswordTarget(record);
         return;
@@ -301,10 +294,7 @@ export function AdminUsersPage() {
         <Button
           type="primary"
           icon={<PlusOutlined />}
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
+          onClick={() => setCreateOpen(true)}
         >
           创建用户
         </Button>
@@ -323,16 +313,7 @@ export function AdminUsersPage() {
         <EmptyState
           title="没有匹配的用户"
           description="调整筛选条件，或创建一个新用户。"
-          action={
-            <Button
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
-            >
-              创建用户
-            </Button>
-          }
+          action={<Button onClick={() => setCreateOpen(true)}>创建用户</Button>}
         />
       ) : isMobile ? (
         <List
@@ -392,12 +373,10 @@ export function AdminUsersPage() {
         </div>
       ) : null}
 
-      <UserFormModal
-        open={formOpen}
-        user={editing}
-        isSelf={editing?.id === currentUser?.id}
-        onClose={() => setFormOpen(false)}
-        onSaved={refresh}
+      <CreateUserModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={refresh}
       />
 
       <PasswordModal

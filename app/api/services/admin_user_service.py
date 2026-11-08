@@ -95,31 +95,20 @@ async def create_user(
         raise UsernameExistsError from exc
 
 
-async def update_user(
+async def update_status(
     session: AsyncSession,
     *,
     operator: User,
     user_id: uuid.UUID,
-    username: str | None,
-    role: UserRole | None,
-    status: UserStatus | None,
+    status: UserStatus,
 ) -> User:
     user = await get_user(session, user_id)
 
-    self_demote = user.id == operator.id and role is not None and role is not UserRole.ADMIN
-    self_disable = (
-        user.id == operator.id and status is not None and status is not UserStatus.ACTIVE
-    )
-    if self_demote or self_disable:
+    if user.id == operator.id and status is not UserStatus.ACTIVE:
         raise SelfAdminChangeError
 
     was_active_admin = user.role is UserRole.ADMIN and user.status is UserStatus.ACTIVE
-    next_role = role if role is not None else user.role
-    next_status = status if status is not None else user.status
-    becomes_inactive_admin = not (
-        next_role is UserRole.ADMIN and next_status is UserStatus.ACTIVE
-    )
-    if was_active_admin and becomes_inactive_admin:
+    if was_active_admin and status is not UserStatus.ACTIVE:
         remaining = await user_repositories.count_active_admins(
             session,
             exclude_user_id=user.id,
@@ -127,24 +116,7 @@ async def update_user(
         if remaining == 0:
             raise LastAdminError
 
-    if username is not None:
-        normalized = username.strip()
-        existing = await user_repositories.get_by_username(session, normalized)
-        if existing is not None and existing.id != user.id:
-            raise UsernameExistsError
-        username = normalized
-
-    try:
-        return await user_repositories.update_user(
-            session,
-            user,
-            username=username,
-            role=role,
-            status=status,
-        )
-    except IntegrityError as exc:
-        await session.rollback()
-        raise UsernameExistsError from exc
+    return await user_repositories.update_user(session, user, status=status)
 
 
 async def reset_password(

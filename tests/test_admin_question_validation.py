@@ -6,7 +6,7 @@ from app.api.services.admin_question_service import (
     _normalize_content,
     _normalize_note,
 )
-from app.shared.dto.admin import AdminUserCreateRequest, AdminUserUpdateRequest
+from app.shared.dto.admin import AdminUserCreateRequest, AdminUserStatusRequest
 from app.shared.enums import QuestionType, UserRole, UserStatus
 
 
@@ -69,4 +69,4 @@ def test_admin_user_username_validation() -> None:
     with pytest.raises(ValidationError):
         AdminUserCreateRequest(username="st udent", password="secret123")
     with pytest.raises(ValidationError):
-        AdminUserUpdateRequest(username="ab")
+        AdminUserStatusRequest(status="unknown")

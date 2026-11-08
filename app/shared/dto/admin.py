@@ -42,10 +42,8 @@ class AdminUserCreateRequest(BaseModel):
     status: UserStatus = UserStatus.ACTIVE
 
 
-class AdminUserUpdateRequest(BaseModel):
-    username: AdminUsername | None = None
-    role: UserRole | None = None
-    status: UserStatus | None = None
+class AdminUserStatusRequest(BaseModel):
+    status: UserStatus
 
 
 class AdminPasswordResetRequest(BaseModel):
@@ -116,7 +114,6 @@ class AdminQuestionItem(BaseModel):
     created_at: AwareDatetime
     attempt_count: int
     student_count: int
-    correct_rate: float | None
 
 
 class AdminQuestionListResponse(BaseModel):
@@ -160,7 +157,6 @@ class AdminAttemptItem(BaseModel):
     user_id: uuid.UUID
     username: str
     answer_text: str
-    is_correct: bool | None
     created_at: AwareDatetime
     session_id: uuid.UUID
     session_title: str | None

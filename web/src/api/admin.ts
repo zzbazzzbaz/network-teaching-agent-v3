@@ -12,7 +12,7 @@ import type {
   AdminUserDetail,
   AdminUserListResponse,
   AdminUserRankingResponse,
-  AdminUserUpdateRequest,
+  AdminUserStatusRequest,
   MemoryEntryDetail,
   MemoryEntryListResponse,
   MessageListResponse,
@@ -90,13 +90,13 @@ export function getUser(userId: string): Promise<AdminUserDetail> {
   return request<AdminUserDetail>(`/admin/users/${encodeURIComponent(userId)}`);
 }
 
-export function updateUser(
+export function updateUserStatus(
   userId: string,
-  payload: AdminUserUpdateRequest,
+  status: AdminUserStatusRequest['status'],
 ): Promise<AdminUserDetail> {
-  return request<AdminUserDetail>(`/admin/users/${encodeURIComponent(userId)}`, {
+  return request<AdminUserDetail>(`/admin/users/${encodeURIComponent(userId)}/status`, {
     method: 'PATCH',
-    body: payload,
+    body: { status },
   });
 }
 
