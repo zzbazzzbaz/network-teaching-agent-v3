@@ -97,6 +97,8 @@ class MemoryOnlyToolsMiddleware(MiddlewareBase):
         "TaskGet",
         "TaskList",
         "TaskUpdate",
+        "reset_tools",
+        "ToolStop",
     ]
 
     async def on_reply(
