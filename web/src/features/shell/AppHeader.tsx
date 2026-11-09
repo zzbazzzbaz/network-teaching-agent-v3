@@ -8,7 +8,7 @@ import { useUiStore } from '@/stores/ui-store';
 const PAGE_TITLES: Record<string, string> = {
   '/memory': '记忆',
   '/knowledge': '知识库',
-  '/questions': '题库',
+  '/questions': '答题记录',
   '/stats': '统计',
 };
 
@@ -25,17 +25,11 @@ function resolveTitle(pathname: string): string {
   if (pathname.startsWith('/admin/users/')) {
     return '学生详情';
   }
-  if (pathname === '/admin/questions') {
-    return '题目管理';
-  }
   if (pathname === '/admin/knowledge') {
     return '公共知识库';
   }
-  if (pathname.startsWith('/admin/questions/')) {
-    return '题目详情';
-  }
   if (pathname.startsWith('/questions/')) {
-    return '题目详情';
+    return '答题详情';
   }
   return PAGE_TITLES[pathname] ?? '对话';
 }

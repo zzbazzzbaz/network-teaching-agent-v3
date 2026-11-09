@@ -8,7 +8,6 @@ import { submitConfirmResult } from './submit';
 
 const TOOL_LABELS: Record<string, string> = {
   quiz_student: '检查题',
-  get_question: '读取题目',
   memory_search: '检索学习记忆',
   materials_ls: '浏览资料',
   materials_read: '读取资料',

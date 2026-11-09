@@ -5,35 +5,22 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict
 from app.shared.enums import QuestionType
 
 
-class QuestionResponse(BaseModel):
+class QuestionRecordItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    user_id: uuid.UUID | None
-    stem: str
     question_type: QuestionType
-    options: dict[str, str] | None
-    answer_text: str
-    note: str | None
-    created_at: AwareDatetime
-
-
-class QuestionListResponse(BaseModel):
-    items: list[QuestionResponse]
-    total: int
-
-
-class AttemptResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    question_id: uuid.UUID
+    stem: str
+    student_answer: str
+    correct_answer: str
     session_id: uuid.UUID
-    tool_call_id: str | None
-    answer_text: str
-    created_at: AwareDatetime
+    answered_at: AwareDatetime
 
 
-class AttemptListResponse(BaseModel):
-    items: list[AttemptResponse]
+class QuestionRecordDetail(QuestionRecordItem):
+    options: dict[str, str] | None = None
+
+
+class QuestionRecordListResponse(BaseModel):
+    items: list[QuestionRecordItem]
     total: int

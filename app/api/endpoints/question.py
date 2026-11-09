@@ -6,82 +6,58 @@ from fastapi import APIRouter, Query
 
 from app.api.dependencies import CurrentUser, SessionDep
 from app.api.repositories.models import QuestionType
-from app.api.repositories.question_repositories import QuestionScope
 from app.api.services import question_service
 from app.shared.dto.question import (
-    AttemptListResponse,
-    AttemptResponse,
-    QuestionListResponse,
-    QuestionResponse,
+    QuestionRecordDetail,
+    QuestionRecordItem,
+    QuestionRecordListResponse,
 )
 from app.shared.errors import not_found
 
-router = APIRouter(prefix="/questions", tags=["题目"])
+router = APIRouter(prefix="/questions", tags=["答题记录"])
 
 
-@router.get("", response_model=QuestionListResponse, summary="题目列表")
-async def list_questions(
+@router.get("", response_model=QuestionRecordListResponse, summary="答题记录列表")
+async def list_records(
     session: SessionDep,
     current_user: CurrentUser,
     query: Annotated[str | None, Query(max_length=200)] = None,
     question_type: QuestionType | None = None,
-    scope: QuestionScope = QuestionScope.ALL,
     date: Date | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
-) -> QuestionListResponse:
-    questions, total = await question_service.list_questions(
+) -> QuestionRecordListResponse:
+    records, total = await question_service.list_records(
         session,
         user_id=current_user.id,
-        scope=scope,
         query=query,
         question_type=question_type,
         date=date,
         limit=limit,
         offset=offset,
     )
-    return QuestionListResponse(
-        items=[QuestionResponse.model_validate(question) for question in questions],
+    return QuestionRecordListResponse(
+        items=[QuestionRecordItem.model_validate(record) for record in records],
         total=total,
     )
-
-
-@router.get("/{question_id}", response_model=QuestionResponse, summary="题目详情")
-async def get_question(
-    question_id: uuid.UUID,
-    session: SessionDep,
-    current_user: CurrentUser,
-) -> QuestionResponse:
-    try:
-        question = await question_service.get_question(session, question_id, current_user.id)
-    except question_service.QuestionNotFoundError as exc:
-        raise not_found() from exc
-    return QuestionResponse.model_validate(question)
 
 
 @router.get(
-    "/{question_id}/attempts",
-    response_model=AttemptListResponse,
-    summary="题目作答记录",
+    "/{question_id}",
+    response_model=QuestionRecordDetail,
+    summary="答题记录详情",
 )
-async def list_attempts(
+async def get_record(
     question_id: uuid.UUID,
     session: SessionDep,
     current_user: CurrentUser,
-    limit: Annotated[int, Query(ge=1, le=100)] = 20,
-    offset: Annotated[int, Query(ge=0)] = 0,
-) -> AttemptListResponse:
+) -> QuestionRecordDetail:
     try:
-        attempts, total = await question_service.list_attempts(
+        record = await question_service.get_record(
             session,
             question_id=question_id,
             user_id=current_user.id,
-            limit=limit,
-            offset=offset,
         )
     except question_service.QuestionNotFoundError as exc:
         raise not_found() from exc
-    return AttemptListResponse(
-        items=[AttemptResponse.model_validate(attempt) for attempt in attempts],
-        total=total,
-    )
+    return QuestionRecordDetail.model_validate(record)

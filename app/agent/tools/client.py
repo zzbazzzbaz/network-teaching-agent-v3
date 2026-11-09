@@ -1,17 +1,11 @@
-import uuid
-
 import httpx
 
 from app.shared.config import get_settings
-from app.shared.dto.internal_question import (
-    AnswerWriteRequest,
-    QuestionDetailResponse,
-)
+from app.shared.dto.internal_question import AnswerRelayRequest
 from app.shared.dto.internal_usage import ReplyUsageReport
 from app.shared.http import InternalHttpClient
 
 ANSWER_WRITE_PATH = "/api/internal/questions/answers"
-QUESTION_DETAIL_PATH = "/api/internal/questions/{question_id}"
 USAGE_REPLY_WRITE_PATH = "/api/internal/usage/replies"
 
 
@@ -28,7 +22,7 @@ class InternalApiClient:
     async def write_answer(
         self,
         user_id: str,
-        payload: AnswerWriteRequest,
+        payload: AnswerRelayRequest,
     ) -> bool:
         response = await self._http.request(
             "POST",
@@ -37,20 +31,6 @@ class InternalApiClient:
             json=payload.model_dump(mode="json"),
         )
         return bool(response.json())
-
-    async def get_question(
-        self,
-        user_id: str,
-        question_id: uuid.UUID,
-        attempt_limit: int,
-    ) -> QuestionDetailResponse:
-        response = await self._http.request(
-            "GET",
-            QUESTION_DETAIL_PATH.format(question_id=question_id),
-            user_id=user_id,
-            params={"attempt_limit": attempt_limit},
-        )
-        return QuestionDetailResponse.model_validate(response.json())
 
     async def report_reply_usage(
         self,

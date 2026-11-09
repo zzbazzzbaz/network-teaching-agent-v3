@@ -45,7 +45,7 @@ async def test_request_maps_transport_error() -> None:
 
 @pytest.mark.asyncio
 async def test_stream_maps_error_body() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(400, json={"detail": "bad request"})
 
     client = InternalHttpClient(

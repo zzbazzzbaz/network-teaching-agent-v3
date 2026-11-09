@@ -7,15 +7,17 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi import Path as PathParam
 
 from app.api.dependencies import AdminUser, SessionDep
-from app.api.repositories.models import ChatSession
+from app.api.repositories.models import ChatSession, QuestionType
 from app.api.services import (
     admin_user_service,
     memory_service,
+    question_service,
     session_service,
     stats_service,
 )
 from app.shared.constants import SESSION_PLACEHOLDER_TITLE
 from app.shared.dto.memory import MemoryEntryDetailDTO, MemoryEntryListDTO
+from app.shared.dto.question import QuestionRecordItem, QuestionRecordListResponse
 from app.shared.dto.session import (
     MessageListResponse,
     SessionItem,
@@ -95,6 +97,37 @@ async def get_user_stats(
             )
             for item in snapshot.daily
         ],
+    )
+
+
+@router.get(
+    "/{user_id}/questions",
+    response_model=QuestionRecordListResponse,
+    summary="学生答题记录",
+)
+async def list_user_questions(
+    user_id: uuid.UUID,
+    session: SessionDep,
+    _admin: AdminUser,
+    query: Annotated[str | None, Query(max_length=200)] = None,
+    question_type: QuestionType | None = None,
+    date: Date | None = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> QuestionRecordListResponse:
+    await _target(session, user_id)
+    records, total = await question_service.list_records(
+        session,
+        user_id=user_id,
+        query=query,
+        question_type=question_type,
+        date=date,
+        limit=limit,
+        offset=offset,
+    )
+    return QuestionRecordListResponse(
+        items=[QuestionRecordItem.model_validate(record) for record in records],
+        total=total,
     )
 
 

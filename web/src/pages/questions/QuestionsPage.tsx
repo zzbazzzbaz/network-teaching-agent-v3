@@ -4,7 +4,6 @@ import {
   Input,
   List,
   Pagination,
-  Segmented,
   Select,
   Skeleton,
   Table,
@@ -17,8 +16,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { toErrorMessage } from '@/api/client';
-import { listQuestions, type QuestionScope } from '@/api/questions';
-import type { QuestionItem, QuestionType } from '@/api/types';
+import { listQuestions } from '@/api/questions';
+import type { QuestionRecordItem, QuestionType } from '@/api/types';
 import { EmptyState, ErrorState, PageShell } from '@/components/common';
 import { formatDateTime, truncate } from '@/lib/format';
 import { useIsMobile } from '@/lib/use-media-query';
@@ -30,15 +29,16 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   short_answer: '简答',
 };
 
+function parseType(value: string | null): QuestionType | undefined {
+  return value === 'single_choice' || value === 'short_answer' ? value : undefined;
+}
+
 export function QuestionsPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const scope: QuestionScope = searchParams.get('scope') === 'mine' ? 'mine' : 'all';
-  const typeParam = searchParams.get('type');
-  const questionType =
-    typeParam === 'single_choice' || typeParam === 'short_answer' ? typeParam : undefined;
+  const questionType = parseType(searchParams.get('type'));
   const query = searchParams.get('q') ?? '';
   const date = searchParams.get('date') ?? '';
   const page = Math.max(Number(searchParams.get('page') ?? '1'), 1);
@@ -67,12 +67,11 @@ export function QuestionsPage() {
   }, [keyword, query, searchParams, setSearchParams]);
 
   const listQuery = useQuery({
-    queryKey: ['questions', scope, questionType ?? 'all', query, date, page],
+    queryKey: ['questions', questionType ?? 'all', query, date, page],
     queryFn: () =>
       listQuestions({
         query: query || undefined,
         question_type: questionType,
-        scope,
         date: date || undefined,
         limit: PAGE_SIZE,
         offset: (page - 1) * PAGE_SIZE,
@@ -92,7 +91,7 @@ export function QuestionsPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const columns: ColumnsType<QuestionItem> = [
+  const columns: ColumnsType<QuestionRecordItem> = [
     {
       title: '题干',
       dataIndex: 'stem',
@@ -107,9 +106,22 @@ export function QuestionsPage() {
       ),
     },
     {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      width: 160,
+      title: '题型',
+      dataIndex: 'question_type',
+      width: 90,
+      render: (value: QuestionType) => <Tag>{TYPE_LABELS[value]}</Tag>,
+    },
+    {
+      title: '我的答案',
+      dataIndex: 'student_answer',
+      width: 200,
+      ellipsis: true,
+      render: (value: string) => <span className="text-sm">{truncate(value, 60)}</span>,
+    },
+    {
+      title: '作答时间',
+      dataIndex: 'answered_at',
+      width: 170,
       render: (value: string) => <span className="data-text">{formatDateTime(value)}</span>,
     },
   ];
@@ -118,55 +130,48 @@ export function QuestionsPage() {
 
   return (
     <PageShell>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 max-[767px]:flex-col max-[767px]:items-stretch">
-        <Segmented
-          value={scope}
-          onChange={(value) => updateParam('scope', value === 'mine' ? 'mine' : null)}
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-2 max-[767px]:flex-col max-[767px]:items-stretch">
+        <DatePicker
+          allowClear
+          className="max-[767px]:w-full"
+          placeholder="按作答日期筛选"
+          value={date ? dayjs(date) : null}
+          onChange={(value) => updateParam('date', value ? value.format('YYYY-MM-DD') : null)}
+        />
+        <Select
+          allowClear
+          className="w-[140px] max-[767px]:w-full"
+          placeholder="全部题型"
+          value={questionType}
+          onChange={(value) => updateParam('type', value ?? null)}
           options={[
-            { label: '全部', value: 'all' },
-            { label: '我的', value: 'mine' },
+            { label: '单选题', value: 'single_choice' },
+            { label: '简答题', value: 'short_answer' },
           ]}
         />
-        <div className="flex flex-wrap items-center gap-2 max-[767px]:w-full max-[767px]:flex-col max-[767px]:items-stretch">
-          <DatePicker
-            allowClear
-            className="max-[767px]:w-full"
-            placeholder="按日期筛选"
-            value={date ? dayjs(date) : null}
-            onChange={(value) => updateParam('date', value ? value.format('YYYY-MM-DD') : null)}
-          />
-          <Select
-            allowClear
-            className="w-[140px] max-[767px]:w-full"
-            placeholder="全部题型"
-            value={questionType}
-            onChange={(value) => updateParam('type', value ?? null)}
-            options={[
-              { label: '单选题', value: 'single_choice' },
-              { label: '简答题', value: 'short_answer' },
-            ]}
-          />
-          <Input.Search
-            allowClear
-            className="w-[240px] max-[767px]:w-full"
-            placeholder="搜索题干"
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-          />
-        </div>
+        <Input.Search
+          allowClear
+          className="w-[240px] max-[767px]:w-full"
+          placeholder="搜索题干"
+          value={keyword}
+          onChange={(event) => setKeyword(event.target.value)}
+        />
       </div>
 
       {listQuery.isLoading ? (
         <Skeleton active paragraph={{ rows: 6 }} />
       ) : listQuery.isError ? (
         <ErrorState
-          title="题库加载失败"
+          title="答题记录加载失败"
           message={toErrorMessage(listQuery.error, '请稍后重试')}
           onRetry={() => void listQuery.refetch()}
           compact
         />
       ) : !data || data.items.length === 0 ? (
-        <EmptyState title="还没有题目" description="完成一次检查题后，题目会出现在这里。" />
+        <EmptyState
+          title="还没有答题记录"
+          description="完成一次检查题后，题目和你的答案会记录在这里。"
+        />
       ) : isMobile ? (
         <List
           className="overflow-hidden rounded-card border border-line bg-surface"
@@ -181,7 +186,7 @@ export function QuestionsPage() {
               <div className="w-full">
                 <div className="mb-1.5 flex items-center gap-2 text-ink-subtle">
                   <Tag>{TYPE_LABELS[item.question_type]}</Tag>
-                  <span className="data-text">{formatDateTime(item.created_at)}</span>
+                  <span className="data-text">{formatDateTime(item.answered_at)}</span>
                 </div>
                 <Typography.Paragraph
                   className="text-sm"
@@ -190,6 +195,9 @@ export function QuestionsPage() {
                 >
                   {item.stem}
                 </Typography.Paragraph>
+                <Typography.Text className="mt-1 block text-xs text-ink-subtle" ellipsis>
+                  我的答案：{item.student_answer}
+                </Typography.Text>
               </div>
             </List.Item>
           )}

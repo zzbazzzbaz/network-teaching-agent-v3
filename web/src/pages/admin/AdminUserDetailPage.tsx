@@ -10,6 +10,7 @@ import {
   UserKnowledgeTab,
   UserMemoryTab,
   UserOverviewTab,
+  UserQuestionsTab,
   UserRoleTag,
   UserSessionsTab,
   UserStatusTag,
@@ -18,10 +19,13 @@ import {
 import { formatDateTime } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth-store';
 
-type TabKey = 'overview' | 'sessions' | 'memory' | 'knowledge';
+type TabKey = 'overview' | 'sessions' | 'questions' | 'memory' | 'knowledge';
 
 function parseTab(value: string | null): TabKey {
-  return value === 'sessions' || value === 'memory' || value === 'knowledge'
+  return value === 'sessions' ||
+    value === 'questions' ||
+    value === 'memory' ||
+    value === 'knowledge'
     ? value
     : 'overview';
 }
@@ -164,6 +168,11 @@ export function AdminUserDetailPage() {
             key: 'sessions',
             label: '会话',
             children: <UserSessionsTab userId={user.id} />,
+          },
+          {
+            key: 'questions',
+            label: '答题记录',
+            children: <UserQuestionsTab userId={user.id} />,
           },
           {
             key: 'memory',

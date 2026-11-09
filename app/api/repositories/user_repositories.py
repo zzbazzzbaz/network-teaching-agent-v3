@@ -11,7 +11,7 @@ from sqlmodel import col
 from app.api.repositories.models import (
     ChatRound,
     ChatSession,
-    QuestionAttempt,
+    Question,
     ReplyUsage,
     User,
     UserRole,
@@ -71,10 +71,10 @@ def _rounds_subquery():
 def _answers_subquery():
     return (
         select(
-            col(QuestionAttempt.user_id).label("user_id"),
+            col(Question.user_id).label("user_id"),
             func.count().label("answers"),
         )
-        .group_by(col(QuestionAttempt.user_id))
+        .group_by(col(Question.user_id))
         .subquery()
     )
 

@@ -46,7 +46,7 @@ async def get_stats(
         include_deleted=True,
     )
     total_rounds = await usage_repositories.count_rounds(session, user_id=user_id)
-    total_answers = await question_repositories.count_attempts(session, user_id=user_id)
+    total_answers = await question_repositories.count_answers(session, user_id=user_id)
 
     token_rows = await usage_repositories.daily_tokens(
         session,

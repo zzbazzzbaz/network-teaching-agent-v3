@@ -1,13 +1,7 @@
 import { request } from './client';
 import type { ListMemoryParams } from './memory';
 import type {
-  AdminAttemptListResponse,
   AdminOverviewResponse,
-  AdminQuestionDetail,
-  AdminQuestionListResponse,
-  AdminQuestionPayload,
-  AdminQuestionScope,
-  AdminQuestionUpdatePayload,
   AdminUserCreateRequest,
   AdminUserDetail,
   AdminUserListResponse,
@@ -17,6 +11,7 @@ import type {
   MemoryEntryListResponse,
   MessageListResponse,
   MyStatsResponse,
+  QuestionRecordListResponse,
   QuestionType,
   SessionItem,
   SessionListResponse,
@@ -46,17 +41,6 @@ export interface ListUsersParams {
 export interface ListAdminSessionsParams {
   q?: string;
   include_empty?: boolean;
-  limit?: number;
-  offset?: number;
-}
-
-export interface ListAdminQuestionsParams {
-  scope?: AdminQuestionScope;
-  user_id?: string;
-  q?: string;
-  question_type?: QuestionType;
-  date?: string;
-  include_deleted?: boolean;
   limit?: number;
   offset?: number;
 }
@@ -192,50 +176,25 @@ export function getUserRanking(
   );
 }
 
-export function listQuestions(
-  params: ListAdminQuestionsParams = {},
-): Promise<AdminQuestionListResponse> {
+export interface ListUserQuestionsParams {
+  query?: string;
+  question_type?: QuestionType;
+  date?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export function listUserQuestions(
+  userId: string,
+  params: ListUserQuestionsParams = {},
+): Promise<QuestionRecordListResponse> {
   const search = new URLSearchParams();
   appendParams(search, {
     ...params,
-    scope: params.scope ?? 'all',
     limit: params.limit ?? 20,
     offset: params.offset ?? 0,
   });
-  return request<AdminQuestionListResponse>(`/admin/questions?${search.toString()}`);
-}
-
-export function createQuestion(payload: AdminQuestionPayload): Promise<AdminQuestionDetail> {
-  return request<AdminQuestionDetail>('/admin/questions', { method: 'POST', body: payload });
-}
-
-export function getQuestion(questionId: string): Promise<AdminQuestionDetail> {
-  return request<AdminQuestionDetail>(`/admin/questions/${encodeURIComponent(questionId)}`);
-}
-
-export function updateQuestion(
-  questionId: string,
-  payload: AdminQuestionUpdatePayload,
-): Promise<AdminQuestionDetail> {
-  return request<AdminQuestionDetail>(`/admin/questions/${encodeURIComponent(questionId)}`, {
-    method: 'PATCH',
-    body: payload,
-  });
-}
-
-export function deleteQuestion(questionId: string): Promise<void> {
-  return request<void>(`/admin/questions/${encodeURIComponent(questionId)}`, {
-    method: 'DELETE',
-  });
-}
-
-export function listQuestionAttempts(
-  questionId: string,
-  limit = 20,
-  offset = 0,
-): Promise<AdminAttemptListResponse> {
-  const search = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-  return request<AdminAttemptListResponse>(
-    `/admin/questions/${encodeURIComponent(questionId)}/attempts?${search.toString()}`,
+  return request<QuestionRecordListResponse>(
+    `/admin/users/${encodeURIComponent(userId)}/questions?${search.toString()}`,
   );
 }

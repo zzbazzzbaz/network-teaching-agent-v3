@@ -2,9 +2,9 @@ import uuid
 from datetime import date
 from typing import Annotated
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import AwareDatetime, BaseModel, ConfigDict, StringConstraints
 
-from app.shared.enums import QuestionType, UserRole, UserStatus
+from app.shared.enums import UserRole, UserStatus
 
 AdminUsername = Annotated[
     str,
@@ -95,69 +95,3 @@ class AdminUserRankingItem(BaseModel):
 
 class AdminUserRankingResponse(BaseModel):
     items: list[AdminUserRankingItem]
-
-
-class AdminQuestionItem(BaseModel):
-    id: uuid.UUID
-    user_id: uuid.UUID | None
-    owner_username: str | None
-    is_public: bool
-    stem: str
-    question_type: QuestionType
-    options: dict[str, str] | None
-    answer_text: str
-    note: str | None
-    created_at: AwareDatetime
-    attempt_count: int
-    student_count: int
-
-
-class AdminQuestionListResponse(BaseModel):
-    items: list[AdminQuestionItem]
-    total: int
-
-
-class AdminQuestionDetail(BaseModel):
-    id: uuid.UUID
-    user_id: uuid.UUID | None
-    owner_username: str | None
-    is_public: bool
-    stem: str
-    question_type: QuestionType
-    options: dict[str, str] | None
-    answer_text: str
-    note: str | None
-    created_at: AwareDatetime
-    attempt_total: int
-    student_count: int
-
-
-class AdminQuestionCreateRequest(BaseModel):
-    stem: str = Field(min_length=1, max_length=5000)
-    question_type: QuestionType
-    options: dict[str, str] | None = None
-    answer_text: str = Field(min_length=1, max_length=5000)
-    note: str | None = Field(default=None, max_length=2000)
-
-
-class AdminQuestionUpdateRequest(BaseModel):
-    stem: str | None = Field(default=None, min_length=1, max_length=5000)
-    question_type: QuestionType | None = None
-    options: dict[str, str] | None = None
-    answer_text: str | None = Field(default=None, min_length=1, max_length=5000)
-    note: str | None = Field(default=None, max_length=2000)
-
-
-class AdminAttemptItem(BaseModel):
-    id: uuid.UUID
-    user_id: uuid.UUID
-    username: str
-    answer_text: str
-    created_at: AwareDatetime
-    session_id: uuid.UUID
-    session_title: str | None
-
-
-class AdminAttemptListResponse(BaseModel):
-    items: list[AdminAttemptItem]
-    total: int

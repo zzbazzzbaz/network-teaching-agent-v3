@@ -5,8 +5,7 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.repositories import question_repositories
-from app.api.repositories.models import ChatSession, Question, QuestionAttempt, QuestionType
-from app.api.repositories.question_repositories import QuestionScope
+from app.api.repositories.models import ChatSession, Question, QuestionType
 
 logger = logging.getLogger(__name__)
 
@@ -19,21 +18,19 @@ class SessionNotFoundError(Exception):
     pass
 
 
-async def list_questions(
+async def list_records(
     session: AsyncSession,
     *,
     user_id: uuid.UUID,
-    scope: QuestionScope,
     query: str | None,
     question_type: QuestionType | None,
     date: date | None,
     limit: int,
     offset: int,
 ) -> tuple[list[Question], int]:
-    return await question_repositories.list_questions(
+    return await question_repositories.list_records(
         session,
         user_id=user_id,
-        scope=scope,
         query=query,
         question_type=question_type,
         date=date,
@@ -42,79 +39,21 @@ async def list_questions(
     )
 
 
-async def get_question(
+async def get_record(
     session: AsyncSession,
+    *,
     question_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> Question:
-    question = await question_repositories.get_question(session, question_id)
-    if question is None:
-        logger.info("question not found: question_id=%s", question_id)
-        raise QuestionNotFoundError
-    if question.deleted_at is not None:
-        logger.info("question deleted: question_id=%s", question_id)
-        raise QuestionNotFoundError
-    if question.user_id is not None and question.user_id != user_id:
-        logger.warning("question not visible: question_id=%s user_id=%s", question_id, user_id)
-        raise QuestionNotFoundError
-    return question
-
-
-async def create_question(
-    session: AsyncSession,
-    *,
-    user_id: uuid.UUID,
-    stem: str,
-    question_type: QuestionType,
-    options: dict[str, str] | None,
-    answer_text: str,
-    note: str | None,
-) -> Question:
-    return await question_repositories.create_question(
+    record = await question_repositories.get_record(
         session,
-        user_id=user_id,
-        stem=stem,
-        question_type=question_type,
-        options=options,
-        answer_text=answer_text,
-        note=note,
-    )
-
-
-async def list_attempts(
-    session: AsyncSession,
-    *,
-    question_id: uuid.UUID,
-    user_id: uuid.UUID,
-    limit: int,
-    offset: int,
-) -> tuple[list[QuestionAttempt], int]:
-    await get_question(session, question_id, user_id)
-    return await question_repositories.list_attempts(
-        session,
-        user_id=user_id,
         question_id=question_id,
-        limit=limit,
-        offset=offset,
-    )
-
-
-async def get_question_with_attempts(
-    session: AsyncSession,
-    *,
-    question_id: uuid.UUID,
-    user_id: uuid.UUID,
-    limit: int,
-) -> tuple[Question, list[QuestionAttempt], int]:
-    question = await get_question(session, question_id, user_id)
-    attempts, total = await question_repositories.list_attempts(
-        session,
         user_id=user_id,
-        question_id=question_id,
-        limit=limit,
-        offset=0,
     )
-    return question, attempts, total
+    if record is None:
+        logger.info("question record not found: question_id=%s", question_id)
+        raise QuestionNotFoundError
+    return record
 
 
 async def record_answer(
@@ -126,37 +65,37 @@ async def record_answer(
     stem: str,
     question_type: QuestionType,
     options: dict[str, str] | None,
-    answer_text: str,
-    answer: str,
+    correct_answer: str,
+    student_answer: str,
 ) -> None:
     chat_session = await session.get(ChatSession, session_id)
     if chat_session is None or chat_session.user_id != user_id:
-        logger.info("answer session not found: session_id=%s user_id=%s", session_id, user_id)
+        logger.info(
+            "answer session not found: session_id=%s user_id=%s",
+            session_id,
+            user_id,
+        )
         raise SessionNotFoundError
 
-    existing = await question_repositories.get_attempt_by_tool_call(
+    existing = await question_repositories.get_by_tool_call(
         session,
         user_id=user_id,
         tool_call_id=tool_call_id,
     )
     if existing is not None:
-        logger.info("answer replayed: tool_call_id=%s attempt_id=%s", tool_call_id, existing.id)
+        logger.info("answer replayed: tool_call_id=%s", tool_call_id)
         return
 
-    question = await create_question(
+    inserted = await question_repositories.create_record(
         session,
         user_id=user_id,
-        stem=stem,
-        question_type=question_type,
-        options=options,
-        answer_text=answer_text,
-        note=None,
-    )
-    await question_repositories.create_attempt(
-        session,
-        user_id=user_id,
-        question_id=question.id,
         session_id=session_id,
         tool_call_id=tool_call_id,
-        answer_text=answer,
+        question_type=question_type,
+        stem=stem,
+        options=options,
+        correct_answer=correct_answer,
+        student_answer=student_answer,
     )
+    if not inserted:
+        logger.info("answer replayed: tool_call_id=%s", tool_call_id)

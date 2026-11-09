@@ -3,7 +3,6 @@ import type { Msg } from '@agentscope-ai/agentscope/message';
 export type AgentKind = 'teach_agent' | 'exp_agent';
 export type QuestionType = 'single_choice' | 'short_answer';
 export type UserRole = 'student' | 'admin';
-export type AdminQuestionScope = 'public' | 'all' | 'user';
 export type FileStatus = 'pending' | 'ready';
 export type SessionStatus = 'running' | 'idle' | 'awaiting_permission' | 'awaiting_external_result';
 
@@ -158,33 +157,22 @@ export interface MemoryEntryListResponse {
   truncated: boolean;
 }
 
-export interface QuestionItem {
+export interface QuestionRecordItem {
   id: string;
-  user_id: string | null;
-  stem: string;
   question_type: QuestionType;
-  options: Record<string, string> | null;
-  answer_text: string;
-  note: string | null;
-  created_at: string;
-}
-
-export interface QuestionListResponse {
-  items: QuestionItem[];
-  total: number;
-}
-
-export interface AttemptItem {
-  id: string;
-  question_id: string;
+  stem: string;
+  student_answer: string;
+  correct_answer: string;
   session_id: string;
-  tool_call_id: string | null;
-  answer_text: string;
-  created_at: string;
+  answered_at: string;
 }
 
-export interface AttemptListResponse {
-  items: AttemptItem[];
+export interface QuestionRecordDetail extends QuestionRecordItem {
+  options: Record<string, string> | null;
+}
+
+export interface QuestionRecordListResponse {
+  items: QuestionRecordItem[];
   total: number;
 }
 
@@ -339,70 +327,4 @@ export interface AdminUserRankingItem {
 
 export interface AdminUserRankingResponse {
   items: AdminUserRankingItem[];
-}
-
-export interface AdminQuestionItem {
-  id: string;
-  user_id: string | null;
-  owner_username: string | null;
-  is_public: boolean;
-  stem: string;
-  question_type: QuestionType;
-  options: Record<string, string> | null;
-  answer_text: string;
-  note: string | null;
-  created_at: string;
-  attempt_count: number;
-  student_count: number;
-}
-
-export interface AdminQuestionListResponse {
-  items: AdminQuestionItem[];
-  total: number;
-}
-
-export interface AdminQuestionDetail {
-  id: string;
-  user_id: string | null;
-  owner_username: string | null;
-  is_public: boolean;
-  stem: string;
-  question_type: QuestionType;
-  options: Record<string, string> | null;
-  answer_text: string;
-  note: string | null;
-  created_at: string;
-  attempt_total: number;
-  student_count: number;
-}
-
-export interface AdminQuestionPayload {
-  stem: string;
-  question_type: QuestionType;
-  options: Record<string, string> | null;
-  answer_text: string;
-  note: string | null;
-}
-
-export interface AdminQuestionUpdatePayload {
-  stem?: string;
-  question_type?: QuestionType;
-  options?: Record<string, string> | null;
-  answer_text?: string;
-  note?: string | null;
-}
-
-export interface AdminAttemptItem {
-  id: string;
-  user_id: string;
-  username: string;
-  answer_text: string;
-  created_at: string;
-  session_id: string;
-  session_title: string | null;
-}
-
-export interface AdminAttemptListResponse {
-  items: AdminAttemptItem[];
-  total: number;
 }

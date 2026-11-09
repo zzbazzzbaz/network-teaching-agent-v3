@@ -22,11 +22,11 @@ async def test_write_back_returns_before_job_finishes(
     calls: list[tuple[str, str | None]] = []
 
     async def fake_write_back(
-        self: ReMeMiddleware,
+        _self: ReMeMiddleware,
         messages: list[Msg],
-        session_id: str | None,
+        _session_id: str | None,
     ) -> None:
-        calls.append((messages[0].get_text_content() or "", session_id))
+        calls.append((messages[0].get_text_content() or "", _session_id))
         started.set()
         await release.wait()
 
@@ -58,7 +58,7 @@ async def test_write_back_passes_student_profile_hint(
     calls: list[tuple[str, dict]] = []
 
     async def fake_run_job(
-        self: ReMeMiddleware,
+        _self: ReMeMiddleware,
         name: str,
         **kwargs,
     ) -> None:
@@ -88,9 +88,9 @@ async def test_write_back_is_serialized_per_user(
     order: list[str] = []
 
     async def fake_write_back(
-        self: ReMeMiddleware,
+        _self: ReMeMiddleware,
         messages: list[Msg],
-        session_id: str | None,
+        _session_id: str | None,
     ) -> None:
         text = messages[0].get_text_content() or ""
         order.append(text)
@@ -129,9 +129,9 @@ async def test_flush_waits_for_pending_writes(
     finished: list[str] = []
 
     async def fake_write_back(
-        self: ReMeMiddleware,
+        _self: ReMeMiddleware,
         messages: list[Msg],
-        session_id: str | None,
+        _session_id: str | None,
     ) -> None:
         started.set()
         await release.wait()

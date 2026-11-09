@@ -76,7 +76,7 @@ uv run uvicorn app.api.main:app --port 8000
 ```text
 src/
   app/          Provider、路由、错误边界、App 根组件
-  pages/        路由页面（登录、对话、记忆、题库、统计、404）
+  pages/        路由页面（登录、对话、记忆、答题记录、统计、404）
   features/     业务组件与业务 hook（auth、shell、chat、hitl、upload、stats）
   components/   通用组件与布局
   api/          HTTP 客户端、类型、各资源接口
@@ -165,7 +165,7 @@ base-uri 'self';
 ## 已知限制
 
 - 会话标题不自动生成，新建后统一「新对话」。
-- 题库每次作答都会新建一条题目记录，不是错题本。
+- 答题记录每完成一次检查题就新增一条，不是错题本。
 - 检查题答案随 `tool_call.input` 下发，DevTools 可见，属于形成性练习。
 - 没有服务端登出接口，退出只清客户端状态。
 - 生产环境若 `API_BASE_URL` 配置错误，历史图片会 404。

@@ -25,7 +25,7 @@ import { useSessions } from './use-sessions';
 const ACCOUNT_ITEMS = [
   { key: 'memory', label: '记忆', icon: <ReadOutlined />, path: '/memory' },
   { key: 'knowledge', label: '知识库', icon: <DatabaseOutlined />, path: '/knowledge' },
-  { key: 'questions', label: '题库', icon: <BookOutlined />, path: '/questions' },
+  { key: 'questions', label: '答题记录', icon: <BookOutlined />, path: '/questions' },
   { key: 'stats', label: '统计', icon: <LineChartOutlined />, path: '/stats' },
 ];
 

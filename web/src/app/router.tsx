@@ -62,21 +62,9 @@ const AdminSessionDetailPage = lazy(() =>
   })),
 );
 
-const AdminQuestionsPage = lazy(() =>
-  import('@/pages/admin/AdminQuestionsPage').then((module) => ({
-    default: module.AdminQuestionsPage,
-  })),
-);
-
 const AdminKnowledgePage = lazy(() =>
   import('@/pages/admin/AdminKnowledgePage').then((module) => ({
     default: module.AdminKnowledgePage,
-  })),
-);
-
-const AdminQuestionDetailPage = lazy(() =>
-  import('@/pages/admin/AdminQuestionDetailPage').then((module) => ({
-    default: module.AdminQuestionDetailPage,
   })),
 );
 
@@ -173,16 +161,6 @@ export const router = createBrowserRouter([
           {
             path: 'knowledge',
             element: <AdminKnowledgePage />,
-            errorElement: <RouteErrorBoundary />,
-          },
-          {
-            path: 'questions',
-            element: <AdminQuestionsPage />,
-            errorElement: <RouteErrorBoundary />,
-          },
-          {
-            path: 'questions/:questionId',
-            element: <AdminQuestionDetailPage />,
             errorElement: <RouteErrorBoundary />,
           },
         ],

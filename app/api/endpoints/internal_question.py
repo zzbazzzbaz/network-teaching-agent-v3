@@ -1,22 +1,15 @@
-"""Agent 进程专用接口: 学生作答回写题库。
+"""Agent 进程专用接口: 学生作答回写答题记录。
 
 路由前缀挂在 ``/api/internal`` 下, 不在 OpenAPI 文档中暴露, 也不走 JWT,
 调用者身份由 ``X-User-ID`` 头给出。它只应被 agent 进程访问。
 """
 
-import uuid
-from typing import Annotated
-
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 
 from app.api.dependencies import InternalUser, SessionDep
 from app.api.repositories.models import QuestionType
 from app.api.services import question_service
-from app.shared.dto.internal_question import (
-    AnswerWriteRequest,
-    AttemptItem,
-    QuestionDetailResponse,
-)
+from app.shared.dto.internal_question import AnswerWriteRequest
 from app.shared.errors import not_found
 
 router = APIRouter(
@@ -40,15 +33,19 @@ async def write_answer(
 ) -> bool:
     question = body.question
     answer = body.answer.strip()
-    if question.question_type is QuestionType.SINGLE_CHOICE:
-        answer = answer.upper()
 
-    options = dict(zip(_LETTERS, question.options, strict=False)) if question.options else None
-    answer_text = (
-        question.correct_option
-        if question.question_type is QuestionType.SINGLE_CHOICE
-        else question.reference_answer
-    ) or ""
+    if question.question_type is QuestionType.SINGLE_CHOICE:
+        assert question.options is not None
+        assert question.correct_option is not None
+        options = dict(
+            zip(_LETTERS[: len(question.options)], question.options, strict=True),
+        )
+        correct_answer = question.correct_option
+        answer = answer.upper()
+    else:
+        assert question.reference_answer is not None
+        options = None
+        correct_answer = question.reference_answer
 
     try:
         await question_service.record_answer(
@@ -59,46 +56,9 @@ async def write_answer(
             stem=question.stem,
             question_type=question.question_type,
             options=options,
-            answer_text=answer_text,
-            answer=answer,
+            correct_answer=correct_answer,
+            student_answer=answer,
         )
     except question_service.SessionNotFoundError as exc:
         raise not_found() from exc
     return True
-
-
-@router.get(
-    "/{question_id}",
-    response_model=QuestionDetailResponse,
-    summary="题目详情与作答记录",
-)
-async def get_question(
-    question_id: uuid.UUID,
-    user: InternalUser,
-    session: SessionDep,
-    attempt_limit: Annotated[int, Query(ge=1, le=20)] = 5,
-) -> QuestionDetailResponse:
-    try:
-        question, attempts, total = await question_service.get_question_with_attempts(
-            session,
-            question_id=question_id,
-            user_id=user.id,
-            limit=attempt_limit,
-        )
-    except question_service.QuestionNotFoundError as exc:
-        raise not_found() from exc
-
-    return QuestionDetailResponse(
-        id=question.id,
-        question_type=question.question_type,
-        stem=question.stem,
-        options=question.options,
-        answer_text=question.answer_text,
-        note=question.note,
-        created_at=question.created_at,
-        attempts=[
-            AttemptItem(answer_text=attempt.answer_text, created_at=attempt.created_at)
-            for attempt in attempts
-        ],
-        attempt_total=total,
-    )

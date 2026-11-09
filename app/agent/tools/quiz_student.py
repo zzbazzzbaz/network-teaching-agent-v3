@@ -11,11 +11,8 @@ from agentscope.permission import (
 from agentscope.tool import ToolBase
 
 from app.agent.tools.client import InternalApiClient
-from app.agent.tools.schemas.quiz_student import QuizStudentAnswer, QuizStudentQuestion
-from app.shared.dto.internal_question import (
-    AnswerWriteRequest,
-    QuestionPayload,
-)
+from app.agent.tools.schemas.quiz_student import QuizStudentAnswer
+from app.shared.dto.internal_question import AnswerRelayRequest, QuestionPayload
 from app.shared.errors import RemoteServiceError
 
 logger = logging.getLogger(__name__)
@@ -25,7 +22,7 @@ _DESCRIPTION = (
     "学生需要练习, 或你刚讲完一个知识点要验证理解时使用; 一次只出一题, 学生未作答前不要出下一题。"
     "调用后本轮立即结束, 等学生提交答案再继续。"
     "单选题必须给 options 和 correct_option, 简答题必须给 reference_answer。"
-    "学生作答会在后台自动记录到题库, 不要在对话里解释保存机制; "
+    "学生作答会在后台自动记录为答题历史, 不要在对话里解释保存机制; "
     "拿到答案后先按 correct_option 或 reference_answer 判分, 再决定怎么反馈。"
 )
 
@@ -34,7 +31,7 @@ class QuizStudent(ToolBase):
     name: str = "quiz_student"
     description: str = _DESCRIPTION
 
-    input_schema: dict[str, Any] = QuizStudentQuestion.model_json_schema()
+    input_schema: dict[str, Any] = QuestionPayload.model_json_schema()
     metadata_schema: dict[str, Any] | None = QuizStudentAnswer.model_json_schema()
 
     is_read_only: bool = False
@@ -72,12 +69,10 @@ class QuizStudent(ToolBase):
         try:
             await self._client.write_answer(
                 self._user_id,
-                AnswerWriteRequest(
+                AnswerRelayRequest(
                     session_id=self._session_id,
                     tool_call_id=result.id,
-                    question=QuestionPayload.model_validate(
-                        payload.question.model_dump(mode="json"),
-                    ),
+                    question=payload.question,
                     answer=payload.answer,
                 ),
             )

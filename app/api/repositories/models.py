@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import Column, Index, Text
+from sqlalchemy import Column, Index, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
@@ -68,28 +68,26 @@ class File(SQLModel, table=True):
 
 class Question(SQLModel, table=True):
     __tablename__ = "questions"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "tool_call_id",
+            name="uq_questions_user_tool_call",
+        ),
+        Index("ix_questions_user_answered", "user_id", "answered_at"),
+        Index("ix_questions_session", "session_id"),
+    )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    user_id: uuid.UUID | None = Field(default=None, foreign_key="users.id", index=True)
-    stem: str = Field(sa_column=Column(Text, nullable=False))
+    user_id: uuid.UUID = Field(foreign_key="users.id")
+    session_id: uuid.UUID = Field(foreign_key="sessions.id")
+    tool_call_id: str = Field(max_length=128)
     question_type: QuestionType
+    stem: str = Field(sa_column=Column(Text, nullable=False))
     options: dict[str, str] | None = Field(default=None, sa_column=Column(JSONB, nullable=True))
-    answer_text: str = Field(sa_column=Column(Text, nullable=False))
-    note: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    created_at: datetime = Field(default_factory=_now)
-    deleted_at: datetime | None = Field(default=None)
-
-
-class QuestionAttempt(SQLModel, table=True):
-    __tablename__ = "question_attempts"
-
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
-    question_id: uuid.UUID = Field(foreign_key="questions.id", index=True)
-    session_id: uuid.UUID = Field(foreign_key="sessions.id", index=True)
-    tool_call_id: str | None = Field(default=None, max_length=128, index=True)
-    answer_text: str = Field(sa_column=Column(Text, nullable=False))
-    created_at: datetime = Field(default_factory=_now)
+    correct_answer: str = Field(sa_column=Column(Text, nullable=False))
+    student_answer: str = Field(sa_column=Column(Text, nullable=False))
+    answered_at: datetime = Field(default_factory=_now)
 
 
 class ReplyUsage(SQLModel, table=True):

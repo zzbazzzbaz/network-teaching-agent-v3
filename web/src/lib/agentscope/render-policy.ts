@@ -18,7 +18,6 @@ export interface ToolResultView {
 
 const TOOL_TITLES: Record<string, string> = {
   [QUIZ_TOOL_NAME]: '检查题',
-  get_question: '读取题目',
   memory_search: '检索学习记忆',
   materials_ls: '浏览资料',
   materials_read: '读取资料',
@@ -71,15 +70,6 @@ export function describeToolCall(block: ToolCallBlock): ToolCallView {
     };
   }
 
-  if (block.name === 'get_question') {
-    const questionId = textOf(input?.question_id);
-    return {
-      title,
-      description: questionId ? `题目 ${questionId}` : '读取题目详情',
-      waitingLabel: null,
-    };
-  }
-
   if (block.name === 'memory_search') {
     const query = textOf(input?.query) || textOf(input?.keywords) || textOf(input?.question);
     return {
@@ -117,10 +107,6 @@ export function describeToolResult(block: ToolResultBlock): ToolResultView {
 
   if (block.name === QUIZ_TOOL_NAME) {
     return { summary: '已收到作答', raw: null, hidden: false };
-  }
-
-  if (block.name === 'get_question') {
-    return { summary: '已读取题目', raw: null, hidden: false };
   }
 
   if (block.name === 'memory_search') {

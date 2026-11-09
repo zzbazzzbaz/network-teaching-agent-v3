@@ -9,7 +9,7 @@ from sqlmodel import cast, col
 
 from app.api.repositories.models import (
     ChatRound,
-    QuestionAttempt,
+    Question,
     ReplyUsage,
     User,
     UserRole,
@@ -164,12 +164,12 @@ async def count_answers(
 ) -> int:
     statement = (
         select(func.count())
-        .select_from(QuestionAttempt)
-        .join(User, _student_join_condition(QuestionAttempt))
+        .select_from(Question)
+        .join(User, _student_join_condition(Question))
         .where(
             col(User.role) == UserRole.STUDENT,
-            col(QuestionAttempt.created_at) >= start_at,
-            col(QuestionAttempt.created_at) < end_at,
+            col(Question.answered_at) >= start_at,
+            col(Question.answered_at) < end_at,
         )
     )
     total = await session.scalar(statement)
@@ -268,15 +268,15 @@ async def daily_answers(
     start_at: datetime,
     end_at: datetime,
 ) -> dict[date, int]:
-    day = _day_column(QuestionAttempt.created_at).label("day")
+    day = _day_column(Question.answered_at).label("day")
     statement = (
         select(day, func.count().label("answers"))
-        .select_from(QuestionAttempt)
-        .join(User, _student_join_condition(QuestionAttempt))
+        .select_from(Question)
+        .join(User, _student_join_condition(Question))
         .where(
             col(User.role) == UserRole.STUDENT,
-            col(QuestionAttempt.created_at) >= start_at,
-            col(QuestionAttempt.created_at) < end_at,
+            col(Question.answered_at) >= start_at,
+            col(Question.answered_at) < end_at,
         )
         .group_by(day)
     )
@@ -343,14 +343,14 @@ async def ranking(
     )
     answers_sq = (
         select(
-            col(QuestionAttempt.user_id).label("user_id"),
+            col(Question.user_id).label("user_id"),
             func.count().label("answers"),
         )
         .where(
-            col(QuestionAttempt.created_at) >= start_at,
-            col(QuestionAttempt.created_at) < end_at,
+            col(Question.answered_at) >= start_at,
+            col(Question.answered_at) < end_at,
         )
-        .group_by(col(QuestionAttempt.user_id))
+        .group_by(col(Question.user_id))
         .subquery()
     )
 

@@ -1,11 +1,11 @@
 export { AdminLayout } from './AdminLayout';
 export { CreateUserModal } from './CreateUserModal';
 export { MetricCard } from './MetricCard';
-export { QuestionFormModal } from './QuestionFormModal';
 export { ReadonlyMessages } from './ReadonlyMessages';
 export { UserKnowledgeTab } from './UserKnowledgeTab';
 export { UserMemoryTab } from './UserMemoryTab';
 export { UserOverviewTab } from './UserOverviewTab';
+export { UserQuestionsTab } from './UserQuestionsTab';
 export { UserSessionsTab } from './UserSessionsTab';
 export { UserRoleTag, UserStatusTag } from './UserTags';
 export { useResetPassword } from './use-reset-password';
