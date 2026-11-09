@@ -299,13 +299,6 @@ export function KnowledgePanel({
       ),
     },
     {
-      title: '类型',
-      dataIndex: 'visibility',
-      width: 80,
-      render: (value: string) =>
-        value === 'public' ? <Tag color="blue">公共</Tag> : <Tag>私人</Tag>,
-    },
-    {
       title: '文档',
       dataIndex: 'document_count',
       width: 80,
@@ -331,36 +324,34 @@ export function KnowledgePanel({
       responsive: ['xl'],
       render: (value: string) => <span className="data-text">{formatDateTime(value)}</span>,
     },
-    {
+  ];
+
+  if (canEdit) {
+    baseColumns.push({
       title: '操作',
       key: 'actions',
-      width: 150,
+      width: 90,
       render: (_value, record) => (
         <Space size={4} onClick={(event) => event.stopPropagation()}>
-          <Button size="small" type="link" onClick={() => setSelected(record)}>
-            查看
-          </Button>
-          {canEdit ? (
-            <Button
-              size="small"
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            />
-          ) : null}
-          {canEdit ? (
-            <Button
-              size="small"
-              type="link"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => confirmDelete(record)}
-            />
-          ) : null}
+          <Button
+            size="small"
+            type="link"
+            icon={<EditOutlined />}
+            aria-label="编辑"
+            onClick={() => openEdit(record)}
+          />
+          <Button
+            size="small"
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            aria-label="删除"
+            onClick={() => confirmDelete(record)}
+          />
         </Space>
       ),
-    },
-  ];
+    });
+  }
 
   const documentColumns: ColumnsType<KnowledgeDocumentItem> = [
     {
@@ -412,6 +403,7 @@ export function KnowledgePanel({
             size="small"
             type="link"
             icon={<DownloadOutlined />}
+            aria-label="下载"
             onClick={() => void downloadDocument(record)}
           />
           {canUpload ? (
@@ -420,6 +412,7 @@ export function KnowledgePanel({
               type="link"
               danger
               icon={<DeleteOutlined />}
+              aria-label="删除"
               onClick={() => confirmDeleteDocument(record)}
             />
           ) : null}

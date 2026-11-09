@@ -17,7 +17,7 @@ import { Button, Dropdown, Modal, Input, Skeleton, Tooltip, Typography, App } fr
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
-import { EmptyState } from '@/components/common';
+import { BrandMark, EmptyState } from '@/components/common';
 import { useAuthStore } from '@/stores/auth-store';
 
 import { useSessions } from './use-sessions';
@@ -148,9 +148,7 @@ export function Sidebar({
     <div className="flex h-full min-h-0 flex-col px-3 pt-4 pb-3">
       <div className="flex items-center justify-between gap-2 px-2 pb-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-chip bg-brand font-code text-[13px] tracking-[0.5px] text-white">
-            CN
-          </span>
+          <BrandMark className="shrink-0" />
           <div className="min-w-0">
             <Typography.Text strong className="block truncate">
               计算机网络

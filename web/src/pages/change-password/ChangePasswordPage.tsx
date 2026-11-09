@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { changePassword } from '@/api/auth';
 import { toErrorMessage } from '@/api/client';
+import { BrandMark } from '@/components/common';
 import { defaultPassword } from '@/lib/password';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -45,10 +46,11 @@ export function ChangePasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-canvas p-6 max-[767px]:items-start max-[767px]:pt-16">
       <div className="w-full max-w-[440px] rounded-panel border border-line bg-surface p-8 max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-6">
         <div className="mb-7 flex items-center gap-2.5">
-          <span className="inline-flex size-7 items-center justify-center rounded-chip bg-brand font-code text-xs text-white">
-            CN
-          </span>
-          <span className="data-text text-ink-subtle">netclass / 计算机网络</span>
+          <BrandMark size={30} className="shrink-0" />
+          <div className="leading-tight">
+            <div className="text-sm font-semibold">计算机网络</div>
+            <div className="text-xs text-ink-subtle">教学智能体</div>
+          </div>
         </div>
         <h1 className="mb-2 text-2xl leading-tight font-semibold">修改密码</h1>
         <div className="mb-6 flex flex-wrap items-center gap-x-2 text-sm text-ink-muted">

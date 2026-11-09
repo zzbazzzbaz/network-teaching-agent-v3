@@ -1,3 +1,4 @@
+import { EyeOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Pagination, Skeleton, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -69,13 +70,15 @@ export function UserQuestionsTab({ userId }: { userId: string }) {
     {
       title: '会话',
       dataIndex: 'session_id',
-      width: 90,
+      width: 70,
       render: (value: string) => (
         <Link
           to={`/admin/users/${userId}/sessions/${value}`}
-          className="text-brand hover:text-brand-strong hover:underline"
+          className="text-brand hover:text-brand-strong"
+          title="查看会话"
+          aria-label="查看会话"
         >
-          查看
+          <EyeOutlined />
         </Link>
       ),
     },

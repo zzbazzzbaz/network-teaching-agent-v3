@@ -1,14 +1,19 @@
-import { EllipsisOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  LockOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  UnlockOutlined,
+} from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   App,
   Button,
-  Dropdown,
   Input,
   List,
   Pagination,
   Select,
   Skeleton,
+  Space,
   Table,
   Typography,
 } from 'antd';
@@ -20,12 +25,7 @@ import { listUsers, updateUserStatus, type AdminUserSort } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
 import type { AdminUserItem, UserRole } from '@/api/types';
 import { EmptyState, ErrorState, PageShell } from '@/components/common';
-import {
-  CreateUserModal,
-  useResetPassword,
-  UserRoleTag,
-  UserStatusTag,
-} from '@/features/admin';
+import { CreateUserModal, useResetPassword, UserStatusTag } from '@/features/admin';
 import { formatDateTime, formatNumber } from '@/lib/format';
 import { useIsMobile } from '@/lib/use-media-query';
 import { useAuthStore } from '@/stores/auth-store';
@@ -150,47 +150,15 @@ export function AdminUsersPage() {
     });
   };
 
-  const rowMenu = (record: AdminUserItem) => ({
-    items: [
-      { key: 'password', label: '重置密码' },
-      { type: 'divider' as const },
-      {
-        key: 'toggle',
-        label: record.status === 'active' ? '禁用' : '启用',
-        danger: record.status === 'active',
-        disabled: record.id === currentUser?.id,
-      },
-    ],
-    onClick: ({ key }: { key: string }) => {
-      if (key === 'password') {
-        confirmResetPassword(record);
-        return;
-      }
-      if (key === 'toggle') {
-        toggleStatus(record);
-      }
-    },
-  });
-
   const columns: ColumnsType<AdminUserItem> = [
     {
       title: '用户名',
       dataIndex: 'username',
-      render: (username: string, record) => (
-        <button
-          type="button"
-          className="cursor-pointer border-0 bg-transparent p-0 text-left text-sm text-brand hover:text-brand-strong hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          onClick={() => navigate(`/admin/users/${record.id}`)}
-        >
+      render: (username: string) => (
+        <Typography.Text strong className="text-sm">
           {username}
-        </button>
+        </Typography.Text>
       ),
-    },
-    {
-      title: '角色',
-      dataIndex: 'role',
-      width: 90,
-      render: (value: UserRole) => <UserRoleTag role={value} />,
     },
     {
       title: '状态',
@@ -212,13 +180,28 @@ export function AdminUsersPage() {
       render: (value: number) => <span className="data-text">{formatNumber(value)}</span>,
     },
     {
-      title: '',
+      title: '操作',
       key: 'actions',
-      width: 48,
+      width: 90,
       render: (_value, record) => (
-        <Dropdown menu={rowMenu(record)} trigger={['click']}>
-          <Button type="text" size="small" icon={<EllipsisOutlined />} aria-label="更多操作" />
-        </Dropdown>
+        <Space size={4} onClick={(event) => event.stopPropagation()}>
+          <Button
+            type="link"
+            size="small"
+            icon={<ReloadOutlined />}
+            aria-label="重置密码"
+            onClick={() => confirmResetPassword(record)}
+          />
+          <Button
+            type="link"
+            size="small"
+            danger={record.status === 'active'}
+            disabled={record.id === currentUser?.id}
+            icon={record.status === 'active' ? <LockOutlined /> : <UnlockOutlined />}
+            aria-label={record.status === 'active' ? '禁用' : '启用'}
+            onClick={() => toggleStatus(record)}
+          />
+        </Space>
       ),
     },
   ];
@@ -297,9 +280,24 @@ export function AdminUsersPage() {
             <List.Item
               style={{ padding: '12px 16px' }}
               actions={[
-                <Dropdown key="actions" menu={rowMenu(item)} trigger={['click']}>
-                  <Button type="text" size="small" icon={<EllipsisOutlined />} aria-label="更多操作" />
-                </Dropdown>,
+                <Button
+                  key="password"
+                  type="link"
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  aria-label="重置密码"
+                  onClick={() => confirmResetPassword(item)}
+                />,
+                <Button
+                  key="toggle"
+                  type="link"
+                  size="small"
+                  danger={item.status === 'active'}
+                  disabled={item.id === currentUser?.id}
+                  icon={item.status === 'active' ? <LockOutlined /> : <UnlockOutlined />}
+                  aria-label={item.status === 'active' ? '禁用' : '启用'}
+                  onClick={() => toggleStatus(item)}
+                />,
               ]}
             >
               <div
@@ -308,7 +306,6 @@ export function AdminUsersPage() {
               >
                 <div className="mb-1.5 flex flex-wrap items-center gap-2">
                   <Typography.Text strong>{item.username}</Typography.Text>
-                  <UserRoleTag role={item.role} />
                   <UserStatusTag status={item.status} />
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-subtle">
@@ -327,6 +324,10 @@ export function AdminUsersPage() {
             dataSource={data.items}
             pagination={false}
             className="bg-surface"
+            onRow={(record) => ({
+              onClick: () => navigate(`/admin/users/${record.id}`),
+              style: { cursor: 'pointer' },
+            })}
           />
         </div>
       )}
