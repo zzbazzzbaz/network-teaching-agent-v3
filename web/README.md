@@ -10,6 +10,7 @@
 - Ant Design 6 + `@ant-design/x` 2.10 + `@ant-design/x-markdown`
 - `@agentscope-ai/agentscope`（消息与事件协议）
 - ECharts（对话配图与统计页图表共用，按需加载）
+- IBM Plex Sans / IBM Plex Mono（自托管）+ lucide 图标
 
 ## 开发
 
@@ -99,6 +100,23 @@ e2e/            Playwright 用例
   - ECharts 只接受合法 JSON option，`title`、`color`、`backgroundColor` 由前端主题接管，使用项目配色和 300px 高度。
 - **统计图表**：`src/features/stats/charts.tsx` 复用 `src/lib/echarts.ts` 的 ECharts core 与主题，`src/lib/use-echart.ts` 统一处理初始化、resize、销毁；原先的 Recharts 已移除，两处图表共用同一份按需加载的 ECharts chunk。
 - **滚动**：`Bubble.List` 关闭内置 `autoScroll`，由 `MessageList` 自行管理贴底、回到底部、向上翻页位置补偿。
+
+## 设计系统
+
+界面视觉分三层维护，页面里只使用映射后的语义类名：
+
+1. `src/styles/tokens.css`：原始 token。纸面 `#f3f5f3`、侧栏 `#edf2f0`、主色 `#0e6b60`、信号色 `#9a5900`、墨色 `#121a1c`。
+2. `src/styles/global.css`：Tailwind `@theme` 映射、Markdown 排版、Ant Design 细节修正、通用 utility（`data-text`、`eyebrow`）。
+3. `src/app/providers.tsx`：Ant Design 全局 token 与组件 token（字号、控件高度、圆角、表格密度、Segmented、Tag 等）。
+
+约定：
+
+- 正文 `14px / 1.6`，长文与对话 Markdown `15px / 1.85`，页面标题 `20px`，登录标题 `26px`；等宽信息统一使用 `data-text` 或 `font-code`。
+- 页面标题由 `AppHeader` 统一渲染，并与 `PageShell` 共用 `max-w-content`（1120px）和左右留白。
+- 侧栏、顶栏、页面内容的表面层级固定为：侧栏 `bg-sidebar` → 页面画布 `bg-canvas` → 卡片 `bg-surface`。
+- 图标统一使用 lucide；Ant Design 只保留组件内部图标（下拉箭头、日期图标、排序图标等）。
+- 新增 Ant Design 组件时先补组件 token；不要在页面里硬编码十六进制色值或新的圆角。
+- 空状态、错误状态、加载状态统一走 `src/components/common`，不要直接使用 Ant Design `Result`。
 
 ## 部署
 

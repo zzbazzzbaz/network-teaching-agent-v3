@@ -1,5 +1,5 @@
-import { ArrowUpOutlined, PictureOutlined, StopOutlined } from '@ant-design/icons';
 import { Button, Input, Upload } from 'antd';
+import { ArrowUp, ImagePlus, Square } from 'lucide-react';
 import type { KeyboardEvent, ReactNode } from 'react';
 
 import { ACCEPTED_IMAGE_TYPES } from '@/features/upload/file-rules';
@@ -10,6 +10,7 @@ export interface ComposerCardProps {
   onChange: (value: string) => void;
   onSubmit: () => void;
   canSubmit: boolean;
+  placeholder?: string;
   attachments?: ReactNode;
   notice?: ReactNode;
   leading?: ReactNode;
@@ -25,6 +26,7 @@ export function ComposerCard({
   onChange,
   onSubmit,
   canSubmit,
+  placeholder,
   attachments,
   notice,
   leading,
@@ -45,7 +47,7 @@ export function ComposerCard({
   };
 
   return (
-    <div className="rounded-card border border-line-strong bg-surface transition-colors focus-within:border-brand">
+    <div className="rounded-panel border border-line-strong bg-surface transition-[border-color,box-shadow] focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/10">
       {attachments}
       {notice}
       <Input.TextArea
@@ -55,9 +57,10 @@ export function ComposerCard({
         onKeyDown={handleKeyDown}
         autoSize={{ minRows: 1, maxRows: 8 }}
         aria-label="输入问题"
-        className="resize-none px-3.5 pt-3 pb-1 text-[15px] leading-6 focus:outline-none"
+        placeholder={placeholder}
+        className="resize-none px-4 pt-3.5 pb-1 text-[14px] leading-6 focus:outline-none"
       />
-      <div className="flex items-center justify-between gap-1 px-2 pb-2">
+      <div className="flex items-center justify-between gap-1 px-2.5 pb-2">
         <div className="flex min-w-0 items-center gap-1">
           <Upload
             multiple
@@ -73,7 +76,8 @@ export function ComposerCard({
             <Button
               type="text"
               size="small"
-              icon={<PictureOutlined />}
+              className="text-ink-muted"
+              icon={<ImagePlus className="size-4" />}
               aria-label="添加图片"
               title="添加图片"
               disabled={disabled}
@@ -87,7 +91,7 @@ export function ComposerCard({
               type="primary"
               shape="circle"
               className="size-8 min-w-8"
-              icon={<StopOutlined />}
+              icon={<Square className="size-3 fill-current" />}
               aria-label="停止生成"
               title="停止生成"
               onClick={onStop}
@@ -97,7 +101,7 @@ export function ComposerCard({
               type="primary"
               shape="circle"
               className="size-8 min-w-8"
-              icon={<ArrowUpOutlined />}
+              icon={<ArrowUp className="size-4" />}
               aria-label="发送消息"
               disabled={!canSubmit}
               loading={submitting}

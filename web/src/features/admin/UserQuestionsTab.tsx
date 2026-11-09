@@ -1,7 +1,7 @@
-import { EyeOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Pagination, Skeleton, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { Eye } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -78,7 +78,7 @@ export function UserQuestionsTab({ userId }: { userId: string }) {
           title="查看会话"
           aria-label="查看会话"
         >
-          <EyeOutlined />
+          <Eye className="size-3.5" />
         </Link>
       ),
     },

@@ -19,7 +19,7 @@ import { listSessions } from '@/api/sessions';
 import type { MemoryEntry } from '@/api/types';
 import { EmptyState, ErrorState, PageShell } from '@/components/common';
 import { MemoryDetail } from '@/features/memory/MemoryDetail';
-import { formatDateTime } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 
 const PAGE_SIZE = 20;
 
@@ -95,7 +95,7 @@ export function MemoryPage() {
       title: '日期',
       dataIndex: 'date',
       width: 120,
-      render: (_value, record) => <span className="data-text">{record.date ?? '\u2014'}</span>,
+      render: (_value, record) => <span className="data-text">{formatDate(record.date)}</span>,
     },
     {
       title: '会话',

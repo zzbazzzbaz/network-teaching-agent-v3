@@ -142,13 +142,13 @@ export function AdminOverviewPage() {
           </div>
 
           <section className="min-w-0 rounded-card border border-line bg-surface p-4 max-[767px]:p-3">
-            <h2 className="mb-3 text-base font-semibold leading-normal">每日趋势</h2>
+            <h2 className="mb-3 text-[15px] font-semibold leading-normal tracking-[-0.01em]">每日趋势</h2>
             <DailyTrendChart data={data.daily} showActiveStudents />
           </section>
 
           <section className="mt-4 rounded-card border border-line bg-surface">
             <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
-              <h2 className="m-0 text-base font-semibold leading-normal">学生排行</h2>
+              <h2 className="m-0 text-[15px] font-semibold leading-normal tracking-[-0.01em]">学生排行</h2>
               <Segmented
                 size="small"
                 value={sort}

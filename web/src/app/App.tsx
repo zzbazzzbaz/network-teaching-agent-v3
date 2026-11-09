@@ -2,7 +2,7 @@ import { App as AntdApp } from 'antd';
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router';
 
-import { BrandMark } from '@/components/common';
+import { BrandLockup } from '@/components/common';
 import { useAuthStore } from '@/stores/auth-store';
 
 import { router } from './router';
@@ -33,8 +33,8 @@ export function App() {
         role="status"
         aria-live="polite"
       >
-        <BrandMark size={36} className="shrink-0" />
-        <span className="data-text">正在恢复登录状态</span>
+        <BrandLockup size={32} />
+        <span className="text-[12px] text-ink-muted">正在恢复登录状态</span>
       </div>
     );
   }

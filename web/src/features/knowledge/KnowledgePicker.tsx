@@ -1,11 +1,11 @@
-import { DatabaseOutlined, DownOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Checkbox, Popover, Tooltip } from 'antd';
+import { ChevronDown, Database } from 'lucide-react';
 
 import { listKnowledgeBases } from '@/api/knowledge';
 
 const CHIP_CLASS =
-  'inline-flex h-7 max-w-[280px] min-w-0 items-center gap-1.5 rounded-chip px-2 text-[12px] text-ink-muted';
+  'inline-flex h-7 max-w-[280px] min-w-0 items-center gap-1.5 rounded-chip px-2 text-[11.5px] text-ink-muted';
 
 export interface KnowledgePickerProps {
   value: string[] | null;
@@ -88,13 +88,13 @@ export function KnowledgePicker({ value, onChange }: KnowledgePickerProps) {
         className={`${CHIP_CLASS} cursor-pointer transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand`}
         aria-label="选择本轮对话使用的知识库"
       >
-        <DatabaseOutlined aria-hidden="true" />
+        <Database className="size-3.5" aria-hidden="true" />
         <span className="shrink-0">知识库</span>
         <span className="shrink-0 text-ink-subtle" aria-hidden="true">
           ·
         </span>
         <span className="min-w-0 truncate text-ink-subtle">{summary}</span>
-        <DownOutlined className="shrink-0 text-[9px] text-ink-subtle" aria-hidden="true" />
+        <ChevronDown className="size-3 shrink-0 text-ink-subtle" aria-hidden="true" />
       </button>
     </Popover>
   );
@@ -110,7 +110,7 @@ export function KnowledgeBadge({ ids }: KnowledgeBadgeProps) {
   if (ids.length === 0) {
     return (
       <span className={CHIP_CLASS}>
-        <DatabaseOutlined aria-hidden="true" />
+        <Database className="size-3.5" aria-hidden="true" />
         <span className="shrink-0">知识库</span>
         <span className="shrink-0 text-ink-subtle" aria-hidden="true">
           ·
@@ -125,7 +125,7 @@ export function KnowledgeBadge({ ids }: KnowledgeBadgeProps) {
   return (
     <Tooltip title={`本会话启用：${summary}`}>
       <span className={`${CHIP_CLASS} cursor-default`}>
-        <DatabaseOutlined aria-hidden="true" />
+        <Database className="size-3.5" aria-hidden="true" />
         <span className="shrink-0">知识库</span>
         <span className="shrink-0 text-ink-subtle" aria-hidden="true">
           ·

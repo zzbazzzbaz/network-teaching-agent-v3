@@ -1,5 +1,5 @@
-import { MenuOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Button, Drawer } from 'antd';
+import { Menu, PanelLeftOpen } from 'lucide-react';
 import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
 
@@ -35,12 +35,12 @@ export function AppLayout() {
     <div className="flex h-full min-h-0">
       {!isMobile ? (
         <aside
-          className={`sticky top-0 h-screen shrink-0 overflow-hidden bg-surface transition-[width] duration-200 ease-out motion-reduce:transition-none ${
-            sidebarCollapsed ? 'w-0' : 'w-[264px] border-r border-line max-[1199px]:w-[220px]'
+          className={`sticky top-0 h-screen shrink-0 overflow-hidden border-r border-line bg-sidebar transition-[width] duration-200 ease-out motion-reduce:transition-none ${
+            sidebarCollapsed ? 'w-0 border-r-0' : 'w-[280px] max-[1199px]:w-[248px]'
           }`}
           inert={sidebarCollapsed}
         >
-          <div className="h-full w-[264px] max-[1199px]:w-[220px]">
+          <div className="h-full w-[280px] max-[1199px]:w-[248px]">
             <Sidebar onCollapse={() => setSidebarCollapsed(true)} />
           </div>
         </aside>
@@ -49,7 +49,7 @@ export function AppLayout() {
           placement="left"
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
-          size={288}
+          size={300}
           closable={false}
           styles={{ body: { padding: 0 } }}
         >
@@ -60,19 +60,27 @@ export function AppLayout() {
         </Drawer>
       )}
 
-      <div className="relative flex h-screen min-w-0 flex-1 flex-col">
+      <div
+        className={`relative flex h-screen min-w-0 flex-1 flex-col ${
+          isChat ? 'bg-surface' : 'bg-canvas'
+        }`}
+      >
         {isChat ? null : <AppHeader />}
         {isChat && (isMobile || sidebarCollapsed) ? (
           <Button
-            className="absolute top-2 left-2 z-20 border border-line bg-surface/90 shadow-[0_1px_4px_rgb(16_23_32/10%)] backdrop-blur-sm"
+            className="absolute top-3 left-3 z-20 border border-line bg-surface/90 shadow-[0_2px_8px_rgb(18_26_28/10%)] backdrop-blur-sm"
             type="text"
             size="small"
-            icon={isMobile ? <MenuOutlined /> : <MenuUnfoldOutlined />}
+            icon={isMobile ? <Menu className="size-4" /> : <PanelLeftOpen className="size-4" />}
             onClick={openSidebar}
             aria-label={isMobile ? '打开导航' : '展开侧边栏'}
           />
         ) : null}
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <main
+          className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
+            isChat && (isMobile || sidebarCollapsed) ? 'pt-12' : ''
+          }`}
+        >
           <Suspense fallback={<PageLoading text="正在加载页面" />}>
             <Outlet />
           </Suspense>

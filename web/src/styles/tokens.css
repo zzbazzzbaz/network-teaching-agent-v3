@@ -1,27 +1,49 @@
 :root {
-  --canvas: #f6f7f8;
-  --surface: #ffffff;
-  --surface-sunken: #eff2f4;
-  --ink-900: #101720;
-  --ink-600: #55606e;
-  --ink-400: #6b7684;
-  --line: #e4e8ed;
-  --line-strong: #cfd6dd;
-  --brand-600: #12586b;
-  --brand-500: #1b7089;
-  --brand-50: #eaf2f4;
-  --success: #1e7a52;
-  --warning: #9a6a16;
-  --danger: #b23a32;
+  color-scheme: light;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --paper: #f3f5f3;
+  --canvas: var(--paper);
+  --sidebar: #edf2f0;
+  --surface: #ffffff;
+  --surface-sunken: #edf2f0;
+
+  --ink-900: #121a1c;
+  --ink-soft: #2e4044;
+  --ink-600: #46575a;
+  --ink-400: #5c6e70;
+
+  --line: #dce4e2;
+  --line-strong: #c4d0cd;
+
+  --brand-600: #0e6b60;
+  --brand-500: #0a4f47;
+  --brand-50: #e7f1ee;
+  --brand-line: #b9d8d1;
+
+  --success: #1e7a52;
+  --success-50: #e9f3ee;
+  --success-line: #bbdcc9;
+
+  --warning: #9a5900;
+  --warning-50: #fbf1dc;
+  --warning-line: #e6cd9b;
+
+  --danger: #b42318;
+  --danger-50: #fdeceb;
+  --danger-line: #f2c3bf;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
 
   --font-sans:
-    ui-sans-serif, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', 'Cascadia Mono', monospace;
+    'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Microsoft YaHei',
+    ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, 'Cascadia Mono', 'PingFang SC',
+    monospace;
 
-  --sidebar-width: 264px;
-  --content-max: 1100px;
+  --sidebar-width: 280px;
+  --content-max: 1120px;
 }

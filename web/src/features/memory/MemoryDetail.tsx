@@ -6,7 +6,7 @@ import { getMemoryEntry } from '@/api/memory';
 import type { MemoryEntryDetail } from '@/api/types';
 import { ErrorState } from '@/components/common';
 import { Markdown } from '@/features/chat/markdown';
-import { formatDateTime } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 
 export interface MemoryDetailProps {
   entryId: string | null;
@@ -45,7 +45,9 @@ export function MemoryDetail({
           <div className="flex items-center gap-2.5 text-[13px] text-ink-muted">
             <Tag>{detailQuery.data.kind === 'daily' ? '日常' : '摘要'}</Tag>
             <span className="data-text">
-              {detailQuery.data.date ?? formatDateTime(detailQuery.data.updated_at)}
+              {detailQuery.data.date
+                ? formatDate(detailQuery.data.date)
+                : formatDateTime(detailQuery.data.updated_at)}
             </span>
             {detailQuery.data.session_title ? (
               <span className="text-[13px] text-ink-muted">{detailQuery.data.session_title}</span>
@@ -54,7 +56,7 @@ export function MemoryDetail({
           {detailQuery.data.content_truncated ? (
             <Alert type="warning" showIcon message="内容较长，这里只展示了一部分" />
           ) : null}
-          <Markdown content={detailQuery.data.content} className="text-base leading-[1.8]" />
+          <Markdown content={detailQuery.data.content} className="text-[15px] leading-[1.8]" />
         </div>
       ) : null}
     </Drawer>

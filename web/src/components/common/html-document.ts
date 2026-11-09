@@ -4,14 +4,14 @@ const BASE_STYLE = `
   :root {
     --ink: #121a1c;
     --muted: #5c6e70;
-    --line: #dce3e1;
+    --line: #dce4e2;
     --brand: #0e6b60;
     --brand-soft: #e7f1ee;
     --brand-line: #b9d8d1;
     --hint: #9a5900;
     --surface: #ffffff;
-    --paper: #f2f4f3;
-    --surface-2: #eef2f1;
+    --paper: #f3f5f3;
+    --surface-2: #edf2f0;
   }
   *, *::before, *::after { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -28,21 +28,21 @@ const BASE_STYLE = `
   }
   body > *:first-child { margin-top: 0; }
   body > *:last-child { margin-bottom: 0; }
-  p { margin: 0 0 8px; }
-  h1, h2, h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; line-height: 1.4; }
-  h4, h5, h6 { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.45; }
+  p { margin: 0 0 10px; }
+  h1, h2, h3 { margin: 0 0 8px; font-size: 19px; font-weight: 600; line-height: 1.45; letter-spacing: -0.012em; }
+  h4, h5, h6 { margin: 0 0 6px; font-size: 15.5px; font-weight: 600; line-height: 1.5; }
   small { font-size: 13px; color: var(--muted); }
   ul, ol { margin: 0 0 8px; padding-left: 20px; }
   li { margin: 2px 0; }
   a { color: var(--brand); text-decoration: none; }
   a:hover { text-decoration: underline; }
   strong, b { font-weight: 600; }
-  table { border-collapse: collapse; margin: 0 0 8px; font-size: 13px; }
+  table { border-collapse: collapse; margin: 0 0 10px; font-size: 13px; }
   th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
   th { background: var(--surface-2); font-weight: 600; }
   code, kbd, pre, samp { font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; font-size: 12.5px; }
-  :not(pre) > code { padding: 1px 5px; border-radius: 4px; background: var(--paper); }
-  pre { margin: 0 0 8px; padding: 10px 12px; overflow-x: auto; border-radius: 6px; background: var(--paper); }
+  :not(pre) > code { padding: 1px 5px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); }
+  pre { margin: 0 0 10px; padding: 10px 12px; overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
   pre code { padding: 0; background: transparent; }
   blockquote { margin: 0 0 8px; padding: 2px 12px; border-left: 2px solid var(--brand-line); color: var(--muted); }
   figure { margin: 0 0 8px; }

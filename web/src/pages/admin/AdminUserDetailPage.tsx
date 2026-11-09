@@ -1,6 +1,6 @@
-import { ArrowLeftOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Card, Skeleton, Space, Tabs, Typography } from 'antd';
+import { ArrowLeft, KeyRound, Lock, Unlock } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 import { getUser, updateUserStatus } from '@/api/admin';
@@ -117,10 +117,10 @@ export function AdminUserDetailPage() {
     <PageShell>
       <button
         type="button"
-        className="mb-3 inline-flex items-center gap-1 rounded-chip py-1.5 text-sm text-ink-muted transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        className="mb-3 inline-flex items-center gap-1.5 rounded-chip py-1.5 text-[12.5px] text-ink-muted transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         onClick={() => navigate('/admin/users')}
       >
-        <ArrowLeftOutlined aria-hidden="true" />
+        <ArrowLeft className="size-3.5" aria-hidden="true" />
         返回学生管理
       </button>
 
@@ -140,13 +140,13 @@ export function AdminUserDetailPage() {
             </div>
           </div>
           <Space wrap>
-            <Button icon={<LockOutlined />} onClick={() => confirmResetPassword(user)}>
+            <Button icon={<KeyRound className="size-3.5" />} onClick={() => confirmResetPassword(user)}>
               重置密码
             </Button>
             <Button
               danger={user.status === 'active'}
               disabled={isSelf}
-              icon={user.status === 'active' ? <LockOutlined /> : <UnlockOutlined />}
+              icon={user.status === 'active' ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}
               onClick={toggleStatus}
             >
               {user.status === 'active' ? '禁用' : '启用'}

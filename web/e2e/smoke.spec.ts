@@ -166,7 +166,7 @@ test('登录后发送消息并收到流式回答，刷新后仍然可见', async
   await page.goto('/login');
 
   await page.getByPlaceholder('学号或用户名').fill('student');
-  await page.getByPlaceholder('密码').fill('password123');
+  await page.getByPlaceholder('输入密码…').fill('password123');
   await page.getByRole('button', { name: /登\s*录/ }).click();
 
   await expect(page).toHaveURL(/\/chat/);
@@ -189,7 +189,7 @@ test('课程学习模式点击教材目录节点填入输入框', async ({ page 
   await page.goto('/login');
 
   await page.getByPlaceholder('学号或用户名').fill('student');
-  await page.getByPlaceholder('密码').fill('password123');
+  await page.getByPlaceholder('输入密码…').fill('password123');
   await page.getByRole('button', { name: /登\s*录/ }).click();
 
   await expect(page.getByRole('textbox', { name: '输入问题' })).toBeVisible();
@@ -199,7 +199,7 @@ test('课程学习模式点击教材目录节点填入输入框', async ({ page 
   );
 
   await page.getByText('考研备考', { exact: true }).click();
-  await expect(page.getByText('上传题目开始对话')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '上传一道题开始讲评' })).toBeVisible();
 });
 
 test('通过链接参数预选模式和预填充提示词', async ({ page }) => {
@@ -207,17 +207,17 @@ test('通过链接参数预选模式和预填充提示词', async ({ page }) => 
   await page.goto('/login');
 
   await page.getByPlaceholder('学号或用户名').fill('student');
-  await page.getByPlaceholder('密码').fill('password123');
+  await page.getByPlaceholder('输入密码…').fill('password123');
   await page.getByRole('button', { name: /登\s*录/ }).click();
 
   await page.goto('/chat?mode=exam&prompt=请讲解 TCP 拥塞控制');
-  await expect(page.getByText('上传题目开始对话')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '上传一道题开始讲评' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue(
     '请讲解 TCP 拥塞控制',
   );
 
   await page.goto('/chat?mode=course&prompt=课程问题');
-  await expect(page.getByText('从教材目录开始')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '从章节开始学习' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue('课程问题');
 });
 

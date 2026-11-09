@@ -1,6 +1,6 @@
-import { ArrowLeftOutlined, CopyOutlined, MessageOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { App, Skeleton, Tag, Typography } from 'antd';
+import { ArrowLeft, Copy, MessageSquare } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { toErrorMessage } from '@/api/client';
@@ -60,10 +60,10 @@ export function QuestionDetailPage() {
         <div className="mb-3 flex items-center justify-between">
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-chip py-1.5 text-sm text-ink-muted transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex items-center gap-1.5 rounded-chip py-1.5 text-[12.5px] text-ink-muted transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             onClick={() => navigate('/questions')}
           >
-            <ArrowLeftOutlined aria-hidden="true" />
+            <ArrowLeft className="size-3.5" aria-hidden="true" />
             返回答题记录
           </button>
         </div>
@@ -83,9 +83,9 @@ export function QuestionDetailPage() {
               <span className="data-text">作答于 {formatDateTime(question.answered_at)}</span>
               <Link
                 to={`/chat/${question.session_id}`}
-                className="inline-flex items-center gap-1 text-xs text-ink-subtle hover:text-brand"
+                className="inline-flex items-center gap-1.5 text-[11.5px] text-ink-subtle hover:text-brand"
               >
-                <MessageOutlined aria-hidden="true" />
+                <MessageSquare className="size-3.5" aria-hidden="true" />
                 查看会话
               </Link>
             </div>
@@ -93,7 +93,7 @@ export function QuestionDetailPage() {
 
           <Markdown
             content={question.stem}
-            className="text-base leading-[1.85] max-[767px]:text-[15px]"
+            className="text-[15px] leading-[1.85]"
           />
 
           {isSingleChoice && options.length > 0 ? (
@@ -114,7 +114,7 @@ export function QuestionDetailPage() {
                     <span className="text-[15px] leading-relaxed">{text}</span>
                     <span className="ml-auto flex shrink-0 gap-1.5">
                       {isPicked ? <Tag>你的选择</Tag> : null}
-                      {isCorrect ? <Tag color="blue">正确答案</Tag> : null}
+                      {isCorrect ? <Tag color="success">正确答案</Tag> : null}
                     </span>
                   </li>
                 );
@@ -126,7 +126,7 @@ export function QuestionDetailPage() {
             <div className="mb-2.5 text-[13px] font-semibold tracking-[0.02em] text-ink-muted">
               我的答案
             </div>
-            <div className="whitespace-pre-wrap rounded-chip bg-surface-sunken px-4 py-3.5 text-[14.5px] leading-[1.8] text-ink [overflow-wrap:anywhere]">
+            <div className="whitespace-pre-wrap rounded-chip bg-surface-sunken px-4 py-3.5 text-[14px] leading-[1.8] text-ink [overflow-wrap:anywhere]">
               {question.student_answer}
             </div>
           </section>
@@ -142,13 +142,13 @@ export function QuestionDetailPage() {
                   className="inline-flex items-center gap-1 rounded-chip px-2 py-1 text-xs text-ink-subtle transition-colors hover:bg-surface-sunken hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                   onClick={() => void copyAnswer()}
                 >
-                  <CopyOutlined aria-hidden="true" />
+                  <Copy className="size-3.5" aria-hidden="true" />
                   复制
                 </button>
               ) : null}
             </div>
             {question.correct_answer ? (
-              <div className="whitespace-pre-wrap rounded-chip border-l-[3px] border-brand bg-brand-soft px-4 py-3.5 text-[14.5px] leading-[1.8] text-ink [overflow-wrap:anywhere]">
+              <div className="whitespace-pre-wrap rounded-chip border-l-[3px] border-brand bg-brand-soft px-4 py-3.5 text-[14px] leading-[1.8] text-ink [overflow-wrap:anywhere]">
                 {question.correct_answer}
               </div>
             ) : (

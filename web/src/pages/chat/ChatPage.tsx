@@ -1,6 +1,6 @@
-import { CloudUploadOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Result, Segmented } from 'antd';
+import { Button, Segmented } from 'antd';
+import { ClipboardPaste, ImagePlus, MessageCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
@@ -8,7 +8,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { ApiError } from '@/api/client';
 import { createSession, getSession } from '@/api/sessions';
 import type { AgentKind } from '@/api/types';
-import { ErrorState, PageLoading } from '@/components/common';
+import { ErrorState, PageLoading, StatePage } from '@/components/common';
 import { ChatActionsProvider } from '@/features/chat/chat-actions';
 import { ChatComposer } from '@/features/chat/ChatComposer';
 import { ComposerCard } from '@/features/chat/ComposerCard';
@@ -185,11 +185,11 @@ export function ChatPage() {
 
   if (sessionId && notFound) {
     return (
-      <Result
-        status="404"
+      <StatePage
+        code="404 · SESSION"
         title="会话不存在"
-        subTitle="它可能已被删除，或不属于当前账号。"
-        extra={
+        description="它可能已被删除，或不属于当前账号。"
+        action={
           <Button type="primary" onClick={() => navigate('/chat')}>
             返回对话
           </Button>
@@ -200,11 +200,15 @@ export function ChatPage() {
 
   if (sessionId && chat.loadError) {
     return (
-      <ErrorState
-        title="对话加载失败"
-        message={chat.loadError}
-        onRetry={() => window.location.reload()}
-      />
+      <div className="flex min-h-0 flex-1 items-center justify-center px-6 py-12">
+        <div className="w-full max-w-[560px]">
+          <ErrorState
+            title="对话加载失败"
+            message={chat.loadError}
+            onRetry={() => window.location.reload()}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -248,6 +252,7 @@ export function ChatPage() {
                 onSubmit={handleSend}
                 uploads={uploads}
                 phase={phase}
+                placeholder="继续追问，或说说你的想法…"
                 onStop={actions.stop}
                 knowledgeBaseIds={sessionQuery.data?.knowledge_base_ids}
                 disabled={chat.loading}
@@ -257,6 +262,11 @@ export function ChatPage() {
                 draft={draft}
                 onDraftChange={setDraft}
                 onSubmit={handleNewChatSubmit}
+                placeholder={
+                  startMode === 'teach_agent'
+                    ? '从教材目录选一节，或直接问我…'
+                    : '上传题目，或直接粘贴题干…'
+                }
                 knowledgePicker={
                   <KnowledgePicker value={knowledgeIds} onChange={setKnowledgeIds} />
                 }
@@ -268,6 +278,30 @@ export function ChatPage() {
     </ChatActionsProvider>
   );
 }
+
+const COURSE_STARTERS = [
+  '用一句话解释 TCP 三次握手',
+  '子网掩码和 CIDR 怎么换算？',
+  'TCP 和 UDP 的主要区别是什么？',
+];
+
+const EXAM_STEPS = [
+  {
+    icon: ImagePlus,
+    title: '上传题目',
+    description: '拍照或截图，从输入框左下角添加。',
+  },
+  {
+    icon: ClipboardPaste,
+    title: '粘贴题干',
+    description: '也可以直接把题目文字粘贴进来。',
+  },
+  {
+    icon: MessageCircle,
+    title: '开始讲评',
+    description: '先做题，再围绕错因继续追问。',
+  },
+];
 
 function EmptyChat({
   mode,
@@ -283,15 +317,23 @@ function EmptyChat({
   const courseMode = mode === 'teach_agent';
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
-      <div className="mx-auto w-full max-w-[760px]">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="min-w-0 truncate text-[18px] font-semibold text-ink">
-            {courseMode ? '从教材目录开始' : '从一句话开始'}
-          </h2>
-          <div className="shrink-0">
+    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-8 lg:px-8 lg:py-10">
+      <div className="mx-auto w-full max-w-[980px]">
+        <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-5">
+          <div className="min-w-0">
+            <p className="m-0 eyebrow">{courseMode ? 'COURSE MAP' : 'EXAM PRACTICE'}</p>
+            <h2 className="mt-1.5 mb-0 text-[21px] leading-tight font-semibold tracking-[-0.012em] text-ink">
+              {courseMode ? '从章节开始学习' : '上传一道题开始讲评'}
+            </h2>
+            <p className="mt-2 mb-0 max-w-[52ch] text-[13px] leading-6 text-ink-muted">
+              {courseMode
+                ? '选一个章节或小节，把目录里的范围直接带进对话；也可以跳过目录，在下方直接提问。'
+                : '把题目交给老师，先独立作答，再根据反馈继续追问；输入框同样支持直接输入题干。'}
+            </p>
+          </div>
+          <div className="mt-1 shrink-0">
             {locked ? (
-              <span className="rounded-chip bg-surface-sunken px-2 py-1 text-[12px] font-medium text-ink-muted">
+              <span className="rounded-chip bg-surface-sunken px-2.5 py-1 text-[12px] font-medium text-ink-muted">
                 {courseMode ? '课程学习' : '考研备考'}
               </span>
             ) : (
@@ -302,22 +344,51 @@ function EmptyChat({
               />
             )}
           </div>
-        </div>
+        </header>
+
         {courseMode ? (
-          <div className="mt-5 h-[360px] overflow-hidden rounded-card border border-line bg-surface p-4">
-            <TextbookTree onPick={onPick} />
-          </div>
-        ) : (
-          <div className="mt-5 flex h-[360px] items-center justify-center rounded-card border border-dashed border-line bg-surface px-6 text-center">
-            <div>
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand">
-                <CloudUploadOutlined className="text-[20px]" />
-              </div>
-              <h3 className="mt-4 text-[15px] font-medium text-ink">上传题目开始对话</h3>
-              <p className="mx-auto mt-2 max-w-[420px] text-[12.5px] leading-6 text-ink-muted">
-                把题目拍照或截图，点输入框左下角的「添加图片」上传；也可以直接把题干粘贴到输入框。
-              </p>
+          <>
+            <div className="mt-6">
+              <TextbookTree onPick={onPick} />
             </div>
+            <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-line pt-4">
+              <span className="eyebrow mr-1">STARTERS</span>
+              {COURSE_STARTERS.map((starter) => (
+                <button
+                  key={starter}
+                  type="button"
+                  onClick={() => onPick(starter)}
+                  className="rounded-full border border-line bg-surface px-3 py-1 text-[11.5px] text-ink-muted transition-colors hover:border-brand-line hover:text-ink"
+                >
+                  {starter}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="mt-6 grid gap-2.5 sm:grid-cols-3">
+            {EXAM_STEPS.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.title}
+                  className="rounded-card border border-line bg-surface p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-md bg-brand-soft text-brand">
+                      <Icon className="size-4" aria-hidden="true" />
+                    </span>
+                    <span className="font-code text-[10px] text-ink-subtle">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 mb-0 text-[13.5px] font-medium text-ink">{step.title}</h3>
+                  <p className="mt-1.5 mb-0 text-[12px] leading-5 text-ink-muted">
+                    {step.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -335,11 +406,13 @@ function PendingComposer({
   draft,
   onDraftChange,
   onSubmit,
+  placeholder,
   knowledgePicker,
 }: {
   draft: string;
   onDraftChange: (value: string) => void;
   onSubmit: (text: string, files: File[]) => Promise<boolean>;
+  placeholder?: string;
   knowledgePicker?: ReactNode;
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -414,6 +487,7 @@ function PendingComposer({
           onChange={onDraftChange}
           onSubmit={() => void handleSubmit()}
           canSubmit={canSubmit}
+          placeholder={placeholder}
           submitting={submitting}
           onPickFiles={addFiles}
           leading={knowledgePicker}

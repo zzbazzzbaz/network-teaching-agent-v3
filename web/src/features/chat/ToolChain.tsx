@@ -1,10 +1,5 @@
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DownOutlined,
-  LoadingOutlined,
-} from '@ant-design/icons';
 import type { ToolCallBlock, ToolResultBlock } from '@agentscope-ai/agentscope/message';
+import { CheckCircle2, ChevronDown, Loader2, XCircle } from 'lucide-react';
 import { useState } from 'react';
 
 import { describeToolCall, describeToolResult, toolStatus } from '@/lib/agentscope/render-policy';
@@ -15,12 +10,12 @@ const MEMORY_TOOLS = new Set(['memory_search']);
 
 function StatusIcon({ status }: { status: ReturnType<typeof toolStatus> }) {
   if (status === 'loading') {
-    return <LoadingOutlined className="text-[11px] text-ink-subtle" aria-hidden="true" />;
+    return <Loader2 className="size-3 animate-spin text-ink-subtle" aria-hidden="true" />;
   }
   if (status === 'error' || status === 'abort') {
-    return <CloseCircleOutlined className="text-[11px] text-danger" aria-hidden="true" />;
+    return <XCircle className="size-3 text-danger" aria-hidden="true" />;
   }
-  return <CheckCircleOutlined className="text-[11px] text-ink-subtle" aria-hidden="true" />;
+  return <CheckCircle2 className="size-3 text-ink-subtle" aria-hidden="true" />;
 }
 
 function ToolBody({ raw, memory }: { raw: string; memory: boolean }) {
@@ -66,8 +61,8 @@ function ToolRow({ call, result }: { call: ToolCallBlock; result: ToolResultBloc
           <span className="shrink-0 text-[11px] text-ink-subtle">{resultView.summary}</span>
         ) : null}
         {hasBody ? (
-          <DownOutlined
-            className={`shrink-0 text-[9px] text-ink-subtle transition-transform ${open ? 'rotate-180' : ''}`}
+          <ChevronDown
+            className={`size-3 shrink-0 text-ink-subtle transition-transform ${open ? 'rotate-180' : ''}`}
             aria-hidden="true"
           />
         ) : null}

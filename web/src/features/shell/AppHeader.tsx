@@ -1,5 +1,5 @@
-import { MenuOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
+import { Menu, PanelLeftOpen } from 'lucide-react';
 import { useLocation } from 'react-router';
 
 import { useIsMobile } from '@/lib/use-media-query';
@@ -14,7 +14,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function resolveTitle(pathname: string): string {
   if (pathname === '/admin') {
-    return '管理';
+    return '管理概览';
   }
   if (pathname === '/admin/users') {
     return '学生管理';
@@ -31,7 +31,7 @@ function resolveTitle(pathname: string): string {
   if (pathname.startsWith('/questions/')) {
     return '答题详情';
   }
-  return PAGE_TITLES[pathname] ?? '对话';
+  return PAGE_TITLES[pathname] ?? '页面';
 }
 
 export function AppHeader() {
@@ -53,17 +53,20 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b border-line bg-surface px-6 max-[767px]:px-3">
-      <div className="flex min-w-0 items-center gap-2">
+    <header className="sticky top-0 z-10 shrink-0 border-b border-line bg-surface">
+      <div className="mx-auto flex h-[60px] w-full max-w-content items-center gap-2 px-6 max-[767px]:px-3">
         {showSidebarToggle ? (
           <Button
+            className="-ml-1 shrink-0 text-ink-muted"
             type="text"
-            icon={isMobile ? <MenuOutlined /> : <MenuUnfoldOutlined />}
+            icon={isMobile ? <Menu className="size-4" /> : <PanelLeftOpen className="size-4" />}
             onClick={openSidebar}
             aria-label={isMobile ? '打开导航' : '展开侧边栏'}
           />
         ) : null}
-        <h1 className="truncate text-[15px] font-semibold">{pageTitle}</h1>
+        <h1 className="min-w-0 truncate text-[20px] leading-tight font-semibold tracking-[-0.012em] text-ink">
+          {pageTitle}
+        </h1>
       </div>
     </header>
   );

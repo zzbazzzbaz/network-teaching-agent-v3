@@ -1,5 +1,5 @@
-import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Card, Tooltip } from 'antd';
+import { Tooltip } from 'antd';
+import { CircleHelp } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 export interface MetricCardProps {
@@ -11,8 +11,8 @@ export interface MetricCardProps {
 
 export function MetricCard({ label, value, hint, tooltip }: MetricCardProps) {
   return (
-    <Card className="border border-line" size="small">
-      <div className="mb-1.5 flex items-center gap-1 text-[13px] text-ink-muted">
+    <div className="rounded-card border border-line bg-surface px-4 py-3.5">
+      <div className="flex items-center gap-1 text-[11.5px] leading-5 text-ink-muted">
         <span>{label}</span>
         {tooltip ? (
           <Tooltip title={tooltip}>
@@ -21,15 +21,15 @@ export function MetricCard({ label, value, hint, tooltip }: MetricCardProps) {
               tabIndex={0}
               aria-label={`${label}统计口径`}
             >
-              <QuestionCircleOutlined />
+              <CircleHelp className="size-3" aria-hidden="true" />
             </span>
           </Tooltip>
         ) : null}
       </div>
-      <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
+      <div className="mt-2 font-code text-[24px] leading-none tracking-[-0.02em] tabular-nums text-ink max-[767px]:text-[20px]">
         {value}
       </div>
-      {hint ? <div className="mt-1 text-[11px] text-ink-subtle">{hint}</div> : null}
-    </Card>
+      {hint ? <div className="mt-1.5 text-[10.5px] text-ink-subtle">{hint}</div> : null}
+    </div>
   );
 }

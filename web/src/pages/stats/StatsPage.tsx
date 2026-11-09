@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { Card, Collapse, Segmented, Skeleton, Table } from 'antd';
+import { Collapse, Segmented, Skeleton, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useSearchParams } from 'react-router';
 
 import { toErrorMessage } from '@/api/client';
 import { getMyStats } from '@/api/stats';
 import type { DailyStatsItem } from '@/api/types';
-import { EmptyState, ErrorState, PageShell } from '@/components/common';
+import { EmptyState, ErrorState, MetricCard, PageShell } from '@/components/common';
 import { DailyTrendChart } from '@/features/stats/charts';
 import { formatNumber, formatPercent } from '@/lib/format';
 
@@ -112,30 +112,10 @@ export function StatsPage() {
       ) : (
         <>
           <div className="mb-6 grid grid-cols-2 gap-3 min-[1200px]:grid-cols-4">
-            <Card className="border border-line" size="small">
-              <div className="mb-1.5 text-[13px] text-ink-muted">总 tokens</div>
-              <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
-                {formatNumber(data.totals.tokens)}
-              </div>
-            </Card>
-            <Card className="border border-line" size="small">
-              <div className="mb-1.5 text-[13px] text-ink-muted">会话数</div>
-              <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
-                {formatNumber(data.totals.sessions)}
-              </div>
-            </Card>
-            <Card className="border border-line" size="small">
-              <div className="mb-1.5 text-[13px] text-ink-muted">对话轮次</div>
-              <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
-                {formatNumber(data.totals.rounds)}
-              </div>
-            </Card>
-            <Card className="border border-line" size="small">
-              <div className="mb-1.5 text-[13px] text-ink-muted">作答数</div>
-              <div className="font-code text-2xl leading-tight tabular-nums max-[767px]:text-xl">
-                {formatNumber(data.totals.answers)}
-              </div>
-            </Card>
+            <MetricCard label="总 tokens" value={formatNumber(data.totals.tokens)} />
+            <MetricCard label="会话数" value={formatNumber(data.totals.sessions)} />
+            <MetricCard label="对话轮次" value={formatNumber(data.totals.rounds)} />
+            <MetricCard label="作答数" value={formatNumber(data.totals.answers)} />
           </div>
 
           {data.daily.length === 0 ? (
@@ -146,7 +126,7 @@ export function StatsPage() {
           ) : (
             <>
               <section className="min-w-0 rounded-card border border-line bg-surface p-4 max-[767px]:p-3">
-                <h2 className="mb-3 text-base font-semibold leading-normal">每日趋势</h2>
+                <h2 className="mb-3 text-[15px] font-semibold leading-normal tracking-[-0.01em]">每日趋势</h2>
                 <DailyTrendChart data={data.daily} />
               </section>
 
@@ -162,7 +142,7 @@ export function StatsPage() {
                     {
                       key: 'detail',
                       label: (
-                        <span className="text-base font-semibold leading-normal">每日明细</span>
+                        <span className="text-[15px] font-semibold leading-normal tracking-[-0.01em]">每日明细</span>
                       ),
                       children: (
                         <Table

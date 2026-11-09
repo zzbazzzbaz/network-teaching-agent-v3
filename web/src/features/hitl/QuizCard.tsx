@@ -1,6 +1,6 @@
 import type { ToolCallBlock } from '@agentscope-ai/agentscope/message';
-import { DownOutlined } from '@ant-design/icons';
 import { Alert, Button, Input, Typography } from 'antd';
+import { ChevronDown } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useChatActions } from '@/features/chat/chat-actions';
@@ -112,8 +112,8 @@ export function QuizCard({ replyId, toolCall, submittedAnswer = null }: QuizCard
             aria-expanded={open}
             className="grid size-5 place-items-center rounded-chip text-ink-subtle transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
           >
-            <DownOutlined
-              className={`text-[10px] transition-transform ${open ? 'rotate-180' : ''}`}
+            <ChevronDown
+              className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
               aria-hidden="true"
             />
           </button>

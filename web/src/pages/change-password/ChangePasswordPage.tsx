@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 
 import { changePassword } from '@/api/auth';
 import { toErrorMessage } from '@/api/client';
-import { BrandMark } from '@/components/common';
+import { BrandLockup } from '@/components/common';
 import { defaultPassword } from '@/lib/password';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -43,17 +43,14 @@ export function ChangePasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas p-6 max-[767px]:items-start max-[767px]:pt-16">
-      <div className="w-full max-w-[440px] rounded-panel border border-line bg-surface p-8 max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-6">
-        <div className="mb-7 flex items-center gap-2.5">
-          <BrandMark size={30} className="shrink-0" />
-          <div className="leading-tight">
-            <div className="text-sm font-semibold">计算机网络</div>
-            <div className="text-xs text-ink-subtle">教学智能体</div>
-          </div>
-        </div>
-        <h1 className="mb-2 text-2xl leading-tight font-semibold">修改密码</h1>
-        <div className="mb-6 flex flex-wrap items-center gap-x-2 text-sm text-ink-muted">
+    <div className="flex min-h-screen items-center justify-center bg-paper p-6 max-[767px]:items-start max-[767px]:pt-16">
+      <div className="w-full max-w-[460px] rounded-panel border border-line bg-surface p-8 shadow-[0_18px_48px_-32px_rgb(18_26_28/28%)] max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-6 max-[767px]:shadow-none">
+        <BrandLockup className="mb-9" size={32} />
+        <p className="m-0 mb-2 font-code text-[10px] tracking-[0.14em] text-ink-subtle">ACCOUNT</p>
+        <h1 className="m-0 text-[26px] leading-tight font-semibold tracking-[-0.015em]">
+          修改密码
+        </h1>
+        <div className="mt-2 mb-7 flex flex-wrap items-center gap-x-2 text-[13px] text-ink-muted">
           <span>当前账号</span>
           <span className="font-medium text-ink">{username || '\u2014'}</span>
         </div>
@@ -83,7 +80,7 @@ export function ChangePasswordPage() {
           >
             <Input.Password
               autoComplete="current-password"
-              size="large"
+              className="h-10 !text-[14px]"
               placeholder="当前密码"
             />
           </Form.Item>
@@ -111,7 +108,11 @@ export function ChangePasswordPage() {
               }),
             ]}
           >
-            <Input.Password autoComplete="new-password" size="large" placeholder="新密码" />
+            <Input.Password
+              autoComplete="new-password"
+              className="h-10 !text-[14px]"
+              placeholder="新密码"
+            />
           </Form.Item>
 
           <Form.Item
@@ -132,24 +133,29 @@ export function ChangePasswordPage() {
           >
             <Input.Password
               autoComplete="new-password"
-              size="large"
+              className="h-10 !text-[14px]"
               placeholder="再次输入新密码"
             />
           </Form.Item>
 
-          <Button type="primary" htmlType="submit" size="large" block loading={submitting}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            className="h-10 !text-[14px]"
+            block
+            loading={submitting}
+          >
             确认修改
           </Button>
 
           {!mustChangePassword ? (
             <Button
-              className="mt-3"
+              className="mt-2 h-10 !text-[13px]"
               type="text"
-              size="large"
               block
               onClick={() => navigate('/chat')}
             >
-              返回
+              返回对话
             </Button>
           ) : null}
         </Form>

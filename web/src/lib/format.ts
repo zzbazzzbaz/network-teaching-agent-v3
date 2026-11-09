@@ -19,6 +19,45 @@ const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
 
 const numberFormatter = new Intl.NumberFormat('zh-CN');
 
+const dayKeyFormatter = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: APP_TIME_ZONE,
+});
+
+const clockFormatter = new Intl.DateTimeFormat('zh-CN', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  timeZone: APP_TIME_ZONE,
+});
+
+const monthDayFormatter = new Intl.DateTimeFormat('zh-CN', {
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: APP_TIME_ZONE,
+});
+
+export function formatSessionTime(value: string | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return '';
+  }
+  const key = dayKeyFormatter.format(parsed);
+  const today = dayKeyFormatter.format(new Date());
+  if (key === today) {
+    return clockFormatter.format(parsed);
+  }
+  if (key.slice(0, 4) === today.slice(0, 4)) {
+    return monthDayFormatter.format(parsed).replace(/\//g, '-');
+  }
+  return dateFormatter.format(parsed).replace(/\//g, '-');
+}
+
 export function formatDateTime(value: string | null | undefined): string {
   if (!value) {
     return '--';

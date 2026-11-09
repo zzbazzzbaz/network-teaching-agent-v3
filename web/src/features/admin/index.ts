@@ -1,6 +1,6 @@
 export { AdminLayout } from './AdminLayout';
 export { CreateUserModal } from './CreateUserModal';
-export { MetricCard } from './MetricCard';
+export { MetricCard } from '@/components/common/MetricCard';
 export { ReadonlyMessages } from './ReadonlyMessages';
 export { UserKnowledgeTab } from './UserKnowledgeTab';
 export { UserMemoryTab } from './UserMemoryTab';

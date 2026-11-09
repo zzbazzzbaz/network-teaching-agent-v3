@@ -7,7 +7,6 @@ import {
   Select,
   Skeleton,
   Table,
-  Tag,
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -31,6 +30,19 @@ const TYPE_LABELS: Record<QuestionType, string> = {
 
 function parseType(value: string | null): QuestionType | undefined {
   return value === 'single_choice' || value === 'short_answer' ? value : undefined;
+}
+
+function QuestionTypeTag({ type }: { type: QuestionType }) {
+  const single = type === 'single_choice';
+  return (
+    <span
+      className={`inline-flex items-center rounded-[4px] px-1.5 text-[10.5px] leading-[19px] font-medium ${
+        single ? 'bg-brand-soft text-brand' : 'bg-surface-sunken text-ink-muted'
+      }`}
+    >
+      {TYPE_LABELS[type]}
+    </span>
+  );
 }
 
 export function QuestionsPage() {
@@ -109,7 +121,7 @@ export function QuestionsPage() {
       title: '题型',
       dataIndex: 'question_type',
       width: 90,
-      render: (value: QuestionType) => <Tag>{TYPE_LABELS[value]}</Tag>,
+      render: (value: QuestionType) => <QuestionTypeTag type={value} />,
     },
     {
       title: '我的答案',
@@ -130,32 +142,38 @@ export function QuestionsPage() {
 
   return (
     <PageShell>
-      <div className="mb-4 flex flex-wrap items-center justify-end gap-2 max-[767px]:flex-col max-[767px]:items-stretch">
-        <DatePicker
-          allowClear
-          className="max-[767px]:w-full"
-          placeholder="按作答日期筛选"
-          value={date ? dayjs(date) : null}
-          onChange={(value) => updateParam('date', value ? value.format('YYYY-MM-DD') : null)}
-        />
-        <Select
-          allowClear
-          className="w-[140px] max-[767px]:w-full"
-          placeholder="全部题型"
-          value={questionType}
-          onChange={(value) => updateParam('type', value ?? null)}
-          options={[
-            { label: '单选题', value: 'single_choice' },
-            { label: '简答题', value: 'short_answer' },
-          ]}
-        />
-        <Input.Search
-          allowClear
-          className="w-[240px] max-[767px]:w-full"
-          placeholder="搜索题干"
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-        />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 max-[767px]:flex-col max-[767px]:items-stretch">
+        <div className="flex items-baseline gap-2">
+          <span className="eyebrow">RECORDS</span>
+          <span className="font-code text-[12px] text-ink-muted">{data?.total ?? 0}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 max-[767px]:flex-col max-[767px]:items-stretch">
+          <DatePicker
+            allowClear
+            className="w-[150px] max-[767px]:w-full"
+            placeholder="作答日期"
+            value={date ? dayjs(date) : null}
+            onChange={(value) => updateParam('date', value ? value.format('YYYY-MM-DD') : null)}
+          />
+          <Select
+            allowClear
+            className="w-[140px] max-[767px]:w-full"
+            placeholder="全部题型"
+            value={questionType}
+            onChange={(value) => updateParam('type', value ?? null)}
+            options={[
+              { label: '单选题', value: 'single_choice' },
+              { label: '简答题', value: 'short_answer' },
+            ]}
+          />
+          <Input.Search
+            allowClear
+            className="w-[240px] max-[767px]:w-full"
+            placeholder="搜索题干"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+        </div>
       </div>
 
       {listQuery.isLoading ? (
@@ -185,7 +203,7 @@ export function QuestionsPage() {
             >
               <div className="w-full">
                 <div className="mb-1.5 flex items-center gap-2 text-ink-subtle">
-                  <Tag>{TYPE_LABELS[item.question_type]}</Tag>
+                  <QuestionTypeTag type={item.question_type} />
                   <span className="data-text">{formatDateTime(item.answered_at)}</span>
                 </div>
                 <Typography.Paragraph

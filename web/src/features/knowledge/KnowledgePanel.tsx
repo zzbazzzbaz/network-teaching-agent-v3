@@ -1,10 +1,3 @@
-import {
-  DeleteOutlined,
-  DownloadOutlined,
-  EditOutlined,
-  PlusOutlined,
-  UploadOutlined,
-} from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   App,
@@ -19,6 +12,7 @@ import {
   Upload,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { Download, Pencil, Plus, Trash2, UploadCloud } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
@@ -336,7 +330,7 @@ export function KnowledgePanel({
           <Button
             size="small"
             type="link"
-            icon={<EditOutlined />}
+            icon={<Pencil className="size-3.5" />}
             aria-label="编辑"
             onClick={() => openEdit(record)}
           />
@@ -344,7 +338,7 @@ export function KnowledgePanel({
             size="small"
             type="link"
             danger
-            icon={<DeleteOutlined />}
+            icon={<Trash2 className="size-3.5" />}
             aria-label="删除"
             onClick={() => confirmDelete(record)}
           />
@@ -402,7 +396,7 @@ export function KnowledgePanel({
           <Button
             size="small"
             type="link"
-            icon={<DownloadOutlined />}
+            icon={<Download className="size-3.5" />}
             aria-label="下载"
             onClick={() => void downloadDocument(record)}
           />
@@ -411,7 +405,7 @@ export function KnowledgePanel({
               size="small"
               type="link"
               danger
-              icon={<DeleteOutlined />}
+              icon={<Trash2 className="size-3.5" />}
               aria-label="删除"
               onClick={() => confirmDeleteDocument(record)}
             />
@@ -430,7 +424,7 @@ export function KnowledgePanel({
           </Typography.Text>
         )}
         {canCreate ? (
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          <Button type="primary" icon={<Plus className="size-3.5" />} onClick={openCreate}>
             新建知识库
           </Button>
         ) : null}
@@ -536,7 +530,7 @@ export function KnowledgePanel({
                 return Upload.LIST_IGNORE;
               }}
             >
-              <Button icon={<UploadOutlined />} loading={uploading}>
+              <Button icon={<UploadCloud className="size-3.5" />} loading={uploading}>
                 上传文档
               </Button>
             </Upload>

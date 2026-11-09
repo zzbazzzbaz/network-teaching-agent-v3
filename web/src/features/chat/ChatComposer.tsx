@@ -13,6 +13,7 @@ export interface ChatComposerProps {
   onSubmit: (text: string, fileIds: string[], previewUrls: string[]) => Promise<boolean>;
   uploads: UseUploadsResult;
   phase: SessionPhase;
+  placeholder?: string;
   onStop: () => void;
   knowledgeBaseIds?: string[];
   disabled?: boolean;
@@ -26,6 +27,7 @@ export function ChatComposer({
   onSubmit,
   uploads,
   phase,
+  placeholder,
   onStop,
   knowledgeBaseIds,
   disabled = false,
@@ -68,6 +70,7 @@ export function ChatComposer({
           onChange={(next) => onChange(next.slice(0, TEXT_LIMIT))}
           onSubmit={() => void handleSubmit()}
           canSubmit={canSubmit}
+          placeholder={placeholder}
           disabled={blocked}
           submitting={submitting}
           running={running}

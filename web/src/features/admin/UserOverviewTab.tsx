@@ -4,8 +4,7 @@ import { useState } from 'react';
 
 import { getUserStats } from '@/api/admin';
 import { toErrorMessage } from '@/api/client';
-import { ErrorState } from '@/components/common';
-import { MetricCard } from '@/features/admin/MetricCard';
+import { ErrorState, MetricCard } from '@/components/common';
 import { DailyTrendChart } from '@/features/stats/charts';
 import { formatNumber } from '@/lib/format';
 
@@ -50,7 +49,7 @@ export function UserOverviewTab({ userId }: { userId: string }) {
           </div>
 
           <section className="min-w-0 rounded-card border border-line bg-surface p-4 max-[767px]:p-3">
-            <h2 className="mb-3 text-base font-semibold leading-normal">每日趋势</h2>
+            <h2 className="mb-3 text-[15px] font-semibold leading-normal tracking-[-0.01em]">每日趋势</h2>
             <DailyTrendChart data={data.daily} />
           </section>
         </>

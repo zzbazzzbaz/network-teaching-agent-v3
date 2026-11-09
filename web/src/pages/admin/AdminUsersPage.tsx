@@ -1,9 +1,3 @@
-import {
-  LockOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  UnlockOutlined,
-} from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   App,
@@ -18,6 +12,7 @@ import {
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { KeyRound, Lock, Plus, Unlock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -188,7 +183,7 @@ export function AdminUsersPage() {
           <Button
             type="link"
             size="small"
-            icon={<ReloadOutlined />}
+            icon={<KeyRound className="size-3.5" />}
             aria-label="重置密码"
             onClick={() => confirmResetPassword(record)}
           />
@@ -197,7 +192,7 @@ export function AdminUsersPage() {
             size="small"
             danger={record.status === 'active'}
             disabled={record.id === currentUser?.id}
-            icon={record.status === 'active' ? <LockOutlined /> : <UnlockOutlined />}
+            icon={record.status === 'active' ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}
             aria-label={record.status === 'active' ? '禁用' : '启用'}
             onClick={() => toggleStatus(record)}
           />
@@ -249,7 +244,7 @@ export function AdminUsersPage() {
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus className="size-3.5" />}
           onClick={() => setCreateOpen(true)}
         >
           创建用户
@@ -284,7 +279,7 @@ export function AdminUsersPage() {
                   key="password"
                   type="link"
                   size="small"
-                  icon={<ReloadOutlined />}
+                  icon={<KeyRound className="size-3.5" />}
                   aria-label="重置密码"
                   onClick={() => confirmResetPassword(item)}
                 />,
@@ -294,7 +289,13 @@ export function AdminUsersPage() {
                   size="small"
                   danger={item.status === 'active'}
                   disabled={item.id === currentUser?.id}
-                  icon={item.status === 'active' ? <LockOutlined /> : <UnlockOutlined />}
+                  icon={
+                    item.status === 'active' ? (
+                      <Lock className="size-3.5" />
+                    ) : (
+                      <Unlock className="size-3.5" />
+                    )
+                  }
                   aria-label={item.status === 'active' ? '禁用' : '启用'}
                   onClick={() => toggleStatus(item)}
                 />,

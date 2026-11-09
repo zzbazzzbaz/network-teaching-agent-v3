@@ -1,6 +1,6 @@
-import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Skeleton, Typography } from 'antd';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router';
 
 import { getUser, getUserSession, listUserMessages } from '@/api/admin';
@@ -61,10 +61,10 @@ export function AdminSessionDetailPage() {
       <div className="mx-auto w-full max-w-[900px]">
         <button
           type="button"
-          className="mb-3 inline-flex items-center gap-1 rounded-chip py-1.5 text-sm text-ink-muted transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="mb-3 inline-flex items-center gap-1.5 rounded-chip py-1.5 text-[12.5px] text-ink-muted transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           onClick={() => navigate(`/admin/users/${userId}?tab=sessions`)}
         >
-          <ArrowLeftOutlined aria-hidden="true" />
+          <ArrowLeft className="size-3.5" aria-hidden="true" />
           返回学生会话
         </button>
 
@@ -80,7 +80,7 @@ export function AdminSessionDetailPage() {
         </Card>
 
         <section className="rounded-card border border-line bg-surface p-4 max-[767px]:p-3">
-          <h2 className="mt-0 mb-4 text-base font-semibold leading-normal">会话消息</h2>
+          <h2 className="mt-0 mb-4 text-[15px] font-semibold leading-normal tracking-[-0.01em]">会话消息</h2>
 
           {messagesQuery.isLoading ? (
             <Skeleton active paragraph={{ rows: 10 }} />

@@ -53,7 +53,9 @@ export function AssistantMessage({ message, last }: { message: ChatMessage; last
       )}
       <span
         aria-hidden="true"
-        className="absolute top-2 left-0 size-[7px] rounded-full bg-brand ring-2 ring-surface"
+        className={`absolute top-2 left-0 size-[7px] rounded-full bg-brand ring-2 ring-surface ${
+          streaming ? 'link-pulse' : ''
+        }`}
       />
       <div className="flex min-w-0 flex-col gap-3">
         {segments.map((segment) => {

@@ -1,4 +1,4 @@
-import { CloseOutlined, ReloadOutlined } from '@ant-design/icons';
+import { RotateCw, X } from 'lucide-react';
 
 export interface AttachmentThumbItem {
   uid: string;
@@ -34,7 +34,7 @@ export function AttachmentThumbs({ items, disabled, onRemove, onRetry }: Attachm
               onClick={() => onRetry?.(item.uid)}
               disabled={disabled}
             >
-              <ReloadOutlined aria-hidden="true" />
+              <RotateCw className="size-3" aria-hidden="true" />
               <span>重试</span>
             </button>
           ) : item.status === 'ready' ? null : (
@@ -49,7 +49,7 @@ export function AttachmentThumbs({ items, disabled, onRemove, onRetry }: Attachm
             onClick={() => onRemove(item.uid)}
             disabled={disabled}
           >
-            <CloseOutlined style={{ fontSize: 8 }} aria-hidden="true" />
+            <X className="size-2.5" aria-hidden="true" />
           </button>
         </div>
       ))}

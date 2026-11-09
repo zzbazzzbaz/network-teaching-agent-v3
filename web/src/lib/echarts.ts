@@ -11,23 +11,23 @@ import { CanvasRenderer } from 'echarts/renderers';
 export const CHART_THEME = 'netclass';
 
 const THEME = {
-  color: ['#0e6b60', '#9a5900', '#5c6e70', '#b9d8d1', '#12586b', '#1b7089'],
+  color: ['#0e6b60', '#9a5900', '#3f7d4e', '#b9d8d1', '#2e4044', '#5c6e70'],
   textStyle: {
     color: '#121a1c',
     fontSize: 12,
     fontFamily:
-      "ui-sans-serif, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
+      "'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
   },
-  legend: { textStyle: { color: '#5c6e70' } },
+  legend: { textStyle: { color: '#46575a' } },
   tooltip: {
     confine: true,
-    backgroundColor: '#ffffff',
-    borderColor: '#dce3e1',
-    textStyle: { color: '#121a1c', fontSize: 12 },
+    backgroundColor: '#121a1c',
+    borderWidth: 0,
+    textStyle: { color: '#ffffff', fontSize: 11 },
   },
   categoryAxis: {
-    axisLine: { lineStyle: { color: '#dce3e1' } },
-    axisTick: { lineStyle: { color: '#dce3e1' } },
+    axisLine: { lineStyle: { color: '#dce4e2' } },
+    axisTick: { lineStyle: { color: '#dce4e2' } },
     axisLabel: { color: '#5c6e70' },
     splitLine: { show: false },
   },
@@ -35,7 +35,7 @@ const THEME = {
     axisLine: { show: false },
     axisTick: { show: false },
     axisLabel: { color: '#5c6e70' },
-    splitLine: { lineStyle: { color: '#eef2f1' } },
+    splitLine: { lineStyle: { color: '#e7ecea' } },
   },
 };
 

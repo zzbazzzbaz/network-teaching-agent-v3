@@ -1,11 +1,14 @@
 import type { EChartsCoreOption } from '@/lib/echarts';
 import { formatNumber } from '@/lib/format';
 
-const TOKENS_COLOR = '#12586B';
-const ROUNDS_COLOR = '#9A6A16';
+const TOKENS_COLOR = '#0E6B60';
+const ROUNDS_COLOR = '#9A5900';
 const STUDENTS_COLOR = '#3F7D4E';
-const LINE_COLOR = '#E4E8ED';
-const LABEL_COLOR = '#6B7684';
+const LINE_COLOR = '#DCE4E2';
+const LABEL_COLOR = '#5C6E70';
+const MONO_FONT = "'IBM Plex Mono', ui-monospace, monospace";
+const SANS_FONT =
+  "'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif";
 
 export interface TrendPoint {
   date: string;
@@ -53,10 +56,23 @@ export function buildDailyTrendOption(
       ? [TOKENS_COLOR, ROUNDS_COLOR, STUDENTS_COLOR]
       : [TOKENS_COLOR, ROUNDS_COLOR],
     animation: false,
+    textStyle: { fontFamily: SANS_FONT },
     grid: { top: 48, right: 12, bottom: 8, left: 12, containLabel: true },
-    legend: { top: 4, left: 0, icon: 'roundRect', itemWidth: 14, itemHeight: 8, itemGap: 16 },
+    legend: {
+      top: 4,
+      left: 0,
+      icon: 'roundRect',
+      itemWidth: 14,
+      itemHeight: 8,
+      itemGap: 16,
+      textStyle: { color: '#46575A', fontSize: 11 },
+    },
     tooltip: {
       trigger: 'axis',
+      backgroundColor: '#121A1C',
+      borderWidth: 0,
+      padding: [8, 10],
+      textStyle: { color: '#FFFFFF', fontSize: 11, fontFamily: SANS_FONT },
       axisPointer: { type: 'line', lineStyle: { color: LINE_COLOR, type: 'dashed' } },
       valueFormatter: (value: unknown) => formatNumber(Number(value)),
     },
@@ -66,7 +82,8 @@ export function buildDailyTrendOption(
       axisLine: { lineStyle: { color: LINE_COLOR } },
       axisLabel: {
         color: LABEL_COLOR,
-        fontSize: 11,
+        fontSize: 10.5,
+        fontFamily: MONO_FONT,
         formatter: (value: string) => (value.length >= 10 ? value.slice(5) : value),
       },
     },
@@ -75,7 +92,8 @@ export function buildDailyTrendOption(
         type: 'value',
         axisLabel: {
           color: LABEL_COLOR,
-          fontSize: 11,
+          fontSize: 10.5,
+          fontFamily: MONO_FONT,
           formatter: (value: number) => formatNumber(value),
         },
         splitLine: { lineStyle: { color: LINE_COLOR, type: 'dashed' } },
@@ -83,7 +101,7 @@ export function buildDailyTrendOption(
       {
         type: 'value',
         minInterval: 1,
-        axisLabel: { color: LABEL_COLOR, fontSize: 11 },
+        axisLabel: { color: LABEL_COLOR, fontSize: 10.5, fontFamily: MONO_FONT },
         splitLine: { show: false },
       },
     ],

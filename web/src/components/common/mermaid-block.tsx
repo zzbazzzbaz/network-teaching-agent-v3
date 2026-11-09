@@ -6,7 +6,21 @@ const MERMAID_CONFIG = {
   securityLevel: 'strict',
   htmlLabels: false,
   theme: 'default',
-  fontFamily: "ui-sans-serif, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+  fontFamily: "'IBM Plex Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+  themeVariables: {
+    primaryColor: '#e7f1ee',
+    primaryTextColor: '#121a1c',
+    primaryBorderColor: '#b9d8d1',
+    secondaryColor: '#f3f5f3',
+    tertiaryColor: '#ffffff',
+    lineColor: '#8aa7a1',
+    textColor: '#121a1c',
+    mainBkg: '#e7f1ee',
+    nodeBorder: '#b9d8d1',
+    clusterBkg: '#f7f9f8',
+    clusterBorder: '#dce4e2',
+    edgeLabelBackground: '#ffffff',
+  },
 } as const;
 
 mermaid.initialize(MERMAID_CONFIG);

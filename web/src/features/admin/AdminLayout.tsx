@@ -23,7 +23,7 @@ export function AdminLayout() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-b border-line bg-surface px-6 py-3 max-[767px]:px-3">
+      <div className="mx-auto w-full max-w-content shrink-0 px-6 pt-4 max-[767px]:px-3">
         <Segmented
           value={activeNav(location.pathname)}
           onChange={(value) => navigate(String(value))}

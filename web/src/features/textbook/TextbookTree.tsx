@@ -1,6 +1,5 @@
-import { FileTextOutlined, FolderOpenOutlined } from '@ant-design/icons';
-import { Tree } from 'antd';
-import type { TreeDataNode } from 'antd';
+import { ArrowUpRight, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 import { TEXTBOOK_TREE } from './textbook-tree';
 import type { TextbookNode } from './types';
@@ -9,60 +8,85 @@ interface TextbookTreeProps {
   onPick: (prompt: string) => void;
 }
 
-interface TextbookTreeNode extends TreeDataNode {
-  prompt: string;
-}
+function ChapterCard({
+  chapter,
+  index,
+  onPick,
+}: {
+  chapter: TextbookNode;
+  index: number;
+  onPick: (prompt: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const sections = chapter.children.filter((node) => node.type === 'file');
 
-function buildTreeData(nodes: TextbookNode[]): TextbookTreeNode[] {
-  return nodes.map((node) => ({
-    key: node.key,
-    title: (
-      <span className={node.type === 'dir' ? 'font-medium text-ink' : 'text-ink-muted'}>
-        {node.title}
-      </span>
-    ),
-    icon: node.type === 'dir' ? <FolderOpenOutlined /> : <FileTextOutlined />,
-    children: node.children.length > 0 ? buildTreeData(node.children) : undefined,
-    prompt: node.prompt,
-  }));
-}
+  return (
+    <li className="flex flex-col overflow-hidden rounded-card border border-line bg-surface transition-colors hover:border-line-strong">
+      <button
+        type="button"
+        onClick={() => onPick(chapter.prompt)}
+        className="group flex flex-1 items-start gap-2.5 p-3.5 text-left transition-colors hover:bg-surface-sunken/60"
+      >
+        <span className="mt-0.5 font-code text-[10px] tabular-nums text-ink-subtle">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13.5px] font-medium text-ink">{chapter.title}</span>
+        </span>
+        <ArrowUpRight
+          className="mt-0.5 size-3.5 shrink-0 text-ink-subtle transition-colors group-hover:text-brand"
+          aria-hidden="true"
+        />
+      </button>
 
-function buildPromptMap(nodes: TextbookNode[], prompts: Map<string, string>): void {
-  for (const node of nodes) {
-    prompts.set(node.key, node.prompt);
-    buildPromptMap(node.children, prompts);
-  }
-}
+      {sections.length > 0 ? (
+        <div className="border-t border-line">
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            aria-expanded={open}
+            className="flex w-full items-center justify-between px-3.5 py-1.5 text-[11px] text-ink-muted transition-colors hover:text-ink"
+          >
+            从某一节开始
+            <ChevronDown
+              className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
 
-const TREE_DATA = buildTreeData(TEXTBOOK_TREE);
-const PROMPTS = (() => {
-  const result = new Map<string, string>();
-  buildPromptMap(TEXTBOOK_TREE, result);
-  return result;
-})();
+          {open ? (
+            <ul className="px-1.5 pb-1.5">
+              {sections.map((section) => {
+                const code = section.title.split(' ')[0];
+                return (
+                  <li key={section.key}>
+                    <button
+                      type="button"
+                      onClick={() => onPick(section.prompt)}
+                      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[12px] text-ink-soft transition-colors hover:bg-surface-sunken hover:text-ink"
+                    >
+                      <span className="w-10 shrink-0 font-code text-[10px] tabular-nums text-ink-subtle">
+                        {code}
+                      </span>
+                      <span className="truncate">{section.title}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+    </li>
+  );
+}
 
 export function TextbookTree({ onPick }: TextbookTreeProps) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
-        <span className="text-[12px] font-medium text-ink-muted">计算机网络（第8版）</span>
-        <span className="text-[11px] text-ink-subtle">点击目录填入输入框</span>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-        <Tree
-          showIcon
-          blockNode
-          defaultExpandAll={false}
-          selectedKeys={[]}
-          treeData={TREE_DATA}
-          onSelect={(keys) => {
-            const prompt = PROMPTS.get(String(keys[0]));
-            if (prompt) {
-              onPick(prompt);
-            }
-          }}
-        />
-      </div>
-    </div>
+    <ul className="m-0 grid list-none gap-2.5 p-0 sm:grid-cols-2 xl:grid-cols-3">
+      {TEXTBOOK_TREE.map((chapter, index) => (
+        <ChapterCard key={chapter.key} chapter={chapter} index={index} onPick={onPick} />
+      ))}
+    </ul>
   );
 }

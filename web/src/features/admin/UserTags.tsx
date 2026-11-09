@@ -1,17 +1,31 @@
-import { Tag } from 'antd';
-
 import type { UserRole } from '@/api/types';
 
 export function UserRoleTag({ role }: { role: UserRole }) {
   if (role === 'admin') {
-    return <Tag color="gold">管理员</Tag>;
+    return (
+      <span className="inline-flex items-center rounded-[4px] border border-warning-line bg-warning-soft px-1.5 text-[10.5px] leading-[19px] font-medium text-warning">
+        管理员
+      </span>
+    );
   }
-  return <Tag>学生</Tag>;
+  return (
+    <span className="inline-flex items-center rounded-[4px] border border-line bg-surface-sunken px-1.5 text-[10.5px] leading-[19px] font-medium text-ink-muted">
+      学生
+    </span>
+  );
 }
 
 export function UserStatusTag({ status }: { status: 'active' | 'disabled' }) {
   if (status === 'disabled') {
-    return <Tag color="red">已禁用</Tag>;
+    return (
+      <span className="inline-flex items-center rounded-[4px] border border-danger-line bg-danger-soft px-1.5 text-[10.5px] leading-[19px] font-medium text-danger">
+        已禁用
+      </span>
+    );
   }
-  return <Tag color="green">正常</Tag>;
+  return (
+    <span className="inline-flex items-center rounded-[4px] border border-success-line bg-success-soft px-1.5 text-[10.5px] leading-[19px] font-medium text-success">
+      正常
+    </span>
+  );
 }
