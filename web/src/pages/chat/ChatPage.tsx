@@ -1,3 +1,4 @@
+import { CloudUploadOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Result, Segmented } from 'antd';
 import { useEffect, useRef, useState } from 'react';
@@ -15,6 +16,7 @@ import { MessageList } from '@/features/chat/MessageList';
 import { setOutbox, takeOutbox } from '@/features/chat/outbox';
 import { useChatSession } from '@/features/chat/use-chat-session';
 import { KnowledgePicker } from '@/features/knowledge';
+import { TextbookTree } from '@/features/textbook';
 import { AttachmentThumbs } from '@/features/upload/AttachmentThumbs';
 import { selectFiles } from '@/features/upload/file-rules';
 import { useUploads } from '@/features/upload/use-uploads';
@@ -31,19 +33,6 @@ const STUDY_MODES = [
 const MODE_HINTS: Record<StudyMode, string> = {
   teach_agent: '跟着教材和课程进度，理解概念、完成作业。',
   exam_agent: '面向 408 计算机网络，考点、真题和做题为主。',
-};
-
-const PROMPTS: Record<StudyMode, { key: string; label: string }[]> = {
-  teach_agent: [
-    { key: 'tcp', label: 'TCP 三次握手为什么不是两次？' },
-    { key: 'congestion', label: '拥塞控制的四个阶段分别做什么？' },
-    { key: 'subnet', label: '子网掩码与 CIDR 该怎么算？' },
-  ],
-  exam_agent: [
-    { key: 'exam-tcp', label: 'TCP 拥塞控制在 408 里怎么考？' },
-    { key: 'exam-subnet', label: '子网划分题有什么速算方法？' },
-    { key: 'exam-quiz', label: '给我一道运输层的单选题练练。' },
-  ],
 };
 
 export function ChatPage() {
@@ -146,6 +135,14 @@ export function ChatPage() {
     return true;
   };
 
+  const sessionKind = sessionQuery.data?.agent_kind;
+  const startMode: StudyMode =
+    sessionKind === 'exam_agent'
+      ? 'exam_agent'
+      : sessionKind === 'teach_agent'
+        ? 'teach_agent'
+        : mode;
+
   const notFound = sessionQuery.error instanceof ApiError && sessionQuery.error.status === 404;
 
   if (sessionId && notFound) {
@@ -188,7 +185,12 @@ export function ChatPage() {
             {sessionId && chat.loading ? (
               <PageLoading text="正在加载对话" />
             ) : chat.messages.length === 0 ? (
-              <EmptyChat mode={mode} onModeChange={setMode} onPick={setDraft} />
+              <EmptyChat
+                mode={startMode}
+                locked={Boolean(sessionId)}
+                onModeChange={setMode}
+                onPick={setDraft}
+              />
             ) : (
               <MessageList
                 messages={chat.messages}
@@ -231,41 +233,52 @@ export function ChatPage() {
 
 function EmptyChat({
   mode,
+  locked,
   onModeChange,
   onPick,
 }: {
   mode: StudyMode;
+  locked: boolean;
   onModeChange: (mode: StudyMode) => void;
   onPick: (text: string) => void;
 }) {
+  const courseMode = mode === 'teach_agent';
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-center px-4 py-10 lg:px-8 lg:py-16">
-      <h2 className="text-[18px] font-semibold text-ink">从一句话开始</h2>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Segmented
-          value={mode}
-          onChange={(value) => onModeChange(value as StudyMode)}
-          options={STUDY_MODES}
-        />
-        <span className="text-[12px] text-ink-subtle">{MODE_HINTS[mode]}</span>
-      </div>
-      <div className="mt-6 w-full max-w-[560px] border-t border-line">
-        {PROMPTS[mode].map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => onPick(item.label)}
-            className="group flex w-full items-center gap-3 border-b border-line py-3 text-left transition-colors hover:bg-surface-sunken/70"
-          >
-            <span
-              aria-hidden="true"
-              className="size-1.5 shrink-0 rounded-full border border-line-strong transition-colors group-hover:border-brand group-hover:bg-brand"
-            />
-            <span className="min-w-0 flex-1 text-[13px] text-ink-muted group-hover:text-ink">
-              {item.label}
+    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-8 lg:px-8 lg:py-10">
+      <div className="mx-auto flex min-h-full w-full max-w-[760px] flex-col justify-center">
+        <h2 className="text-[18px] font-semibold text-ink">
+          {courseMode ? '从教材目录开始' : '从一句话开始'}
+        </h2>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {locked ? (
+            <span className="rounded-chip bg-surface-sunken px-2 py-1 text-[12px] font-medium text-ink-muted">
+              {courseMode ? '课程学习' : '考研备考'}
             </span>
-          </button>
-        ))}
+          ) : (
+            <Segmented
+              value={mode}
+              onChange={(value) => onModeChange(value as StudyMode)}
+              options={STUDY_MODES}
+            />
+          )}
+          <span className="text-[12px] text-ink-subtle">{MODE_HINTS[mode]}</span>
+        </div>
+        {courseMode ? (
+          <div className="mt-6 rounded-card border border-line bg-surface p-4">
+            <TextbookTree onPick={onPick} />
+          </div>
+        ) : (
+          <div className="mt-6 rounded-card border border-dashed border-line bg-surface px-6 py-10 text-center">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand">
+              <CloudUploadOutlined className="text-[20px]" />
+            </div>
+            <h3 className="mt-4 text-[15px] font-medium text-ink">上传题目开始对话</h3>
+            <p className="mx-auto mt-2 max-w-[420px] text-[12.5px] leading-6 text-ink-muted">
+              把题目拍照或截图，点输入框左下角的「添加图片」上传；也可以直接把题干粘贴到输入框。
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

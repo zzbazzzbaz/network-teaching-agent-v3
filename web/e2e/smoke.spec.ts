@@ -111,6 +111,7 @@ async function mockApi(page: Page) {
               id: SESSION_ID,
               agent_kind: 'teach_agent',
               title: '两次握手',
+              knowledge_base_ids: [],
               last_message_at: '2026-11-06T10:00:00.000Z',
               created_at: '2026-11-06T09:00:00.000Z',
             },
@@ -123,6 +124,7 @@ async function mockApi(page: Page) {
           id: SESSION_ID,
           agent_kind: 'teach_agent',
           title: '两次握手',
+          knowledge_base_ids: [],
           last_message_at: '2026-11-06T10:00:00.000Z',
           created_at: '2026-11-06T09:00:00.000Z',
         });
@@ -170,6 +172,7 @@ test('登录后发送消息并收到流式回答，刷新后仍然可见', async
   await expect(page).toHaveURL(/\/chat/);
   await page.getByText('两次握手', { exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/chat/${SESSION_ID}`));
+  await expect(page.getByText('未启用')).toBeVisible();
 
   await page.getByRole('textbox', { name: '输入问题' }).fill('为什么不能两次握手');
   await page.getByRole('textbox', { name: '输入问题' }).press('Enter');
@@ -179,6 +182,24 @@ test('登录后发送消息并收到流式回答，刷新后仍然可见', async
   await page.reload();
   await expect(page.getByRole('textbox', { name: '输入问题' })).toBeVisible();
   await expect(page.getByText(REPLY_TEXT)).toBeVisible();
+});
+
+test('课程学习模式点击教材目录节点填入输入框', async ({ page }) => {
+  await mockApi(page);
+  await page.goto('/login');
+
+  await page.getByPlaceholder('学号或用户名').fill('student');
+  await page.getByPlaceholder('密码').fill('password123');
+  await page.getByRole('button', { name: /登\s*录/ }).click();
+
+  await expect(page.getByRole('textbox', { name: '输入问题' })).toBeVisible();
+  await page.getByText('第1章 概述', { exact: true }).click();
+  await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue(
+    '我想学习《计算机网络》「第1章 概述」。请先帮我梳理这一章的整体框架。',
+  );
+
+  await page.getByText('考研备考', { exact: true }).click();
+  await expect(page.getByText('上传题目开始对话')).toBeVisible();
 });
 
 test('未登录访问业务路由会跳转到登录页并带上 next', async ({ page }) => {
