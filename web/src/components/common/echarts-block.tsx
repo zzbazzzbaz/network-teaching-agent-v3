@@ -1,9 +1,9 @@
-import { BarChart, GaugeChart, PieChart, ScatterChart } from 'echarts/charts';
+import { BarChart, GaugeChart, GraphChart, PieChart, ScatterChart } from 'echarts/charts';
 
 import { echarts, type EChartsCoreOption } from '@/lib/echarts';
 import { useEchart } from '@/lib/use-echart';
 
-echarts.use([BarChart, GaugeChart, PieChart, ScatterChart]);
+echarts.use([BarChart, GaugeChart, GraphChart, PieChart, ScatterChart]);
 
 export default function EchartsBlock({ option }: { option: EChartsCoreOption }) {
   const mountRef = useEchart(option);
