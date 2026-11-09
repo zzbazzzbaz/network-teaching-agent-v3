@@ -76,8 +76,7 @@ export function LoginPage() {
             </div>
           </div>
 
-          <h1 className="mb-1.5 text-2xl leading-tight font-semibold">登录</h1>
-          <p className="mb-7 text-sm text-ink-muted">使用老师分配的账号进入课程。</p>
+          <h1 className="mb-7 text-2xl leading-tight font-semibold">登录</h1>
 
           <Form<LoginFormValues>
             layout="vertical"
@@ -113,8 +112,6 @@ export function LoginPage() {
               登录
             </Button>
           </Form>
-
-          <p className="mt-5 mb-0 text-xs text-ink-subtle">忘记密码请联系任课老师。</p>
         </div>
       </div>
     </div>

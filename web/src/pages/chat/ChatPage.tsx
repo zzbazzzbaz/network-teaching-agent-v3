@@ -208,13 +208,7 @@ export function ChatPage() {
 function EmptyChat({ onPick }: { onPick: (text: string) => void }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col justify-center px-4 py-10 lg:px-8 lg:py-16">
-      <span className="inline-flex size-7 items-center justify-center self-start rounded-chip bg-brand font-code text-[11px] tracking-[0.5px] text-white">
-        CN
-      </span>
-      <h2 className="mt-5 text-[18px] font-semibold text-ink">从一句话开始</h2>
-      <p className="mt-2 max-w-[38ch] text-[13px] leading-6 text-ink-muted">
-        不用先组织好。把你现在理解到的部分说出来，老师会从那里接着问。
-      </p>
+      <h2 className="text-[18px] font-semibold text-ink">从一句话开始</h2>
       <div className="mt-6 w-full max-w-[560px] border-t border-line">
         {PROMPTS.map((item) => (
           <button

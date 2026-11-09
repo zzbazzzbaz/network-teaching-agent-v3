@@ -2,6 +2,7 @@ import { App as AntdApp } from 'antd';
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router';
 
+import { BrandMark } from '@/components/common';
 import { useAuthStore } from '@/stores/auth-store';
 
 import { router } from './router';
@@ -32,9 +33,7 @@ export function App() {
         role="status"
         aria-live="polite"
       >
-        <span className="inline-flex size-9 items-center justify-center rounded-chip bg-brand font-code text-[13px] text-white">
-          CN
-        </span>
+        <BrandMark size={36} className="shrink-0" />
         <span className="data-text">正在恢复登录状态</span>
       </div>
     );
