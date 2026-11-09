@@ -14,7 +14,6 @@ from app.shared.config import get_settings
 from app.shared.constants import (
     CHAT_CREDENTIAL_ID,
     MAX_SESSION_KNOWLEDGE_BASES,
-    SESSION_PLACEHOLDER_TITLE,
     TEACH_AGENT_ID,
 )
 from app.shared.dto.session import MessageAttachment
@@ -96,7 +95,6 @@ async def create_session(
         agent_session_id = await client.create_session(
             user_id=str(user_id),
             agent_id=TEACH_AGENT_ID,
-            name=SESSION_PLACEHOLDER_TITLE,
             chat_model_config={
                 "type": "deepseek_credential",
                 "credential_id": CHAT_CREDENTIAL_ID,
@@ -119,7 +117,7 @@ async def create_session(
         id=session_uuid,
         user_id=user_id,
         agent_kind=AgentKind.TEACH,
-        title=SESSION_PLACEHOLDER_TITLE,
+        title=None,
         knowledge_base_ids=bound_ids,
     )
     try:
@@ -148,7 +146,7 @@ async def list_sessions(
     include_empty: bool,
     query: str | None = None,
 ) -> tuple[list[ChatSession], int]:
-    return await session_repositories.list_owned(
+    chats, total = await session_repositories.list_owned(
         session,
         user_id=user_id,
         limit=limit,
@@ -156,6 +154,39 @@ async def list_sessions(
         include_empty=include_empty,
         query=query,
     )
+    await _sync_titles(user_id=user_id, chats=chats)
+    return chats, total
+
+
+async def _sync_titles(*, user_id: uuid.UUID, chats: list[ChatSession]) -> None:
+    unnamed = [chat for chat in chats if chat.title is None]
+    if not unnamed:
+        return
+
+    client = get_agent_client()
+    by_kind: dict[AgentKind, list[ChatSession]] = {}
+    for chat in unnamed:
+        by_kind.setdefault(chat.agent_kind, []).append(chat)
+
+    for kind, items in by_kind.items():
+        try:
+            names = await client.list_session_names(
+                user_id=str(user_id),
+                agent_id=kind.value,
+            )
+        except RemoteServiceError as exc:
+            logger.warning(
+                "agent session title sync failed: user_id=%s agent_id=%s status=%s detail=%s",
+                user_id,
+                kind.value,
+                exc.status_code,
+                exc.detail,
+            )
+            continue
+        for chat in items:
+            name = names.get(chat.id.hex)
+            if name:
+                chat.title = name
 
 
 async def get_session(
@@ -171,18 +202,6 @@ async def get_session(
     )
     if chat is None:
         raise SessionNotFoundError
-    return chat
-
-
-async def rename_session(
-    session: AsyncSession,
-    *,
-    user_id: uuid.UUID,
-    session_id: uuid.UUID,
-    title: str,
-) -> ChatSession:
-    chat = await get_session(session, user_id=user_id, session_id=session_id)
-    await session_repositories.rename(session, chat, title)
     return chat
 
 

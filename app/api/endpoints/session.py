@@ -18,7 +18,6 @@ from app.shared.dto.session import (
     CreateSessionRequest,
     InterruptResponse,
     MessageListResponse,
-    RenameSessionRequest,
     SendMessageRequest,
     SendMessageResponse,
     SessionItem,
@@ -149,31 +148,6 @@ async def get_session(
             session,
             user_id=current_user.id,
             session_id=session_id,
-        )
-    except session_service.SessionNotFoundError as exc:
-        raise not_found() from exc
-    return _to_item(chat)
-
-
-@router.patch("/{session_id}", response_model=SessionItem, summary="重命名会话")
-async def rename_session(
-    session_id: uuid.UUID,
-    payload: RenameSessionRequest,
-    session: SessionDep,
-    current_user: CurrentUser,
-) -> SessionItem:
-    title = payload.title.strip()
-    if not title:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="标题不能为空",
-        )
-    try:
-        chat = await session_service.rename_session(
-            session,
-            user_id=current_user.id,
-            session_id=session_id,
-            title=title,
         )
     except session_service.SessionNotFoundError as exc:
         raise not_found() from exc

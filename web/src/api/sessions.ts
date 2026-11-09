@@ -31,13 +31,6 @@ export function getSession(sessionId: string): Promise<SessionItem> {
   return request<SessionItem>(`/sessions/${encodeURIComponent(sessionId)}`);
 }
 
-export function renameSession(sessionId: string, title: string): Promise<SessionItem> {
-  return request<SessionItem>(`/sessions/${encodeURIComponent(sessionId)}`, {
-    method: 'PATCH',
-    body: { title },
-  });
-}
-
 export function deleteSession(sessionId: string): Promise<void> {
   return request<void>(`/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
 }

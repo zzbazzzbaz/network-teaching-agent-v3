@@ -24,10 +24,6 @@ class SessionListResponse(BaseModel):
     total: int
 
 
-class RenameSessionRequest(BaseModel):
-    title: str = Field(min_length=1, max_length=255)
-
-
 class MessageAttachment(BaseModel):
     file_id: uuid.UUID | None = None
     url: HttpUrl | None = None

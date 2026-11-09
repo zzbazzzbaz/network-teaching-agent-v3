@@ -1,3 +1,4 @@
+import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -5,9 +6,42 @@ from typing import Any
 import httpx
 
 from app.shared.config import get_settings
+from app.shared.constants import SESSION_PLACEHOLDER_TITLE
 from app.shared.dto.memory import MemoryEntryDetailDTO, MemoryEntryListDTO
 from app.shared.errors import RemoteServiceError
 from app.shared.http import InternalHttpClient
+
+_DEFAULT_SESSION_NAME = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
+
+
+def parse_session_names(payload: Any) -> dict[str, str]:
+    sessions = payload.get("sessions") if isinstance(payload, dict) else None
+    if not isinstance(sessions, list):
+        return {}
+
+    names: dict[str, str] = {}
+    for item in sessions:
+        if not isinstance(item, dict):
+            continue
+        session = item.get("session")
+        if not isinstance(session, dict):
+            continue
+        session_id = session.get("id")
+        config = session.get("config")
+        if not isinstance(session_id, str) or not isinstance(config, dict):
+            continue
+        name = config.get("name")
+        naming = config.get("naming")
+        auto = naming.get("auto") if isinstance(naming, dict) else None
+        if auto is not False or not isinstance(name, str):
+            continue
+        normalized = name.strip()
+        if not normalized or normalized == SESSION_PLACEHOLDER_TITLE:
+            continue
+        if _DEFAULT_SESSION_NAME.fullmatch(normalized):
+            continue
+        names[session_id.replace("-", "")] = normalized
+    return names
 
 
 class AgentClient:
@@ -31,15 +65,16 @@ class AgentClient:
         *,
         user_id: str,
         agent_id: str,
-        name: str,
         chat_model_config: dict[str, Any],
         knowledge_config: dict[str, Any] | None = None,
+        name: str | None = None,
     ) -> str:
         body: dict[str, Any] = {
             "agent_id": agent_id,
-            "name": name,
             "chat_model_config": chat_model_config,
         }
+        if name is not None:
+            body["name"] = name
         if knowledge_config is not None:
             body["knowledge_config"] = knowledge_config
         response = await self._http.request(
@@ -55,6 +90,20 @@ class AgentClient:
         if not isinstance(payload, dict) or not isinstance(payload.get("session_id"), str):
             raise RemoteServiceError(502, "invalid create session response")
         return payload["session_id"]
+
+    async def list_session_names(self, *, user_id: str, agent_id: str) -> dict[str, str]:
+        response = await self._http.request(
+            "GET",
+            "/sessions/",
+            user_id=user_id,
+            params={"agent_id": agent_id},
+            timeout=3.0,
+        )
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise RemoteServiceError(502, "invalid session list response") from exc
+        return parse_session_names(payload)
 
     async def delete_session(self, *, user_id: str, agent_id: str, session_id: str) -> bool:
         try:

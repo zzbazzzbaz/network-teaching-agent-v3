@@ -100,6 +100,9 @@ export function useChatSession(sessionId: string | null, userName: string): UseC
         const controller = new StreamController({
           sessionId,
           onEvent: (event: AgentEvent) => {
+            if (event.type === 'CUSTOM' && event.name === 'session_updated') {
+              void queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            }
             useChatStore.getState().queueEvents([event]);
           },
           onPhaseChange: (phase, state) => {

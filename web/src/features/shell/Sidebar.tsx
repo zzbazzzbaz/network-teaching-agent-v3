@@ -3,7 +3,6 @@ import {
   ControlOutlined,
   DatabaseOutlined,
   DeleteOutlined,
-  EditOutlined,
   KeyOutlined,
   LineChartOutlined,
   LogoutOutlined,
@@ -13,8 +12,8 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { Conversations } from '@ant-design/x';
-import { Button, Dropdown, Modal, Input, Skeleton, Tooltip, Typography, App } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Dropdown, Skeleton, Tooltip, Typography, App } from 'antd';
+import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 import { BrandMark, EmptyState } from '@/components/common';
@@ -44,8 +43,6 @@ export function Sidebar({
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const sessions = useSessions();
-  const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null);
-  const [renameValue, setRenameValue] = useState('');
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const loadMoreRef = useRef(sessions.loadMore);
   const hasMore = sessions.hasMore;
@@ -107,10 +104,7 @@ export function Sidebar({
   };
 
   const menuFor = (sessionId: string) => ({
-    items: [
-      { key: 'rename', label: '重命名', icon: <EditOutlined /> },
-      { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true },
-    ],
+    items: [{ key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true }],
     onClick: ({
       key,
       domEvent,
@@ -119,30 +113,11 @@ export function Sidebar({
       domEvent: React.MouseEvent | React.KeyboardEvent;
     }) => {
       domEvent.stopPropagation();
-      const session = sessions.items.find((item) => item.id === sessionId);
-      if (!session) {
-        return;
-      }
-      if (key === 'rename') {
-        setRenaming({ id: sessionId, title: session.title });
-        setRenameValue(session.title);
-        return;
-      }
       if (key === 'delete') {
         handleDelete(sessionId);
       }
     },
   });
-
-  const submitRename = async () => {
-    if (!renaming) {
-      return;
-    }
-    const ok = await sessions.rename(renaming.id, renameValue);
-    if (ok) {
-      setRenaming(null);
-    }
-  };
 
   return (
     <div className="flex h-full min-h-0 flex-col px-3 pt-4 pb-3">
@@ -274,23 +249,6 @@ export function Sidebar({
         </Dropdown>
       </div>
 
-      <Modal
-        open={Boolean(renaming)}
-        title="重命名会话"
-        okText="保存"
-        cancelText="取消"
-        onCancel={() => setRenaming(null)}
-        onOk={() => void submitRename()}
-        confirmLoading={false}
-      >
-        <Input
-          value={renameValue}
-          onChange={(event) => setRenameValue(event.target.value)}
-          maxLength={255}
-          placeholder="会话标题"
-          onPressEnter={() => void submitRename()}
-        />
-      </Modal>
     </div>
   );
 }

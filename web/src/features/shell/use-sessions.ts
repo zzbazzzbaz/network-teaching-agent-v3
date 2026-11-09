@@ -3,7 +3,7 @@ import { App } from 'antd';
 import { useCallback } from 'react';
 
 import { toErrorMessage } from '@/api/client';
-import { createSession, deleteSession, listSessions, renameSession } from '@/api/sessions';
+import { createSession, deleteSession, listSessions } from '@/api/sessions';
 import type { SessionItem, SessionListResponse } from '@/api/types';
 
 const PAGE_SIZE = 20;
@@ -20,7 +20,6 @@ export interface UseSessionsResult {
   refetch: () => void;
   loadMore: () => void;
   create: () => Promise<SessionItem | null>;
-  rename: (sessionId: string, title: string) => Promise<boolean>;
   remove: (sessionId: string) => Promise<boolean>;
 }
 
@@ -63,26 +62,6 @@ export function useSessions(): UseSessionsResult {
     },
   });
 
-  const renameMutation = useMutation({
-    mutationFn: ({ sessionId, title }: { sessionId: string; title: string }) =>
-      renameSession(sessionId, title),
-    onSuccess: (updated) => {
-      queryClient.setQueryData<{ pages: SessionListResponse[]; pageParams: number[] }>(
-        SESSIONS_QUERY_KEY,
-        (current) =>
-          current
-            ? {
-                ...current,
-                pages: current.pages.map((page) => ({
-                  ...page,
-                  items: page.items.map((item) => (item.id === updated.id ? updated : item)),
-                })),
-              }
-            : current,
-      );
-    },
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (sessionId: string) => deleteSession(sessionId),
     onSuccess: (_data, sessionId) => {
@@ -111,24 +90,6 @@ export function useSessions(): UseSessionsResult {
       return null;
     }
   }, [createMutation, message]);
-
-  const rename = useCallback(
-    async (sessionId: string, title: string) => {
-      const trimmed = title.trim();
-      if (!trimmed) {
-        message.warning('标题不能为空');
-        return false;
-      }
-      try {
-        await renameMutation.mutateAsync({ sessionId, title: trimmed });
-        return true;
-      } catch (error) {
-        message.error(toErrorMessage(error, '重命名失败'));
-        return false;
-      }
-    },
-    [message, renameMutation],
-  );
 
   const remove = useCallback(
     async (sessionId: string) => {
@@ -161,7 +122,6 @@ export function useSessions(): UseSessionsResult {
       }
     },
     create,
-    rename,
     remove,
   };
 }

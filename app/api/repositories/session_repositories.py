@@ -85,12 +85,6 @@ async def touch(session: AsyncSession, chat: ChatSession, at: datetime) -> None:
     await session.flush()
 
 
-async def rename(session: AsyncSession, chat: ChatSession, title: str) -> None:
-    chat.title = title
-    session.add(chat)
-    await session.flush()
-
-
 async def soft_delete(session: AsyncSession, chat: ChatSession, at: datetime) -> None:
     chat.deleted_at = at
     session.add(chat)
