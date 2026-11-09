@@ -175,6 +175,25 @@
     overflow-x: auto;
   }
 
+  .markdown-body .md-code-block pre {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    font-family: inherit !important;
+    font-size: 12.5px !important;
+    line-height: 1.7 !important;
+    overflow: visible !important;
+  }
+
+  .markdown-body .md-code-block pre code {
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    white-space: pre !important;
+  }
+
   .markdown-body table {
     border-collapse: collapse;
     width: 100%;
@@ -216,6 +235,12 @@
     border-top: 1px solid var(--line);
     margin: 16px 0;
   }
+}
+
+.markdown-body .x-markdown {
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
 }
 
 @utility trace-line {

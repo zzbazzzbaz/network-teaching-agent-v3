@@ -19,10 +19,19 @@ function dedent(code: string): string {
   return lines.map((line) => line.slice(min)).join('\n');
 }
 
+const SOURCE_STYLES = {
+  code: {
+    background: 'transparent',
+    border: 'none',
+    borderRadius: 0,
+    overflow: 'visible',
+  },
+};
+
 function SourceCode({ code, lang }: { code: string; lang?: string }) {
   return (
-    <div className="my-3 overflow-x-auto rounded-card border border-line bg-surface-sunken px-3.5 py-3 font-code text-[12.5px] leading-[1.7] [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-[12px] [&_code]:leading-[1.7]">
-      <CodeHighlighter lang={lang} header={false}>
+    <div className="md-code-block my-3 overflow-x-auto rounded-card border border-line bg-surface-sunken px-3.5 py-3 font-code text-[12.5px] leading-[1.7]">
+      <CodeHighlighter lang={lang} header={false} styles={SOURCE_STYLES}>
         {dedent(code)}
       </CodeHighlighter>
     </div>

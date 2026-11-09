@@ -76,9 +76,7 @@ function MarkdownCode(props: ComponentProps) {
         </span>
       );
     }
-    return (
-      <code className="rounded bg-surface-sunken px-1 py-px text-[0.92em]">{code.trim()}</code>
-    );
+    return <code>{code.trim()}</code>;
   }
   const language = (lang ?? '').trim().toLowerCase();
   const kind = diagramKind(language);
@@ -166,6 +164,7 @@ export function Markdown({ content, streaming = false, className }: MarkdownProp
         config={config}
         components={MARKDOWN_COMPONENTS}
         componentsProps={MARKDOWN_COMPONENT_PROPS}
+        disableDefaultStyles
         escapeRawHtml
         openLinksInNewTab
       />
