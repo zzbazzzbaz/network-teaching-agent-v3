@@ -18,12 +18,10 @@ from app.shared.errors import RemoteServiceError
 logger = logging.getLogger(__name__)
 
 _DESCRIPTION = (
-    "向学生提出一道检查题, 由前端卡片呈现并等待作答, 是阻塞式的人机协作工具。"
+    "向学生提出一道检查题。"
     "学生需要练习, 或你刚讲完一个知识点要验证理解时使用; 一次只出一题, 学生未作答前不要出下一题。"
     "调用后本轮立即结束, 等学生提交答案再继续。"
     "单选题必须给 options 和 correct_option, 简答题必须给 reference_answer。"
-    "学生作答会在后台自动记录为答题历史, 不要在对话里解释保存机制; "
-    "拿到答案后先按 correct_option 或 reference_answer 判分, 再决定怎么反馈。"
 )
 
 
