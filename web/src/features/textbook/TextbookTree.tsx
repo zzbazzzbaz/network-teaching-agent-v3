@@ -43,12 +43,12 @@ const PROMPTS = (() => {
 
 export function TextbookTree({ onPick }: TextbookTreeProps) {
   return (
-    <div>
-      <div className="mb-2 flex items-center justify-between gap-3">
+    <div className="flex h-full flex-col">
+      <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
         <span className="text-[12px] font-medium text-ink-muted">计算机网络（第8版）</span>
         <span className="text-[11px] text-ink-subtle">点击目录填入输入框</span>
       </div>
-      <div className="max-h-[320px] overflow-y-auto pr-1">
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         <Tree
           showIcon
           blockNode

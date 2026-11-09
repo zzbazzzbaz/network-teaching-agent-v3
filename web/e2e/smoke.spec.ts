@@ -202,6 +202,25 @@ test('课程学习模式点击教材目录节点填入输入框', async ({ page 
   await expect(page.getByText('上传题目开始对话')).toBeVisible();
 });
 
+test('通过链接参数预选模式和预填充提示词', async ({ page }) => {
+  await mockApi(page);
+  await page.goto('/login');
+
+  await page.getByPlaceholder('学号或用户名').fill('student');
+  await page.getByPlaceholder('密码').fill('password123');
+  await page.getByRole('button', { name: /登\s*录/ }).click();
+
+  await page.goto('/chat?mode=exam&prompt=请讲解 TCP 拥塞控制');
+  await expect(page.getByText('上传题目开始对话')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue(
+    '请讲解 TCP 拥塞控制',
+  );
+
+  await page.goto('/chat?mode=course&prompt=课程问题');
+  await expect(page.getByText('从教材目录开始')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue('课程问题');
+});
+
 test('未登录访问业务路由会跳转到登录页并带上 next', async ({ page }) => {
   await mockApi(page);
   await page.goto('/stats');

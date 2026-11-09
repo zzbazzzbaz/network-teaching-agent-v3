@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button, Result, Segmented } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 import { ApiError } from '@/api/client';
 import { createSession, getSession } from '@/api/sessions';
@@ -30,20 +30,58 @@ const STUDY_MODES = [
   { label: '考研备考', value: 'exam_agent' },
 ] satisfies { label: string; value: StudyMode }[];
 
-const MODE_HINTS: Record<StudyMode, string> = {
-  teach_agent: '跟着教材和课程进度，理解概念、完成作业。',
-  exam_agent: '面向 408 计算机网络，考点、真题和做题为主。',
+const MAX_PROMPT_LENGTH = 20000;
+
+const MODE_PARAM_MAP: Record<string, StudyMode> = {
+  course: 'teach_agent',
+  exam: 'exam_agent',
 };
+
+interface Prefill {
+  key: string;
+  mode: StudyMode | null;
+  prompt: string;
+}
+
+function readPrefill(params: URLSearchParams): Prefill {
+  const rawMode = params.get('mode');
+  const rawPrompt = params.get('prompt');
+  const mode = rawMode ? (MODE_PARAM_MAP[rawMode] ?? null) : null;
+  const prompt = rawPrompt ? rawPrompt.slice(0, MAX_PROMPT_LENGTH) : '';
+  const key = rawMode || rawPrompt ? `${rawMode ?? ''}\u0000${rawPrompt ?? ''}` : '';
+  return { key, mode, prompt };
+}
 
 export function ChatPage() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const user = useAuthStore((state) => state.user);
-  const [draft, setDraft] = useState('');
+  const initialPrefill = readPrefill(searchParams);
+  const [draft, setDraft] = useState(initialPrefill.prompt);
   const [stickSignal, setStickSignal] = useState(0);
   const [knowledgeIds, setKnowledgeIds] = useState<string[] | null>(null);
-  const [mode, setMode] = useState<StudyMode>('teach_agent');
+  const [mode, setMode] = useState<StudyMode>(initialPrefill.mode ?? 'teach_agent');
+  const appliedPrefill = useRef(initialPrefill.key);
   const outboxHandled = useRef<string | null>(null);
+
+  useEffect(() => {
+    const prefill = readPrefill(searchParams);
+    if (!prefill.key) {
+      appliedPrefill.current = '';
+      return;
+    }
+    if (appliedPrefill.current === prefill.key) {
+      return;
+    }
+    appliedPrefill.current = prefill.key;
+    if (prefill.mode && !sessionId) {
+      setMode(prefill.mode);
+    }
+    if (prefill.prompt) {
+      setDraft(prefill.prompt);
+    }
+  }, [searchParams, sessionId]);
 
   const sessionQuery = useQuery({
     queryKey: ['session', sessionId],
@@ -245,38 +283,41 @@ function EmptyChat({
   const courseMode = mode === 'teach_agent';
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-8 lg:px-8 lg:py-10">
-      <div className="mx-auto flex min-h-full w-full max-w-[760px] flex-col justify-center">
-        <h2 className="text-[18px] font-semibold text-ink">
-          {courseMode ? '从教材目录开始' : '从一句话开始'}
-        </h2>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          {locked ? (
-            <span className="rounded-chip bg-surface-sunken px-2 py-1 text-[12px] font-medium text-ink-muted">
-              {courseMode ? '课程学习' : '考研备考'}
-            </span>
-          ) : (
-            <Segmented
-              value={mode}
-              onChange={(value) => onModeChange(value as StudyMode)}
-              options={STUDY_MODES}
-            />
-          )}
-          <span className="text-[12px] text-ink-subtle">{MODE_HINTS[mode]}</span>
+    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8">
+      <div className="mx-auto w-full max-w-[760px]">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="min-w-0 truncate text-[18px] font-semibold text-ink">
+            {courseMode ? '从教材目录开始' : '从一句话开始'}
+          </h2>
+          <div className="shrink-0">
+            {locked ? (
+              <span className="rounded-chip bg-surface-sunken px-2 py-1 text-[12px] font-medium text-ink-muted">
+                {courseMode ? '课程学习' : '考研备考'}
+              </span>
+            ) : (
+              <Segmented
+                value={mode}
+                onChange={(value) => onModeChange(value as StudyMode)}
+                options={STUDY_MODES}
+              />
+            )}
+          </div>
         </div>
         {courseMode ? (
-          <div className="mt-6 rounded-card border border-line bg-surface p-4">
+          <div className="mt-5 h-[360px] overflow-hidden rounded-card border border-line bg-surface p-4">
             <TextbookTree onPick={onPick} />
           </div>
         ) : (
-          <div className="mt-6 rounded-card border border-dashed border-line bg-surface px-6 py-10 text-center">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand">
-              <CloudUploadOutlined className="text-[20px]" />
+          <div className="mt-5 flex h-[360px] items-center justify-center rounded-card border border-dashed border-line bg-surface px-6 text-center">
+            <div>
+              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand">
+                <CloudUploadOutlined className="text-[20px]" />
+              </div>
+              <h3 className="mt-4 text-[15px] font-medium text-ink">上传题目开始对话</h3>
+              <p className="mx-auto mt-2 max-w-[420px] text-[12.5px] leading-6 text-ink-muted">
+                把题目拍照或截图，点输入框左下角的「添加图片」上传；也可以直接把题干粘贴到输入框。
+              </p>
             </div>
-            <h3 className="mt-4 text-[15px] font-medium text-ink">上传题目开始对话</h3>
-            <p className="mx-auto mt-2 max-w-[420px] text-[12.5px] leading-6 text-ink-muted">
-              把题目拍照或截图，点输入框左下角的「添加图片」上传；也可以直接把题干粘贴到输入框。
-            </p>
           </div>
         )}
       </div>
