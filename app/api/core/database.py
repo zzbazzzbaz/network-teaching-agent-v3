@@ -59,6 +59,7 @@ _MIGRATION_DDL = (
     ALTER TABLE sessions
     ADD COLUMN IF NOT EXISTS knowledge_base_ids jsonb NOT NULL DEFAULT '[]'::jsonb
     """,
+    "ALTER TYPE agentkind ADD VALUE IF NOT EXISTS 'EXAM'",
 )
 
 

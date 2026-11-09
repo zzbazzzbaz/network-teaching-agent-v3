@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { Button, Result } from 'antd';
+import { Button, Result, Segmented } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 import { ApiError } from '@/api/client';
 import { createSession, getSession } from '@/api/sessions';
+import type { AgentKind } from '@/api/types';
 import { ErrorState, PageLoading } from '@/components/common';
 import { ChatActionsProvider } from '@/features/chat/chat-actions';
 import { ChatComposer } from '@/features/chat/ChatComposer';
@@ -20,11 +21,30 @@ import { useUploads } from '@/features/upload/use-uploads';
 import { useAuthStore } from '@/stores/auth-store';
 import { useChatStore } from '@/stores/chat-store';
 
-const PROMPTS = [
-  { key: 'tcp', label: 'TCP 三次握手为什么不是两次？' },
-  { key: 'congestion', label: '拥塞控制的四个阶段分别做什么？' },
-  { key: 'subnet', label: '子网掩码与 CIDR 该怎么算？' },
-];
+type StudyMode = Extract<AgentKind, 'teach_agent' | 'exam_agent'>;
+
+const STUDY_MODES = [
+  { label: '课程学习', value: 'teach_agent' },
+  { label: '考研备考', value: 'exam_agent' },
+] satisfies { label: string; value: StudyMode }[];
+
+const MODE_HINTS: Record<StudyMode, string> = {
+  teach_agent: '跟着教材和课程进度，理解概念、完成作业。',
+  exam_agent: '面向 408 计算机网络，考点、真题和做题为主。',
+};
+
+const PROMPTS: Record<StudyMode, { key: string; label: string }[]> = {
+  teach_agent: [
+    { key: 'tcp', label: 'TCP 三次握手为什么不是两次？' },
+    { key: 'congestion', label: '拥塞控制的四个阶段分别做什么？' },
+    { key: 'subnet', label: '子网掩码与 CIDR 该怎么算？' },
+  ],
+  exam_agent: [
+    { key: 'exam-tcp', label: 'TCP 拥塞控制在 408 里怎么考？' },
+    { key: 'exam-subnet', label: '子网划分题有什么速算方法？' },
+    { key: 'exam-quiz', label: '给我一道运输层的单选题练练。' },
+  ],
+};
 
 export function ChatPage() {
   const { sessionId } = useParams();
@@ -33,6 +53,7 @@ export function ChatPage() {
   const [draft, setDraft] = useState('');
   const [stickSignal, setStickSignal] = useState(0);
   const [knowledgeIds, setKnowledgeIds] = useState<string[] | null>(null);
+  const [mode, setMode] = useState<StudyMode>('teach_agent');
   const outboxHandled = useRef<string | null>(null);
 
   const sessionQuery = useQuery({
@@ -113,7 +134,10 @@ export function ChatPage() {
     if (!text.trim() && files.length === 0) {
       return false;
     }
-    const created = await createSession(knowledgeIds ?? undefined);
+    const created = await createSession({
+      knowledgeBaseIds: knowledgeIds ?? undefined,
+      agentKind: mode,
+    });
     if (!created) {
       return false;
     }
@@ -164,7 +188,7 @@ export function ChatPage() {
             {sessionId && chat.loading ? (
               <PageLoading text="正在加载对话" />
             ) : chat.messages.length === 0 ? (
-              <EmptyChat onPick={setDraft} />
+              <EmptyChat mode={mode} onModeChange={setMode} onPick={setDraft} />
             ) : (
               <MessageList
                 messages={chat.messages}
@@ -205,12 +229,28 @@ export function ChatPage() {
   );
 }
 
-function EmptyChat({ onPick }: { onPick: (text: string) => void }) {
+function EmptyChat({
+  mode,
+  onModeChange,
+  onPick,
+}: {
+  mode: StudyMode;
+  onModeChange: (mode: StudyMode) => void;
+  onPick: (text: string) => void;
+}) {
   return (
     <div className="flex min-h-0 flex-1 flex-col justify-center px-4 py-10 lg:px-8 lg:py-16">
       <h2 className="text-[18px] font-semibold text-ink">从一句话开始</h2>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Segmented
+          value={mode}
+          onChange={(value) => onModeChange(value as StudyMode)}
+          options={STUDY_MODES}
+        />
+        <span className="text-[12px] text-ink-subtle">{MODE_HINTS[mode]}</span>
+      </div>
       <div className="mt-6 w-full max-w-[560px] border-t border-line">
-        {PROMPTS.map((item) => (
+        {PROMPTS[mode].map((item) => (
           <button
             key={item.key}
             type="button"

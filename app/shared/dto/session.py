@@ -17,6 +17,13 @@ class SessionItem(BaseModel):
 
 class CreateSessionRequest(BaseModel):
     knowledge_base_ids: list[str] | None = None
+    agent_kind: AgentKind = AgentKind.TEACH
+
+    @model_validator(mode="after")
+    def _check_agent_kind(self) -> Self:
+        if self.agent_kind not in (AgentKind.TEACH, AgentKind.EXAM):
+            raise ValueError("不支持的学习模式")
+        return self
 
 
 class SessionListResponse(BaseModel):

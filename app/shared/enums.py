@@ -14,6 +14,7 @@ class UserRole(StrEnum):
 class AgentKind(StrEnum):
     TEACH = "teach_agent"
     EXP = "exp_agent"
+    EXAM = "exam_agent"
 
 
 class QuestionType(StrEnum):

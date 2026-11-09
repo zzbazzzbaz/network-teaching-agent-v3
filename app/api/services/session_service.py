@@ -11,11 +11,7 @@ from app.api.repositories import file_repositories, session_repositories, usage_
 from app.api.repositories.models import AgentKind, ChatSession, FileStatus, User
 from app.api.services import file_service, knowledge_service
 from app.shared.config import get_settings
-from app.shared.constants import (
-    CHAT_CREDENTIAL_ID,
-    MAX_SESSION_KNOWLEDGE_BASES,
-    TEACH_AGENT_ID,
-)
+from app.shared.constants import CHAT_CREDENTIAL_ID, MAX_SESSION_KNOWLEDGE_BASES
 from app.shared.dto.session import MessageAttachment
 from app.shared.errors import RemoteServiceError
 
@@ -70,9 +66,11 @@ async def create_session(
     *,
     user_id: uuid.UUID,
     knowledge_base_ids: list[str] | None = None,
+    agent_kind: AgentKind = AgentKind.TEACH,
 ) -> ChatSession:
     settings = get_settings()
     client = get_agent_client()
+    agent_id = agent_kind.value
 
     if knowledge_base_ids is None:
         try:
@@ -94,7 +92,7 @@ async def create_session(
     try:
         agent_session_id = await client.create_session(
             user_id=str(user_id),
-            agent_id=TEACH_AGENT_ID,
+            agent_id=agent_id,
             chat_model_config={
                 "type": "deepseek_credential",
                 "credential_id": CHAT_CREDENTIAL_ID,
@@ -116,7 +114,7 @@ async def create_session(
     chat = ChatSession(
         id=session_uuid,
         user_id=user_id,
-        agent_kind=AgentKind.TEACH,
+        agent_kind=agent_kind,
         title=None,
         knowledge_base_ids=bound_ids,
     )
@@ -128,7 +126,7 @@ async def create_session(
         try:
             await client.delete_session(
                 user_id=str(user_id),
-                agent_id=TEACH_AGENT_ID,
+                agent_id=agent_id,
                 session_id=agent_session_id,
             )
         except RemoteServiceError:

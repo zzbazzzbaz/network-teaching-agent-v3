@@ -72,7 +72,16 @@ export function Sidebar({
     () =>
       sessions.items.map((session) => ({
         key: session.id,
-        label: session.title,
+        label: (
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="min-w-0 flex-1 truncate">{session.title}</span>
+            {session.agent_kind === 'exam_agent' ? (
+              <span className="shrink-0 rounded-chip bg-brand-soft px-1.5 py-0.5 text-[10px] leading-none text-brand">
+                考研
+              </span>
+            ) : null}
+          </span>
+        ),
       })),
     [sessions.items],
   );

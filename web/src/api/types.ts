@@ -1,6 +1,6 @@
 import type { Msg } from '@agentscope-ai/agentscope/message';
 
-export type AgentKind = 'teach_agent' | 'exp_agent';
+export type AgentKind = 'teach_agent' | 'exp_agent' | 'exam_agent';
 export type QuestionType = 'single_choice' | 'short_answer';
 export type UserRole = 'student' | 'admin';
 export type FileStatus = 'pending' | 'ready';

@@ -6,6 +6,7 @@
 
 SYSTEM_USER_ID = "system"
 TEACH_AGENT_ID = "teach_agent"
+EXAM_AGENT_ID = "exam_agent"
 CHAT_CREDENTIAL_ID = "deepseek"
 EMBEDDING_CREDENTIAL_ID = "bailian"
 EMBEDDING_CREDENTIAL_TYPE = "dashscope_credential"

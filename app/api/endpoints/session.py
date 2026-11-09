@@ -24,6 +24,7 @@ from app.shared.dto.session import (
     SessionListResponse,
     SessionStatusResponse,
 )
+from app.shared.enums import AgentKind
 from app.shared.errors import (
     RemoteServiceError,
     account_unavailable,
@@ -94,6 +95,7 @@ async def create_session(
             session,
             user_id=current_user.id,
             knowledge_base_ids=payload.knowledge_base_ids if payload else None,
+            agent_kind=payload.agent_kind if payload else AgentKind.TEACH,
         )
     except session_service.InvalidKnowledgeSelectionError as exc:
         raise HTTPException(

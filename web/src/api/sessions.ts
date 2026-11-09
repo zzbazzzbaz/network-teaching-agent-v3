@@ -1,5 +1,5 @@
 import { request } from './client';
-import type { SessionItem, SessionListResponse, SessionStatusResponse } from './types';
+import type { AgentKind, SessionItem, SessionListResponse, SessionStatusResponse } from './types';
 
 export interface ListSessionsParams {
   limit?: number;
@@ -17,14 +17,20 @@ export function listSessions(params: ListSessionsParams = {}): Promise<SessionLi
   return request<SessionListResponse>(`/sessions?${search.toString()}`);
 }
 
-export function createSession(knowledgeBaseIds?: string[]): Promise<SessionItem> {
-  return request<SessionItem>('/sessions', {
-    method: 'POST',
-    body:
-      knowledgeBaseIds === undefined
-        ? {}
-        : { knowledge_base_ids: knowledgeBaseIds },
-  });
+export interface CreateSessionParams {
+  knowledgeBaseIds?: string[];
+  agentKind?: AgentKind;
+}
+
+export function createSession(params: CreateSessionParams = {}): Promise<SessionItem> {
+  const body: Record<string, unknown> = {};
+  if (params.knowledgeBaseIds !== undefined) {
+    body.knowledge_base_ids = params.knowledgeBaseIds;
+  }
+  if (params.agentKind) {
+    body.agent_kind = params.agentKind;
+  }
+  return request<SessionItem>('/sessions', { method: 'POST', body });
 }
 
 export function getSession(sessionId: string): Promise<SessionItem> {
