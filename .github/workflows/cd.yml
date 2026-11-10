@@ -1,0 +1,96 @@
+name: cd
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "sha-<40 位 commit>"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd
+  cancel-in-progress: false
+
+env:
+  SITE_DOMAIN: network-agent2.test.chatgqt.top
+  DEPLOY_HOST: 101.35.223.219
+  DEPLOY_USER: ubuntu
+  DEPLOY_ROOT: /srv/network-teaching-agent-v3
+
+jobs:
+  validate:
+    name: 校验 tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          [[ "$TAG" =~ ^sha-[0-9a-f]{40}$ ]] || { echo "invalid tag: $TAG"; exit 1; }
+
+  deploy:
+    name: 同步并部署
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          [ -n "$SSH_KEY" ] || { echo "missing DEPLOY_SSH_KEY"; exit 1; }
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync compose
+        run: |
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            deploy/docker-compose.yml "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_ROOT/"
+
+      - name: Check server .env
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" "cd '$DEPLOY_ROOT' && [ -s .env ]" \
+            || { echo "missing $DEPLOY_ROOT/.env"; exit 1; }
+
+      - name: Pull images
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd '$DEPLOY_ROOT' && TAG='$TAG' docker compose --env-file .env pull </dev/null"
+
+      - name: Recreate containers
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd '$DEPLOY_ROOT' && TAG='$TAG' docker compose --env-file .env up -d --remove-orphans --wait </dev/null"
+
+  verify:
+    name: 公网验证
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Public checks
+        run: |
+          set -e
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -m 8 -w '%{http_code}' "https://$SITE_DOMAIN/health" || true)
+            [ "$code" = 200 ] && break
+            sleep 5
+          done
+          test "$code" = 200
+          curl -fsS -m 15 "https://$SITE_DOMAIN/health"
+          curl -fsS -o /dev/null -m 15 -w 'web %{http_code}\n' "https://$SITE_DOMAIN/"
+          curl -s -o /dev/null -m 15 -w 'api %{http_code}\n' "https://$SITE_DOMAIN/api/auth/me"
+          curl -fsS -o /dev/null -w 'ssl %{ssl_verify_result}\n' "https://$SITE_DOMAIN/health"
+          curl -s -o /dev/null -m 15 -w 'http %{http_code}\n' "http://$SITE_DOMAIN/health"

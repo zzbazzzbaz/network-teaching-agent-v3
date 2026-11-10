@@ -1,0 +1,123 @@
+name: network-teaching-agent-v3
+
+x-log: &log
+  logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+
+services:
+  web:
+    <<: *log
+    image: "15688463267/network-teaching-agent-v3-web:${TAG}"
+    restart: unless-stopped
+    ports: ["127.0.0.1:8084:80"]
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  api:
+    <<: *log
+    image: "15688463267/network-teaching-agent-v3-api:${TAG}"
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      DB_URL: "postgresql+asyncpg://teaching:teaching@postgres:5432/teaching"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      QDRANT_URL: "http://qdrant:6333"
+      AGENT_BASE_URL: "http://agent:8001"
+      API_BASE_URL: "http://api:8000"
+      DATA_ROOT: "/data"
+      LANGFUSE_SERVICE_NAME: "network-agent-v3"
+    ports: ["127.0.0.1:8085:8000"]
+    mem_limit: 512m
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  agent:
+    <<: *log
+    image: "15688463267/network-teaching-agent-v3-agent:${TAG}"
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      QDRANT_URL: "http://qdrant:6333"
+      API_BASE_URL: "http://api:8000"
+      DATA_ROOT: "/data"
+      LANGFUSE_SERVICE_NAME: "network-agent-v3"
+    volumes:
+      - agent-data:/data
+    ports: ["127.0.0.1:8086:8001"]
+    mem_limit: 1024m
+    depends_on:
+      redis: { condition: service_healthy }
+      qdrant: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request as u; r=u.Request('http://127.0.0.1:8001/health', headers={'X-User-ID': 'healthcheck'}); u.urlopen(r)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  postgres:
+    <<: *log
+    image: postgres:17.11
+    restart: unless-stopped
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "max_connections=100"]
+    environment:
+      POSTGRES_DB: teaching
+      POSTGRES_USER: teaching
+      POSTGRES_PASSWORD: teaching
+    volumes: ["pg-data:/var/lib/postgresql/data"]
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teaching -d teaching"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    <<: *log
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "64mb", "--maxmemory-policy", "noeviction"]
+    volumes: ["redis-data:/data"]
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  qdrant:
+    <<: *log
+    image: qdrant/qdrant:v1.20.0
+    restart: unless-stopped
+    volumes: ["qdrant-data:/qdrant/storage"]
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg-data:
+  redis-data:
+  qdrant-data:
+  agent-data:
