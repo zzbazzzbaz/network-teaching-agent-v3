@@ -1,6 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Button, Segmented } from 'antd';
-import { ClipboardPaste, ImagePlus, MessageCircle } from 'lucide-react';
+import {
+  ClipboardPaste,
+  BookOpen,
+  ExternalLink,
+  ImagePlus,
+  ListChecks,
+  MessageCircle,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
@@ -16,7 +23,6 @@ import { MessageList } from '@/features/chat/MessageList';
 import { setOutbox, takeOutbox } from '@/features/chat/outbox';
 import { useChatSession } from '@/features/chat/use-chat-session';
 import { KnowledgePicker } from '@/features/knowledge';
-import { TextbookTree } from '@/features/textbook';
 import { AttachmentThumbs } from '@/features/upload/AttachmentThumbs';
 import { selectFiles } from '@/features/upload/file-rules';
 import { useUploads } from '@/features/upload/use-uploads';
@@ -227,12 +233,7 @@ export function ChatPage() {
             {sessionId && chat.loading ? (
               <PageLoading text="正在加载对话" />
             ) : chat.messages.length === 0 ? (
-              <EmptyChat
-                mode={startMode}
-                locked={Boolean(sessionId)}
-                onModeChange={setMode}
-                onPick={setDraft}
-              />
+              <EmptyChat mode={startMode} locked={Boolean(sessionId)} onModeChange={setMode} />
             ) : (
               <MessageList
                 messages={chat.messages}
@@ -279,10 +280,22 @@ export function ChatPage() {
   );
 }
 
-const COURSE_STARTERS = [
-  '用一句话解释 TCP 三次握手',
-  '子网掩码和 CIDR 怎么换算？',
-  'TCP 和 UDP 的主要区别是什么？',
+const COURSE_STEPS = [
+  {
+    icon: MessageCircle,
+    title: '直接提问',
+    description: '把概念、公式或卡住的地方直接发到输入框。',
+  },
+  {
+    icon: BookOpen,
+    title: '按节阅读',
+    description: '从「课程内容」打开教材目录，带着当前小节进入对话。',
+  },
+  {
+    icon: ListChecks,
+    title: '随堂检查',
+    description: '讲完一个知识点后，让老师出一道题确认理解。',
+  },
 ];
 
 const EXAM_STEPS = [
@@ -303,16 +316,38 @@ const EXAM_STEPS = [
   },
 ];
 
+function StepCards({ steps }: { steps: typeof COURSE_STEPS | typeof EXAM_STEPS }) {
+  return (
+    <div className="mt-6 grid gap-2.5 sm:grid-cols-3">
+      {steps.map((step, index) => {
+        const Icon = step.icon;
+        return (
+          <div key={step.title} className="rounded-card border border-line bg-surface p-4">
+            <div className="flex items-center justify-between">
+              <span className="flex size-8 items-center justify-center rounded-md bg-brand-soft text-brand">
+                <Icon className="size-4" aria-hidden="true" />
+              </span>
+              <span className="font-code text-[10px] text-ink-subtle">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+            </div>
+            <h3 className="mt-4 mb-0 text-[13.5px] font-medium text-ink">{step.title}</h3>
+            <p className="mt-1.5 mb-0 text-[12px] leading-5 text-ink-muted">{step.description}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function EmptyChat({
   mode,
   locked,
   onModeChange,
-  onPick,
 }: {
   mode: StudyMode;
   locked: boolean;
   onModeChange: (mode: StudyMode) => void;
-  onPick: (text: string) => void;
 }) {
   const courseMode = mode === 'teach_agent';
 
@@ -323,15 +358,10 @@ function EmptyChat({
           <div className="min-w-0">
             <p className="m-0 eyebrow">{courseMode ? 'COURSE MAP' : 'EXAM PRACTICE'}</p>
             <h2 className="mt-1.5 mb-0 text-[21px] leading-tight font-semibold tracking-[-0.012em] text-ink">
-              {courseMode ? '从章节开始学习' : '上传一道题开始讲评'}
+              {courseMode ? '直接开始学习' : '上传一道题开始讲评'}
             </h2>
-            <p className="mt-2 mb-0 max-w-[52ch] text-[13px] leading-6 text-ink-muted">
-              {courseMode
-                ? '选一个章节或小节，把目录里的范围直接带进对话；也可以跳过目录，在下方直接提问。'
-                : '把题目交给老师，先独立作答，再根据反馈继续追问；输入框同样支持直接输入题干。'}
-            </p>
           </div>
-          <div className="mt-1 shrink-0">
+          <div className="mt-1 flex shrink-0 flex-wrap items-center gap-2">
             {locked ? (
               <span className="rounded-chip bg-surface-sunken px-2.5 py-1 text-[12px] font-medium text-ink-muted">
                 {courseMode ? '课程学习' : '考研备考'}
@@ -343,54 +373,18 @@ function EmptyChat({
                 options={STUDY_MODES}
               />
             )}
+            <Button
+              href="/learn"
+              target="_blank"
+              rel="noopener noreferrer"
+              icon={<ExternalLink className="size-3.5" aria-hidden="true" />}
+            >
+              课程内容
+            </Button>
           </div>
         </header>
 
-        {courseMode ? (
-          <>
-            <div className="mt-6">
-              <TextbookTree onPick={onPick} />
-            </div>
-            <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-line pt-4">
-              <span className="eyebrow mr-1">STARTERS</span>
-              {COURSE_STARTERS.map((starter) => (
-                <button
-                  key={starter}
-                  type="button"
-                  onClick={() => onPick(starter)}
-                  className="rounded-full border border-line bg-surface px-3 py-1 text-[11.5px] text-ink-muted transition-colors hover:border-brand-line hover:text-ink"
-                >
-                  {starter}
-                </button>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="mt-6 grid gap-2.5 sm:grid-cols-3">
-            {EXAM_STEPS.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div
-                  key={step.title}
-                  className="rounded-card border border-line bg-surface p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="flex size-8 items-center justify-center rounded-md bg-brand-soft text-brand">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </span>
-                    <span className="font-code text-[10px] text-ink-subtle">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                  </div>
-                  <h3 className="mt-4 mb-0 text-[13.5px] font-medium text-ink">{step.title}</h3>
-                  <p className="mt-1.5 mb-0 text-[12px] leading-5 text-ink-muted">
-                    {step.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <StepCards steps={courseMode ? COURSE_STEPS : EXAM_STEPS} />
       </div>
     </div>
   );

@@ -661,9 +661,9 @@ export function AdminMaterialsPage() {
                 </Space>
               </div>
 
-              <label className="flex flex-col gap-1">
-                <span className="text-[11.5px] text-ink-muted">路径名（name，不含 .md）</span>
+              <div className="flex flex-col gap-1">
                 <Input
+                  aria-label="路径名"
                   value={name}
                   maxLength={255}
                   placeholder={
@@ -671,10 +671,7 @@ export function AdminMaterialsPage() {
                   }
                   onChange={(event) => setName(event.target.value)}
                 />
-                <span className="text-[10.5px] text-ink-subtle">
-                  显示标题由路径名自动生成；当前标题：{detail.title}
-                </span>
-              </label>
+              </div>
 
               {detail.kind === 'document' ? (
                 <div className="grid min-h-0 gap-3 xl:grid-cols-2">
@@ -740,8 +737,8 @@ export function AdminMaterialsPage() {
               value={kind}
               disabled={collectionMode === 'edit'}
               options={[
-                { value: 'textbook', label: '教材（课程学习）' },
-                { value: 'question_bank', label: '题库（考研备考）' },
+                { value: 'textbook', label: '课程学习' },
+                { value: 'question_bank', label: '考研备考' },
               ]}
               onChange={(value) => setKind(value)}
             />

@@ -246,7 +246,7 @@ test('登录后发送消息并收到流式回答，刷新后仍然可见', async
   await expect(page.getByText(REPLY_TEXT)).toBeVisible();
 });
 
-test('课程学习模式点击教材目录节点填入输入框', async ({ page }) => {
+test('课程学习模式不显示教材目录和 STARTERS', async ({ page }) => {
   await mockApi(page);
   await page.goto('/login');
 
@@ -254,11 +254,16 @@ test('课程学习模式点击教材目录节点填入输入框', async ({ page 
   await page.getByPlaceholder('输入密码…').fill('password123');
   await page.getByRole('button', { name: /登\s*录/ }).click();
 
+  await expect(page.getByRole('heading', { name: '直接开始学习' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: '输入问题' })).toBeVisible();
-  await page.getByText('第1章 概述', { exact: true }).click();
-  await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue(
-    '我想学习《计算机网络》「第1章 概述」。请先帮我梳理这一章的整体框架。',
-  );
+  await expect(page.getByText('第1章 概述', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('用一句话解释 TCP 三次握手')).toHaveCount(0);
+  await expect(page.getByText('直接提问')).toBeVisible();
+  await expect(page.getByText('按节阅读')).toBeVisible();
+  await expect(page.getByText('随堂检查')).toBeVisible();
+  const learnLink = page.getByRole('link', { name: /课程内容/ });
+  await expect(learnLink).toHaveAttribute('href', '/learn');
+  await expect(learnLink).toHaveAttribute('target', '_blank');
 
   await page.getByText('考研备考', { exact: true }).click();
   await expect(page.getByRole('heading', { name: '上传一道题开始讲评' })).toBeVisible();
@@ -277,7 +282,7 @@ test('通过链接参数预选模式和预填充提示词', async ({ page }) => 
   await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue('请讲解 TCP 拥塞控制');
 
   await page.goto('/chat?mode=course&prompt=课程问题');
-  await expect(page.getByRole('heading', { name: '从章节开始学习' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '直接开始学习' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue('课程问题');
 });
 
