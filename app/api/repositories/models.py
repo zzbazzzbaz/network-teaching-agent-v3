@@ -2,11 +2,18 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import Column, Index, Text, UniqueConstraint
+from sqlalchemy import Column, Index, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
-from app.shared.enums import AgentKind, FileStatus, QuestionType, UserRole, UserStatus
+from app.shared.enums import (
+    AgentKind,
+    FileStatus,
+    MaterialCollectionKind,
+    QuestionType,
+    UserRole,
+    UserStatus,
+)
 
 
 def _now() -> datetime:
@@ -44,7 +51,11 @@ class File(SQLModel, table=True):
     __tablename__ = "files"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    session_id: uuid.UUID = Field(foreign_key="sessions.id", index=True)
+    session_id: uuid.UUID | None = Field(
+        default=None,
+        foreign_key="sessions.id",
+        index=True,
+    )
     user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
     original_name: str = Field(max_length=255)
     content_type: str = Field(max_length=128)
@@ -59,11 +70,65 @@ class File(SQLModel, table=True):
         suffix = Path(self.original_name).suffix.lower()
         if len(suffix) > 10 or not suffix[1:].isalnum():
             suffix = ""
+        if self.session_id is None:
+            return f"materials/{self.id}{suffix}"
         return f"sessions/{self.session_id}/{self.id}{suffix}"
 
     @property
     def thumb_key(self) -> str:
         return f"{self.storage_key}.thumb.jpg"
+
+
+class MaterialCollection(SQLModel, table=True):
+    __tablename__ = "material_collections"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    slug: str = Field(max_length=128, unique=True, index=True)
+    title: str = Field(max_length=255)
+    kind: MaterialCollectionKind = Field(default=MaterialCollectionKind.TEXTBOOK)
+    description: str = Field(default="", max_length=1000)
+    sort_order: int = Field(default=0)
+    created_at: datetime = Field(default_factory=_now)
+    updated_at: datetime = Field(default_factory=_now)
+    deleted_at: datetime | None = Field(default=None)
+
+
+class MaterialNode(SQLModel, table=True):
+    __tablename__ = "material_nodes"
+    __table_args__ = (
+        Index(
+            "uq_material_nodes_parent_name_active",
+            "collection_id",
+            "parent_id",
+            "name",
+            unique=True,
+            postgresql_nulls_not_distinct=True,
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
+        Index(
+            "ix_material_nodes_collection_parent_sort",
+            "collection_id",
+            "parent_id",
+            "sort_order",
+        ),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    collection_id: uuid.UUID = Field(foreign_key="material_collections.id", index=True)
+    parent_id: uuid.UUID | None = Field(
+        default=None,
+        foreign_key="material_nodes.id",
+        index=True,
+    )
+    name: str = Field(max_length=255)
+    content: str | None = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True),
+    )
+    sort_order: int = Field(default=0)
+    created_at: datetime = Field(default_factory=_now)
+    updated_at: datetime = Field(default_factory=_now)
+    deleted_at: datetime | None = Field(default=None)
 
 
 class Question(SQLModel, table=True):

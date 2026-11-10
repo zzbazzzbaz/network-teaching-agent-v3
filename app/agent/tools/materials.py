@@ -1,9 +1,7 @@
-import asyncio
-import re
-from pathlib import Path
-from typing import Any
+import logging
+from typing import Any, Protocol
 
-from agentscope.message import TextBlock, ToolResultState
+from agentscope.message import DataBlock, TextBlock, ToolResultState, URLSource
 from agentscope.permission import (
     PermissionBehavior,
     PermissionContext,
@@ -16,19 +14,17 @@ from app.agent.tools.schemas.materials import (
     MaterialsLsInput,
     MaterialsReadInput,
 )
+from app.shared.config import get_settings
+from app.shared.errors import RemoteServiceError
 
-MATERIALS_ROOT = Path(__file__).resolve().parents[1] / "resource" / "materials"
-
-READABLE_SUFFIXES = {".md", ".txt", ".json", ".html"}
-SEARCHABLE_SUFFIXES = {".md", ".txt"}
-_FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.DOTALL)
+logger = logging.getLogger(__name__)
 
 _LS_DESCRIPTION = (
     "列出资料库中某个目录的内容, 类似 ls。目录名以 `/` 结尾; 路径不确定时先用它逐层确认, 再读文件。"
 )
 _READ_DESCRIPTION = (
     "按行读取资料库中的单个文本文件, 类似 cat, 会去掉文件顶部的 YAML frontmatter。"
-    "支持 .md/.txt/.json/.html, 只能读文件不能读目录; "
+    "只能读文件不能读目录; "
     "只读当前问题需要的一两节, 不要整章或整本加载。"
 )
 _GREP_DESCRIPTION = (
@@ -38,96 +34,36 @@ _GREP_DESCRIPTION = (
 )
 
 
-def materials_root() -> Path:
-    return MATERIALS_ROOT
+class MaterialsClient(Protocol):
+    async def list_material_children(self, user_id: str, path: str) -> dict: ...
 
+    async def read_material(
+        self,
+        user_id: str,
+        path: str,
+        offset: int,
+        limit: int,
+        include_images: bool,
+        max_images: int,
+    ) -> dict: ...
 
-def _resolve(root: Path, path: str) -> Path:
-    target = (root / (path or "/").lstrip("/")).resolve()
-    if target != root and not target.is_relative_to(root):
-        raise ValueError("路径越界")
-    return target
-
-
-def _read_text(path: Path) -> str:
-    text = path.read_text(encoding="utf-8", errors="replace")
-    return _FRONTMATTER.sub("", text, count=1).lstrip("\n")
-
-
-def _virtual(root: Path, path: Path) -> str:
-    return "/" + path.relative_to(root).as_posix()
-
-
-def _ls(root: Path, path: str) -> str:
-    target = _resolve(root, path)
-    if not target.exists():
-        raise ValueError(f"路径不存在: {path}; 用 materials_ls 从 `/` 开始逐层确认")
-    if not target.is_dir():
-        raise ValueError(f"不是目录: {path}; 读取文件请用 materials_read")
-    names = [
-        f"{child.name}/" if child.is_dir() else child.name
-        for child in sorted(
-            target.iterdir(),
-            key=lambda item: (item.is_file(), item.name),
-        )
-        if not child.name.startswith(".")
-    ]
-    return "\n".join(names)
-
-
-def _read(root: Path, path: str, offset: int, limit: int) -> str:
-    target = _resolve(root, path)
-    if not target.exists():
-        raise ValueError(f"文件不存在: {path}; 用 materials_ls 或 materials_grep 确认路径")
-    if not target.is_file():
-        raise ValueError(f"不是文件: {path}; 这是目录, 用 materials_ls 查看其内容")
-    if target.suffix.lower() not in READABLE_SUFFIXES:
-        raise ValueError(
-            f"不支持的文件类型: {target.suffix or '无后缀'}; "
-            "materials_read 仅支持 .md/.txt/.json/.html",
-        )
-    lines = _read_text(target).splitlines()
-    return "\n".join(lines[offset - 1 : offset - 1 + limit])
-
-
-def _grep(root: Path, path: str, query: str, limit: int) -> str:
-    target = _resolve(root, path)
-    if not target.exists():
-        raise ValueError(f"路径不存在: {path}; 用 materials_ls 确认搜索范围")
-    if target.is_file():
-        if target.suffix.lower() not in SEARCHABLE_SUFFIXES:
-            raise ValueError(
-                f"不支持的文件类型: {target.suffix or '无后缀'}; materials_grep 仅搜索 .md/.txt",
-            )
-        files = [target]
-    else:
-        files = [
-            item
-            for item in sorted(target.rglob("*"))
-            if item.is_file()
-            and not item.is_symlink()
-            and item.suffix.lower() in SEARCHABLE_SUFFIXES
-            and not any(part.startswith(".") for part in item.relative_to(root).parts)
-        ]
-
-    needle = query.casefold()
-    results: list[str] = []
-    for file in files:
-        for number, line in enumerate(_read_text(file).splitlines(), start=1):
-            if needle in line.casefold():
-                results.append(f"{_virtual(root, file)}:{number}: {line.strip()}")
-                if len(results) >= limit:
-                    return "\n".join(results)
-    return "\n".join(results) or "未找到"
+    async def search_materials(
+        self,
+        user_id: str,
+        query: str,
+        path: str,
+        limit: int,
+    ) -> dict: ...
 
 
 class _MaterialsTool(ToolBase):
     is_read_only: bool = True
     is_concurrency_safe: bool = True
 
-    def __init__(self, root: Path | None = None) -> None:
+    def __init__(self, client: MaterialsClient, user_id: str) -> None:
         super().__init__()
-        self._root = root.resolve() if root is not None else None
+        self._client = client
+        self._user_id = user_id
 
     async def check_permissions(
         self,
@@ -140,14 +76,17 @@ class _MaterialsTool(ToolBase):
             message="资料库只读",
         )
 
-    def _library(self) -> Path:
-        return self._root if self._root is not None else materials_root()
-
     def _error(self, message: str) -> ToolChunk:
         return ToolChunk(
             content=[TextBlock(text=message)],
             state=ToolResultState.ERROR,
         )
+
+    def _failure(self, exc: RemoteServiceError, *, missing: str) -> ToolChunk:
+        if exc.status_code == 404:
+            return self._error(missing)
+        logger.warning("资料库请求失败: status=%s detail=%s", exc.status_code, exc.detail)
+        return self._error("资料库读取失败")
 
 
 class MaterialsLs(_MaterialsTool):
@@ -158,12 +97,21 @@ class MaterialsLs(_MaterialsTool):
     async def call(self, **kwargs: Any) -> ToolChunk:
         data = MaterialsLsInput.model_validate(kwargs)
         try:
-            text = await asyncio.to_thread(_ls, self._library(), data.path)
-        except ValueError as exc:
-            return self._error(str(exc))
-        except OSError:
-            return self._error("资料库读取失败")
-        return ToolChunk(content=[TextBlock(text=text)])
+            payload = await self._client.list_material_children(self._user_id, data.path)
+        except RemoteServiceError as exc:
+            return self._failure(
+                exc,
+                missing=f"路径不存在: {data.path}; 用 materials_ls 从 `/` 开始逐层确认",
+            )
+        entries = [
+            (
+                f"{item['name']}/"
+                if item["kind"] == "folder"
+                else str(item["path"]).rsplit("/", 1)[-1]
+            )
+            for item in payload.get("items", [])
+        ]
+        return ToolChunk(content=[TextBlock(text="\n".join(entries) or "空目录")])
 
 
 class MaterialsRead(_MaterialsTool):
@@ -174,18 +122,38 @@ class MaterialsRead(_MaterialsTool):
     async def call(self, **kwargs: Any) -> ToolChunk:
         data = MaterialsReadInput.model_validate(kwargs)
         try:
-            text = await asyncio.to_thread(
-                _read,
-                self._library(),
+            payload = await self._client.read_material(
+                self._user_id,
                 data.path,
                 data.offset,
                 data.limit,
+                data.include_images,
+                data.max_images,
             )
-        except ValueError as exc:
-            return self._error(str(exc))
-        except OSError:
-            return self._error("资料库读取失败")
-        return ToolChunk(content=[TextBlock(text=text)])
+        except RemoteServiceError as exc:
+            return self._failure(
+                exc,
+                missing=f"文件不存在: {data.path}; 用 materials_ls 或 materials_grep 确认路径",
+            )
+        content: list[TextBlock | DataBlock] = [
+            TextBlock(text=payload.get("content", "") or "空文件")
+        ]
+        base = get_settings().api.base_url.rstrip("/")
+        for image in payload.get("images", []):
+            raw_path = image.get("raw_path", "")
+            content_type = image.get("content_type", "")
+            if not raw_path or not content_type:
+                continue
+            content.append(
+                DataBlock(
+                    source=URLSource(
+                        url=f"{base}{raw_path}",
+                        media_type=content_type,
+                    ),
+                    name=image.get("name", ""),
+                )
+            )
+        return ToolChunk(content=content)
 
 
 class MaterialsGrep(_MaterialsTool):
@@ -196,15 +164,19 @@ class MaterialsGrep(_MaterialsTool):
     async def call(self, **kwargs: Any) -> ToolChunk:
         data = MaterialsGrepInput.model_validate(kwargs)
         try:
-            text = await asyncio.to_thread(
-                _grep,
-                self._library(),
-                data.path,
+            payload = await self._client.search_materials(
+                self._user_id,
                 data.query,
+                data.path,
                 data.limit,
             )
-        except ValueError as exc:
-            return self._error(str(exc))
-        except OSError:
-            return self._error("资料库读取失败")
-        return ToolChunk(content=[TextBlock(text=text)])
+        except RemoteServiceError as exc:
+            return self._failure(
+                exc,
+                missing=f"路径不存在: {data.path}; 用 materials_ls 确认搜索范围",
+            )
+        lines = [
+            f"{item['path']}:{item['line']}: {item['text']}"
+            for item in payload.get("items", [])
+        ]
+        return ToolChunk(content=[TextBlock(text="\n".join(lines) or "未找到")])

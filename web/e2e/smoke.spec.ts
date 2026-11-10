@@ -74,6 +74,62 @@ const assistantMessage = {
   finished_at: null,
 };
 
+const MATERIAL_COLLECTION = {
+  id: 'mat-book',
+  slug: 'computer-networks-8e',
+  title: '计算机网络',
+  kind: 'textbook',
+  description: '教材原文',
+  sort_order: 0,
+};
+
+const MATERIAL_CHAPTER = {
+  id: 'chapter-1',
+  parent_id: null,
+  kind: 'folder',
+  name: '01-概述',
+  title: '第1章 概述',
+  path: '/computer-networks-8e/01-概述',
+  sort_order: 0,
+  children: [
+    {
+      id: 'doc-1',
+      parent_id: 'chapter-1',
+      kind: 'document',
+      name: '1.1-计算机网络在信息时代中的作用',
+      title: '1.1 计算机网络在信息时代中的作用',
+      path: '/computer-networks-8e/01-概述/1.1-计算机网络在信息时代中的作用.md',
+      sort_order: 0,
+      children: [],
+    },
+  ],
+};
+
+const MATERIAL_TREE = {
+  items: [{ ...MATERIAL_COLLECTION, children: [MATERIAL_CHAPTER] }],
+};
+
+const MATERIAL_NODE = {
+  id: 'doc-1',
+  collection_id: 'mat-book',
+  parent_id: 'chapter-1',
+  kind: 'document',
+  name: '1.1-计算机网络在信息时代中的作用',
+  title: '1.1 计算机网络在信息时代中的作用',
+  path: '/computer-networks-8e/01-概述/1.1-计算机网络在信息时代中的作用.md',
+  sort_order: 0,
+  content: '# 1.1 计算机网络在信息时代中的作用\n\n正文内容。',
+  collection: MATERIAL_COLLECTION,
+  breadcrumbs: [
+    { id: 'mat-book', title: '计算机网络', kind: 'collection' },
+    { id: 'chapter-1', title: '第1章 概述', kind: 'folder' },
+  ],
+  prev: null,
+  next: null,
+  images: [],
+  updated_at: '2026-11-06T10:00:00.000Z',
+};
+
 async function mockApi(page: Page) {
   let replied = false;
   let streamCalls = 0;
@@ -144,6 +200,12 @@ async function mockApi(page: Page) {
       if (path === `/api/sessions/${SESSION_ID}/status`) {
         return fulfill(200, { session_id: SESSION_ID, status: 'idle' });
       }
+      if (path === '/api/materials/tree') {
+        return fulfill(200, MATERIAL_TREE);
+      }
+      if (path === `/api/materials/nodes/${MATERIAL_NODE.id}`) {
+        return fulfill(200, MATERIAL_NODE);
+      }
       if (path === `/api/sessions/${SESSION_ID}/stream`) {
         streamCalls += 1;
         if (streamCalls === 1) {
@@ -212,13 +274,32 @@ test('通过链接参数预选模式和预填充提示词', async ({ page }) => 
 
   await page.goto('/chat?mode=exam&prompt=请讲解 TCP 拥塞控制');
   await expect(page.getByRole('heading', { name: '上传一道题开始讲评' })).toBeVisible();
-  await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue(
-    '请讲解 TCP 拥塞控制',
-  );
+  await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue('请讲解 TCP 拥塞控制');
 
   await page.goto('/chat?mode=course&prompt=课程问题');
   await expect(page.getByRole('heading', { name: '从章节开始学习' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue('课程问题');
+});
+
+test('阅读页展示正文，点击问 AI 预填当前小节', async ({ page }) => {
+  await mockApi(page);
+  await page.goto('/login');
+
+  await page.getByPlaceholder('学号或用户名').fill('student');
+  await page.getByPlaceholder('输入密码…').fill('password123');
+  await page.getByRole('button', { name: /登\s*录/ }).click();
+
+  await page.goto('/learn/doc-1');
+  await expect(
+    page.getByRole('heading', { name: '1.1 计算机网络在信息时代中的作用' }).first(),
+  ).toBeVisible();
+  await expect(page.getByText('正文内容。')).toBeVisible();
+
+  await page.getByRole('button', { name: '问 AI 这一节' }).click();
+  await expect(page).toHaveURL(/\/chat\?mode=course&prompt=/);
+  await expect(page.getByRole('textbox', { name: '输入问题' })).toHaveValue(
+    /资料路径：\/computer-networks-8e\/01-概述\/1\.1-计算机网络在信息时代中的作用\.md/,
+  );
 });
 
 test('未登录访问业务路由会跳转到登录页并带上 next', async ({ page }) => {

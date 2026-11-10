@@ -6,6 +6,7 @@ import { useIsMobile } from '@/lib/use-media-query';
 import { useUiStore } from '@/stores/ui-store';
 
 const PAGE_TITLES: Record<string, string> = {
+  '/learn': '课程内容',
   '/memory': '记忆',
   '/knowledge': '知识库',
   '/questions': '答题记录',
@@ -27,6 +28,12 @@ function resolveTitle(pathname: string): string {
   }
   if (pathname === '/admin/knowledge') {
     return '公共知识库';
+  }
+  if (pathname === '/admin/materials') {
+    return '教材内容';
+  }
+  if (pathname.startsWith('/learn/')) {
+    return '在线阅读';
   }
   if (pathname.startsWith('/questions/')) {
     return '答题详情';

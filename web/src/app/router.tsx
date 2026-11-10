@@ -68,6 +68,20 @@ const AdminKnowledgePage = lazy(() =>
   })),
 );
 
+const AdminMaterialsPage = lazy(() =>
+  import('@/pages/admin/AdminMaterialsPage').then((module) => ({
+    default: module.AdminMaterialsPage,
+  })),
+);
+
+const LearnIndexPage = lazy(() =>
+  import('@/pages/learn').then((module) => ({ default: module.LearnIndexPage })),
+);
+
+const LearnPage = lazy(() =>
+  import('@/pages/learn').then((module) => ({ default: module.LearnPage })),
+);
+
 export const router = createBrowserRouter([
   {
     path: '/login',
@@ -116,6 +130,16 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundary />,
       },
       {
+        path: 'learn',
+        element: <LearnIndexPage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: 'learn/:nodeId',
+        element: <LearnPage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
         path: 'questions',
         element: <QuestionsPage />,
         errorElement: <RouteErrorBoundary />,
@@ -161,6 +185,11 @@ export const router = createBrowserRouter([
           {
             path: 'knowledge',
             element: <AdminKnowledgePage />,
+            errorElement: <RouteErrorBoundary />,
+          },
+          {
+            path: 'materials',
+            element: <AdminMaterialsPage />,
             errorElement: <RouteErrorBoundary />,
           },
         ],

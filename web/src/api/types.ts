@@ -5,6 +5,8 @@ export type QuestionType = 'single_choice' | 'short_answer';
 export type UserRole = 'student' | 'admin';
 export type FileStatus = 'pending' | 'ready';
 export type SessionStatus = 'running' | 'idle' | 'awaiting_permission' | 'awaiting_external_result';
+export type MaterialCollectionKind = 'textbook' | 'question_bank';
+export type MaterialNodeKind = 'folder' | 'document';
 
 export interface AuthResponse {
   access_token: string;
@@ -32,12 +34,7 @@ export interface SessionItem {
 
 export type KnowledgeVisibility = 'private' | 'public';
 export type KnowledgeDocumentStatus =
-  | 'pending'
-  | 'parsing'
-  | 'chunking'
-  | 'indexing'
-  | 'ready'
-  | 'error';
+  'pending' | 'parsing' | 'chunking' | 'indexing' | 'ready' | 'error';
 
 export interface KnowledgeStatusCounts {
   pending: number;
@@ -219,7 +216,7 @@ export interface FileItem {
 }
 
 export interface FileDetail extends FileItem {
-  session_id: string;
+  session_id: string | null;
   status: FileStatus;
   download_url: string;
 }
@@ -327,4 +324,97 @@ export interface AdminUserRankingItem {
 
 export interface AdminUserRankingResponse {
   items: AdminUserRankingItem[];
+}
+
+export interface MaterialCollectionItem {
+  id: string;
+  slug: string;
+  title: string;
+  kind: MaterialCollectionKind;
+  description: string;
+  sort_order: number;
+}
+
+export interface MaterialNodeSummary {
+  id: string;
+  parent_id: string | null;
+  kind: MaterialNodeKind;
+  name: string;
+  title: string;
+  path: string;
+  sort_order: number;
+  children: MaterialNodeSummary[];
+}
+
+export interface MaterialCollectionTree extends MaterialCollectionItem {
+  children: MaterialNodeSummary[];
+}
+
+export interface MaterialTreeResponse {
+  items: MaterialCollectionTree[];
+}
+
+export interface MaterialCollectionListResponse {
+  items: MaterialCollectionItem[];
+}
+
+export interface MaterialNodeRef {
+  id: string;
+  title: string;
+  path: string;
+}
+
+export interface MaterialBreadcrumb {
+  id: string;
+  title: string;
+  kind: 'collection' | 'folder';
+}
+
+export interface MaterialImageAsset {
+  file_id: string;
+  name: string;
+  content_type: string;
+  raw_path: string;
+}
+
+export interface MaterialNodeDetail {
+  id: string;
+  collection_id: string;
+  parent_id: string | null;
+  kind: MaterialNodeKind;
+  name: string;
+  title: string;
+  path: string;
+  sort_order: number;
+  content: string | null;
+  collection: MaterialCollectionItem;
+  breadcrumbs: MaterialBreadcrumb[];
+  prev: MaterialNodeRef | null;
+  next: MaterialNodeRef | null;
+  images: MaterialImageAsset[];
+  updated_at: string;
+}
+
+export interface MaterialSearchItem {
+  id: string;
+  title: string;
+  path: string;
+  snippet: string;
+}
+
+export interface MaterialSearchResponse {
+  items: MaterialSearchItem[];
+}
+
+export interface MaterialAssetUploadUrlResponse {
+  file_id: string;
+  upload_url: string;
+  headers: Record<string, string>;
+  expires_in: number;
+}
+
+export interface MaterialAssetCompleteResponse {
+  file_id: string;
+  raw_path: string;
+  markdown: string;
 }

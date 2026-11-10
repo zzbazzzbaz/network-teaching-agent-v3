@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Sequence
 
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +17,16 @@ async def create(session: AsyncSession, file: File) -> File:
 
 async def get_by_id(session: AsyncSession, file_id: uuid.UUID) -> File | None:
     return await session.get(File, file_id)
+
+
+async def get_by_ids(
+    session: AsyncSession,
+    file_ids: Sequence[uuid.UUID],
+) -> list[File]:
+    if not file_ids:
+        return []
+    statement = select(File).where(col(File.id).in_(list(file_ids)))
+    return list((await session.execute(statement)).scalars().all())
 
 
 async def session_owned_by(

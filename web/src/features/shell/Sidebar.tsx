@@ -4,6 +4,7 @@ import {
   ChevronsUpDown,
   Database,
   KeyRound,
+  Library,
   LineChart,
   ListChecks,
   LogOut,
@@ -23,6 +24,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useSessions } from './use-sessions';
 
 const ACCOUNT_ITEMS = [
+  { key: 'learn', label: '课程内容', icon: Library, path: '/learn' },
   { key: 'memory', label: '记忆', icon: BookOpen, path: '/memory' },
   { key: 'knowledge', label: '知识库', icon: Database, path: '/knowledge' },
   { key: 'questions', label: '答题记录', icon: ListChecks, path: '/questions' },

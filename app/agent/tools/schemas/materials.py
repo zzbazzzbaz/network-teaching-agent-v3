@@ -34,6 +34,18 @@ class MaterialsReadInput(BaseModel):
             "返回行数正好等于 limit 时可能还有后续, 用更大的 offset 继续读。"
         ),
     )
+    include_images: bool = Field(
+        default=True,
+        description=(
+            "是否同时返回本段正文引用的图片, 默认 true; 纯文字阅读可设为 false 节省上下文。"
+        ),
+    )
+    max_images: int = Field(
+        default=6,
+        ge=0,
+        le=20,
+        description="本次最多返回的图片数量, 取值 0-20, 默认 6。",
+    )
 
 
 class MaterialsGrepInput(BaseModel):

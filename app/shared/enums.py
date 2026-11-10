@@ -25,3 +25,8 @@ class QuestionType(StrEnum):
 class FileStatus(StrEnum):
     PENDING = "pending"
     READY = "ready"
+
+
+class MaterialCollectionKind(StrEnum):
+    TEXTBOOK = "textbook"
+    QUESTION_BANK = "question_bank"

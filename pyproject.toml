@@ -44,6 +44,9 @@ target-version = "py314"
 line-length = 100
 exclude = ["docs"]
 
+[tool.ruff.lint.per-file-ignores]
+"scripts/import_materials.py" = ["ASYNC240", "RUF001"]
+
 [tool.ruff.lint]
 select = [
     "E",

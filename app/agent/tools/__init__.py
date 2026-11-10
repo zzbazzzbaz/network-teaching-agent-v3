@@ -1,12 +1,7 @@
 from agentscope.tool import ToolBase
 
 from app.agent.tools.client import get_client
-from app.agent.tools.materials import (
-    MaterialsGrep,
-    MaterialsLs,
-    MaterialsRead,
-    materials_root,
-)
+from app.agent.tools.materials import MaterialsGrep, MaterialsLs, MaterialsRead
 from app.agent.tools.quiz_student import QuizStudent
 
 
@@ -16,14 +11,14 @@ async def agent_tools(
     session_id: str,
 ) -> list[ToolBase]:
     del agent_id
-    root = materials_root()
+    client = get_client()
     return [
         QuizStudent(
-            client=get_client(),
+            client=client,
             user_id=user_id,
             session_id=session_id,
         ),
-        MaterialsLs(root=root),
-        MaterialsRead(root=root),
-        MaterialsGrep(root=root),
+        MaterialsLs(client=client, user_id=user_id),
+        MaterialsRead(client=client, user_id=user_id),
+        MaterialsGrep(client=client, user_id=user_id),
     ]

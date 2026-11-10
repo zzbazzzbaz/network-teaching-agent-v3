@@ -1,9 +1,10 @@
-from pathlib import Path
+import uuid
 
 import pytest
-from agentscope.message import TextBlock, ToolResultState
+from agentscope.message import DataBlock, TextBlock, ToolResultState
 
 from app.agent.tools.materials import MaterialsGrep, MaterialsLs, MaterialsRead
+from app.shared.errors import RemoteServiceError
 
 
 def _text(chunk) -> str:
@@ -12,146 +13,150 @@ def _text(chunk) -> str:
     )
 
 
-@pytest.fixture
-def materials_root(tmp_path: Path) -> Path:
-    root = tmp_path / "materials"
-    book = root / "test-book"
-    chapter = book / "01-章"
-    chapter.mkdir(parents=True)
-    (book / "00-toc.md").write_text(
-        "# 目录\n\n- 1.1 小节标题(教材 10)\n",
-        encoding="utf-8",
-    )
-    (chapter / "1.1-小节.md").write_text(
-        "---\n"
-        'section: "1.1"\n'
-        'title: "小节标题"\n'
-        "book_pages: [10, 12]\n"
-        "---\n"
-        "\n"
-        "# 1.1 小节标题\n"
-        "\n"
-        "第一段包含 TCP 拥塞控制。\n"
-        "\n"
-        "第二段。\n",
-        encoding="utf-8",
-    )
-    (chapter / "many.md").write_text(
-        "第一行\n第二行\n第三行\n第四行\n",
-        encoding="utf-8",
-    )
-    hidden = book / ".hidden"
-    hidden.mkdir()
-    (hidden / "secret.md").write_text("隐藏内容\n", encoding="utf-8")
-    (book / "image.png").write_bytes(b"\x89PNG\r\n")
-    secret = tmp_path / "secret.md"
-    secret.write_text("不应读取\n", encoding="utf-8")
-    (chapter / "escape.md").symlink_to(secret)
-    return root
+class FakeMaterialsClient:
+    def __init__(self) -> None:
+        self.ls = {
+            "path": "/",
+            "items": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "kind": "folder",
+                    "name": "computer-networks-8e",
+                    "path": "/computer-networks-8e",
+                },
+                {
+                    "id": str(uuid.uuid4()),
+                    "kind": "document",
+                    "name": "step-demo.html",
+                    "path": "/.templates/step-demo.html",
+                },
+            ],
+        }
+        self.read = {
+            "id": str(uuid.uuid4()),
+            "collection_id": str(uuid.uuid4()),
+            "title": "1.1 小节",
+            "path": "/test-book/01-章/1.1-小节.md",
+            "content": "第一段\n第二段",
+            "images": [
+                {
+                    "file_id": str(uuid.uuid4()),
+                    "name": "fig-01.jpg",
+                    "content_type": "image/jpeg",
+                    "raw_path": "/api/files/abc/raw?token=xyz",
+                }
+            ],
+        }
+        self.search = {
+            "items": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "path": "/test-book/01-章/1.1-小节.md",
+                    "line": 2,
+                    "text": "第二段",
+                }
+            ]
+        }
+        self.error: RemoteServiceError | None = None
+        self.captured: dict = {}
+
+    async def list_material_children(self, user_id: str, path: str) -> dict:
+        del user_id, path
+        if self.error:
+            raise self.error
+        return self.ls
+
+    async def read_material(
+        self,
+        user_id: str,
+        path: str,
+        offset: int,
+        limit: int,
+        include_images: bool,
+        max_images: int,
+    ) -> dict:
+        self.captured.update(
+            user_id=user_id,
+            path=path,
+            offset=offset,
+            limit=limit,
+            include_images=include_images,
+            max_images=max_images,
+        )
+        if self.error:
+            raise self.error
+        return self.read
+
+    async def search_materials(
+        self,
+        user_id: str,
+        query: str,
+        path: str,
+        limit: int,
+    ) -> dict:
+        del user_id, query, path, limit
+        if self.error:
+            raise self.error
+        return self.search
 
 
 @pytest.mark.asyncio
-async def test_ls(materials_root: Path) -> None:
-    tool = MaterialsLs(root=materials_root)
-
-    root_text = _text(await tool.call(path="/"))
-    assert "test-book/" in root_text
-    assert ".hidden" not in root_text
-
-    book_text = _text(await tool.call(path="/test-book"))
-    assert "00-toc.md" in book_text
-    assert "01-章/" in book_text
-    assert "image.png" in book_text
-
-    chapter_text = _text(await tool.call(path="/test-book/01-章"))
-    assert "1.1-小节.md" in chapter_text
-    assert "many.md" in chapter_text
-
-
-@pytest.mark.asyncio
-async def test_read_strips_frontmatter(materials_root: Path) -> None:
-    tool = MaterialsRead(root=materials_root)
-    text = _text(await tool.call(path="/test-book/01-章/1.1-小节.md"))
-
-    assert "section:" not in text
-    assert "book_pages" not in text
-    assert "# 1.1 小节标题" in text
-    assert "TCP 拥塞控制" in text
-
-
-@pytest.mark.asyncio
-async def test_read_offset_and_limit(materials_root: Path) -> None:
-    tool = MaterialsRead(root=materials_root)
-    text = _text(
-        await tool.call(path="/test-book/01-章/many.md", offset=2, limit=2),
-    )
-
-    assert text == "第二行\n第三行"
-
-
-@pytest.mark.asyncio
-async def test_read_html_template(materials_root: Path) -> None:
-    template = materials_root / ".templates" / "step-demo.html"
-    template.parent.mkdir()
-    template.write_text("<div>模板</div>\n", encoding="utf-8")
-
-    tool = MaterialsRead(root=materials_root)
-    assert (
-        _text(await tool.call(path="/.templates/step-demo.html"))
-        == "<div>模板</div>"
+async def test_ls_keeps_folder_suffix() -> None:
+    tool = MaterialsLs(client=FakeMaterialsClient(), user_id="user-1")
+    assert _text(await tool.call(path="/")) == (
+        "computer-networks-8e/\nstep-demo.html"
     )
 
 
 @pytest.mark.asyncio
-async def test_path_safety(materials_root: Path, tmp_path: Path) -> None:
-    tool = MaterialsRead(root=materials_root)
+async def test_read_returns_text_and_images() -> None:
+    tool = MaterialsRead(client=FakeMaterialsClient(), user_id="user-1")
+    chunk = await tool.call(path="/test-book/01-章/1.1-小节.md")
 
-    assert (await tool.call(path="../secret.md")).state == ToolResultState.ERROR
-    assert (await tool.call(path="/../secret.md")).state == ToolResultState.ERROR
-    assert (
-        await tool.call(path=str(tmp_path / "secret.md"))
-    ).state == ToolResultState.ERROR
-    assert (
-        await tool.call(path="/test-book/01-章/escape.md")
-    ).state == ToolResultState.ERROR
-    assert (await tool.call(path="/test-book/image.png")).state == ToolResultState.ERROR
-    assert (await tool.call(path="/test-book/01-章")).state == ToolResultState.ERROR
+    assert _text(chunk) == "第一段\n第二段"
+    images = [block for block in chunk.content if isinstance(block, DataBlock)]
+    assert len(images) == 1
+    assert images[0].name == "fig-01.jpg"
+    assert str(getattr(images[0].source, "url", "")).endswith(
+        "/api/files/abc/raw?token=xyz"
+    )
 
 
 @pytest.mark.asyncio
-async def test_grep(materials_root: Path) -> None:
-    tool = MaterialsGrep(root=materials_root)
+async def test_read_passes_image_options() -> None:
+    client = FakeMaterialsClient()
+    tool = MaterialsRead(client=client, user_id="user-1")
+    await tool.call(path="/x.md", offset=2, limit=10, include_images=False, max_images=3)
 
-    text = _text(await tool.call(query="tcp"))
-    assert "/test-book/01-章/1.1-小节.md:3: 第一段包含 TCP 拥塞控制。" in text
-
-    scoped = _text(
-        await tool.call(query="第二段", path="/test-book/01-章"),
-    )
-    assert "/test-book/01-章/1.1-小节.md:5: 第二段。" in scoped
-
-    limited = _text(
-        await tool.call(query="行", path="/test-book/01-章/many.md", limit=2),
-    )
-    assert len(limited.splitlines()) == 2
-
-    direct = _text(
-        await tool.call(query="第三行", path="/test-book/01-章/many.md"),
-    )
-    assert "/test-book/01-章/many.md:3: 第三行" in direct
-
-    assert "未找到" in _text(await tool.call(query="隐藏内容"))
-    assert "未找到" in _text(await tool.call(query="不应读取"))
+    assert client.captured == {
+        "user_id": "user-1",
+        "path": "/x.md",
+        "offset": 2,
+        "limit": 10,
+        "include_images": False,
+        "max_images": 3,
+    }
 
 
 @pytest.mark.asyncio
-async def test_missing_paths(materials_root: Path) -> None:
-    assert (
-        await MaterialsLs(root=materials_root).call(path="/missing")
-    ).state == ToolResultState.ERROR
-    assert (
-        await MaterialsRead(root=materials_root).call(path="/missing.md")
-    ).state == ToolResultState.ERROR
-    assert (
-        await MaterialsGrep(root=materials_root).call(query="x", path="/missing")
-    ).state == ToolResultState.ERROR
+async def test_grep_formats_matches() -> None:
+    tool = MaterialsGrep(client=FakeMaterialsClient(), user_id="user-1")
+    text = _text(await tool.call(query="第二段"))
+    assert text == "/test-book/01-章/1.1-小节.md:2: 第二段"
+
+
+@pytest.mark.asyncio
+async def test_grep_empty_returns_not_found() -> None:
+    client = FakeMaterialsClient()
+    client.search = {"items": []}
+    tool = MaterialsGrep(client=client, user_id="user-1")
+    assert _text(await tool.call(query="不存在")) == "未找到"
+
+
+@pytest.mark.asyncio
+async def test_missing_path_is_error() -> None:
+    client = FakeMaterialsClient()
+    client.error = RemoteServiceError(404, "资源不存在")
+    chunk = await MaterialsRead(client=client, user_id="user-1").call(path="/missing.md")
+    assert chunk.state == ToolResultState.ERROR
+    assert "/missing.md" in _text(chunk)

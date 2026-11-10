@@ -67,3 +67,15 @@ async def delete_object(key: str) -> None:
                 raise
 
     await asyncio.to_thread(_delete)
+
+
+async def put_object(key: str, content: bytes, content_type: str) -> None:
+    def _put() -> None:
+        _client.put_object(
+            Bucket=_settings.bucket,
+            Key=key,
+            Body=content,
+            ContentType=content_type,
+        )
+
+    await asyncio.to_thread(_put)

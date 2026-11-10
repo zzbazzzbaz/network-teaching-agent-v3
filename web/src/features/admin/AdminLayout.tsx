@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { label: '概览', value: '/admin' },
   { label: '学生管理', value: '/admin/users' },
   { label: '公共知识库', value: '/admin/knowledge' },
+  { label: '教材内容', value: '/admin/materials' },
 ];
 
 function activeNav(pathname: string): string {
@@ -13,6 +14,9 @@ function activeNav(pathname: string): string {
   }
   if (pathname.startsWith('/admin/knowledge')) {
     return '/admin/knowledge';
+  }
+  if (pathname.startsWith('/admin/materials')) {
+    return '/admin/materials';
   }
   return '/admin';
 }

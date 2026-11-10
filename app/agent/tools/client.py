@@ -7,6 +7,9 @@ from app.shared.http import InternalHttpClient
 
 ANSWER_WRITE_PATH = "/api/internal/questions/answers"
 USAGE_REPLY_WRITE_PATH = "/api/internal/usage/replies"
+MATERIALS_LS_PATH = "/api/internal/materials/ls"
+MATERIALS_READ_PATH = "/api/internal/materials/read"
+MATERIALS_SEARCH_PATH = "/api/internal/materials/search"
 
 
 class InternalApiClient:
@@ -45,6 +48,53 @@ class InternalApiClient:
             timeout=5.0,
         )
         return bool(response.json())
+
+    async def list_material_children(self, user_id: str, path: str) -> dict:
+        response = await self._http.request(
+            "GET",
+            MATERIALS_LS_PATH,
+            user_id=user_id,
+            params={"path": path},
+        )
+        return response.json()
+
+    async def read_material(
+        self,
+        user_id: str,
+        path: str,
+        offset: int,
+        limit: int,
+        include_images: bool,
+        max_images: int,
+    ) -> dict:
+        response = await self._http.request(
+            "GET",
+            MATERIALS_READ_PATH,
+            user_id=user_id,
+            params={
+                "path": path,
+                "offset": offset,
+                "limit": limit,
+                "include_images": include_images,
+                "max_images": max_images,
+            },
+        )
+        return response.json()
+
+    async def search_materials(
+        self,
+        user_id: str,
+        query: str,
+        path: str,
+        limit: int,
+    ) -> dict:
+        response = await self._http.request(
+            "GET",
+            MATERIALS_SEARCH_PATH,
+            user_id=user_id,
+            params={"q": query, "path": path, "limit": limit},
+        )
+        return response.json()
 
 
 _client: InternalApiClient | None = None

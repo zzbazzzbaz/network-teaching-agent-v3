@@ -40,7 +40,7 @@ class FileDetail(BaseModel):
     thumb_url: str | None
     preview_url: str
     created_at: AwareDatetime
-    session_id: uuid.UUID
+    session_id: uuid.UUID | None
     status: FileStatus
     download_url: str
 

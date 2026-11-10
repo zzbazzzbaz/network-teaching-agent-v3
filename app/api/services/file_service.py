@@ -35,6 +35,8 @@ _ALLOWED_SUFFIXES = {
     ".zip",
 }
 
+_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
+
 
 class FileError(Exception):
     pass
@@ -122,6 +124,10 @@ async def request_upload(
 
 async def complete_upload(session: AsyncSession, *, user_id: uuid.UUID, file_id: uuid.UUID) -> File:
     file = await _get_owned(session, file_id=file_id, user_id=user_id)
+    return await _finalize_upload(session, file)
+
+
+async def _finalize_upload(session: AsyncSession, file: File) -> File:
     if file.status is FileStatus.READY:
         return file
     size = await cos.object_size(file.storage_key)
@@ -144,6 +150,52 @@ async def complete_upload(session: AsyncSession, *, user_id: uuid.UUID, file_id:
     await session.flush()
     logger.info("upload completed: file_id=%s size=%s", file.id, size)
     return file
+
+
+async def request_material_upload(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    filename: str,
+    size_bytes: int,
+) -> UploadTicket:
+    if size_bytes <= 0 or size_bytes > get_settings().storage.max_upload_bytes:
+        raise FileTooLargeError
+    name = _clean_name(filename)
+    suffix = Path(name).suffix.lower()
+    if suffix not in _IMAGE_SUFFIXES:
+        raise UnsupportedFileTypeError
+    content_type = mimetypes.guess_type(name)[0] or "application/octet-stream"
+    if not content_type.startswith("image/"):
+        raise UnsupportedFileTypeError
+    file = File(
+        session_id=None,
+        user_id=user_id,
+        original_name=name,
+        content_type=content_type,
+        size_bytes=size_bytes,
+    )
+    await file_repositories.create(session, file)
+    logger.info("material upload requested: file_id=%s user_id=%s", file.id, user_id)
+    return UploadTicket(
+        file_id=file.id,
+        upload_url=cos.upload_url(file.storage_key, content_type),
+        thumb_upload_url=None,
+        headers={"Content-Type": content_type},
+        expires_in=get_settings().cos.upload_expires,
+    )
+
+
+async def complete_material_upload(
+    session: AsyncSession,
+    *,
+    user_id: uuid.UUID,
+    file_id: uuid.UUID,
+) -> File:
+    file = await _get_owned(session, file_id=file_id, user_id=user_id)
+    if file.session_id is not None:
+        raise AttachmentNotFoundError
+    return await _finalize_upload(session, file)
 
 
 async def list_files(
@@ -198,9 +250,13 @@ def verify_raw_token(file_id: uuid.UUID, token: str) -> bool:
     return hmac.compare_digest(raw_token(file_id), token)
 
 
+def raw_path(file: File) -> str:
+    return f"/api/files/{file.id}/raw?token={raw_token(file.id)}"
+
+
 def raw_url(file: File) -> str:
     base = get_settings().api.base_url.rstrip("/")
-    return f"{base}/api/files/{file.id}/raw?token={raw_token(file.id)}"
+    return f"{base}{raw_path(file)}"
 
 
 def preview_url(file: File) -> str:
@@ -216,3 +272,8 @@ def thumb_url(file: File) -> str | None:
         return None
     name = f"{Path(file.original_name).stem}.jpg"
     return cos.download_url(file.thumb_key, name, "image/jpeg", inline=True)
+
+
+def material_markdown(file: File) -> str:
+    name = file.original_name.replace("]", "\\]")
+    return f"![{name}]({raw_path(file)})"
