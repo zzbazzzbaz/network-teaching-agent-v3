@@ -681,14 +681,14 @@ export function AdminMaterialsPage() {
                       ref={textareaRef}
                       value={content}
                       onChange={(event) => setContent(event.target.value)}
-                      autoSize={{ minRows: 20, maxRows: 32 }}
+                      autoSize={{ minRows: 20 }}
                       spellCheck={false}
                       className="font-code text-[12.5px] leading-6"
                     />
                   </div>
                   <div className="min-h-0">
                     <span className="text-[11.5px] text-ink-muted">预览</span>
-                    <div className="mt-1 max-h-[720px] overflow-y-auto rounded-card border border-line bg-surface px-4 py-3">
+                    <div className="mt-1 rounded-card border border-line bg-surface px-4 py-3">
                       <Markdown content={content} imageMaxWidth={520} />
                     </div>
                   </div>

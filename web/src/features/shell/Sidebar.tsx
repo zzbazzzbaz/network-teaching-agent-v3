@@ -206,16 +206,20 @@ export function Sidebar({
                           >
                             {session.title || '未命名对话'}
                           </span>
-                          <span className="mt-0.5 flex items-center gap-1.5">
-                            <span className="font-code text-[9.5px] text-ink-subtle">
-                              {formatSessionTime(session.last_message_at ?? session.created_at)}
-                            </span>
-                            {session.agent_kind === 'exam_agent' ? (
+                          <span
+                            className={`pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 font-code text-[9.5px] text-ink-subtle transition-opacity group-hover:opacity-0 group-focus-within:opacity-0 ${
+                              active ? 'opacity-0' : ''
+                            }`}
+                          >
+                            {formatSessionTime(session.last_message_at ?? session.created_at)}
+                          </span>
+                          {session.agent_kind === 'exam_agent' ? (
+                            <span className="mt-0.5 flex items-center gap-1.5">
                               <span className="rounded-[3px] bg-brand-soft px-1 py-px text-[9px] leading-[14px] font-medium text-brand">
                                 考研
                               </span>
-                            ) : null}
-                          </span>
+                            </span>
+                          ) : null}
                         </button>
 
                         <Dropdown
