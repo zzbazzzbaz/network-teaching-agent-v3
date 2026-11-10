@@ -1,16 +1,20 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
-from typing import IO, Any
+from typing import IO
 
 from agentscope.app.rag.blob_store import AsyncReadable, BlobStoreBase
-from qcloud_cos import CosConfig, CosS3Client, CosServiceError
 
 from app.shared import storage_keys
+from app.shared.cos_client import (
+    build_client,
+    delete_object,
+    head_object,
+    open_object,
+)
 
 _SCHEME = "cos://"
 _PART_SIZE = 8 << 20
-_READ_CHUNK = 1 << 20
 
 
 def _parse_key(key: str) -> tuple[str, str]:
@@ -19,27 +23,6 @@ def _parse_key(key: str) -> tuple[str, str]:
         raise ValueError(f"Invalid knowledge blob key: {key!r}")
     storage_keys.knowledge_key(parts[1], parts[2])
     return parts[1], parts[2]
-
-
-class _COSReader:
-    def __init__(self, body: Any) -> None:
-        self._body = body
-
-    async def read(self, n: int = -1) -> bytes:
-        if n < 0:
-            buffer = bytearray()
-            while True:
-                chunk = await self.read(_READ_CHUNK)
-                if not chunk:
-                    break
-                buffer.extend(chunk)
-            return bytes(buffer)
-        data = await asyncio.to_thread(self._body.read, n)
-        if not data:
-            return b""
-        if isinstance(data, str):
-            return data.encode()
-        return data
 
 
 class COSBlobStore(BlobStoreBase):
@@ -52,13 +35,10 @@ class COSBlobStore(BlobStoreBase):
         secret_key: str,
     ) -> None:
         self._bucket = bucket
-        self._client = CosS3Client(
-            CosConfig(
-                Region=region,
-                SecretId=secret_id,
-                SecretKey=secret_key,
-                Scheme="https",
-            )
+        self._client = build_client(
+            region=region,
+            secret_id=secret_id,
+            secret_key=secret_key,
         )
 
     def _cos_key(self, key: str) -> str:
@@ -139,54 +119,17 @@ class COSBlobStore(BlobStoreBase):
     @asynccontextmanager
     async def open(self, uri: str) -> AsyncGenerator[AsyncReadable]:
         key = self._key_from_uri(uri)
-        try:
-            response = await asyncio.to_thread(
-                self._client.get_object,
-                Bucket=self._bucket,
-                Key=key,
-            )
-        except CosServiceError as exc:
-            if exc.get_status_code() == 404:
-                raise FileNotFoundError(uri) from exc
-            raise
-        body = response["Body"]
-        try:
-            yield _COSReader(body)
-        finally:
-            raw = body.get_raw_stream()
-            await asyncio.to_thread(raw.close)
+        async with open_object(self._client, self._bucket, key) as reader:
+            yield reader
 
     async def size(self, uri: str) -> int | None:
         key = self._key_from_uri(uri)
-
-        def _head() -> int | None:
-            try:
-                response = self._client.head_object(
-                    Bucket=self._bucket,
-                    Key=key,
-                )
-            except CosServiceError as exc:
-                if exc.get_status_code() == 404:
-                    return None
-                raise
-            return int(response["Content-Length"])
-
-        return await asyncio.to_thread(_head)
+        meta = await head_object(self._client, self._bucket, key)
+        return meta.size if meta is not None else None
 
     async def delete(self, uri: str) -> None:
         key = self._key_from_uri(uri)
-
-        def _delete() -> None:
-            try:
-                self._client.delete_object(
-                    Bucket=self._bucket,
-                    Key=key,
-                )
-            except CosServiceError as exc:
-                if exc.get_status_code() != 404:
-                    raise
-
-        await asyncio.to_thread(_delete)
+        await delete_object(self._client, self._bucket, key)
 
     async def exists(self, uri: str) -> bool:
         return await self.size(uri) is not None

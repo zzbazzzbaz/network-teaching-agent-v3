@@ -2,9 +2,9 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-from app.api.infra.cos import ObjectMeta
 from app.api.services import knowledge_service
 from app.shared.config import get_settings
+from app.shared.cos_client import ObjectMeta
 
 
 def _document(

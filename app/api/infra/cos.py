@@ -1,30 +1,18 @@
 import asyncio
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
 from urllib.parse import quote
 
-from qcloud_cos import CosConfig, CosS3Client, CosServiceError
-
+from app.shared import cos_client
 from app.shared.config import get_settings
-
-_STREAM_CHUNK = 1 << 20
+from app.shared.cos_client import ObjectMeta, build_client, head_object
 
 _settings = get_settings().cos
 
-_client = CosS3Client(
-    CosConfig(
-        Region=_settings.region,
-        SecretId=_settings.secret_id,
-        SecretKey=_settings.secret_key,
-        Scheme="https",
-    )
+_client = build_client(
+    region=_settings.region,
+    secret_id=_settings.secret_id,
+    secret_key=_settings.secret_key,
 )
-
-
-@dataclass(frozen=True, slots=True)
-class ObjectMeta:
-    size: int
-    content_type: str | None
 
 
 def upload_url(key: str, headers: dict[str, str]) -> str:
@@ -54,19 +42,7 @@ def download_url(key: str, filename: str, content_type: str, *, inline: bool) ->
 
 
 async def object_meta(key: str) -> ObjectMeta | None:
-    def _head() -> ObjectMeta | None:
-        try:
-            response = _client.head_object(Bucket=_settings.bucket, Key=key)
-        except CosServiceError as exc:
-            if exc.get_status_code() == 404:
-                return None
-            raise
-        return ObjectMeta(
-            size=int(response["Content-Length"]),
-            content_type=response.get("Content-Type"),
-        )
-
-    return await asyncio.to_thread(_head)
+    return await head_object(_client, _settings.bucket, key)
 
 
 async def object_size(key: str) -> int | None:
@@ -75,40 +51,12 @@ async def object_size(key: str) -> int | None:
 
 
 async def iter_object(key: str) -> AsyncIterator[bytes]:
-    try:
-        response = await asyncio.to_thread(
-            _client.get_object,
-            Bucket=_settings.bucket,
-            Key=key,
-        )
-    except CosServiceError as exc:
-        if exc.get_status_code() == 404:
-            raise FileNotFoundError(key) from exc
-        raise
-
-    body = response["Body"]
-    try:
-        while True:
-            chunk = await asyncio.to_thread(body.read, _STREAM_CHUNK)
-            if not chunk:
-                break
-            if isinstance(chunk, str):
-                chunk = chunk.encode()
-            yield chunk
-    finally:
-        raw = body.get_raw_stream()
-        await asyncio.to_thread(raw.close)
+    async for chunk in cos_client.iter_object(_client, _settings.bucket, key):
+        yield chunk
 
 
 async def delete_object(key: str) -> None:
-    def _delete() -> None:
-        try:
-            _client.delete_object(Bucket=_settings.bucket, Key=key)
-        except CosServiceError as exc:
-            if exc.get_status_code() != 404:
-                raise
-
-    await asyncio.to_thread(_delete)
+    await cos_client.delete_object(_client, _settings.bucket, key)
 
 
 async def put_object(
