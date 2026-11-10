@@ -10,7 +10,6 @@ export interface ComposerCardProps {
   onChange: (value: string) => void;
   onSubmit: () => void;
   canSubmit: boolean;
-  placeholder?: string;
   attachments?: ReactNode;
   notice?: ReactNode;
   leading?: ReactNode;
@@ -26,7 +25,6 @@ export function ComposerCard({
   onChange,
   onSubmit,
   canSubmit,
-  placeholder,
   attachments,
   notice,
   leading,
@@ -57,7 +55,6 @@ export function ComposerCard({
         onKeyDown={handleKeyDown}
         autoSize={{ minRows: 1, maxRows: 8 }}
         aria-label="输入问题"
-        placeholder={placeholder}
         className="resize-none px-4 pt-3.5 pb-1 text-[14px] leading-6 focus:outline-none"
       />
       <div className="flex items-center justify-between gap-1 px-2.5 pb-2">

@@ -1,4 +1,4 @@
-import { App, Button, Dropdown, Tooltip } from 'antd';
+import { App, Button, Dropdown, Tooltip, type MenuProps } from 'antd';
 import {
   BookOpen,
   ChevronsUpDown,
@@ -13,8 +13,9 @@ import {
   Plus,
   Settings2,
   Trash2,
+  UserRound,
 } from 'lucide-react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 import { BrandLockup } from '@/components/common';
@@ -23,15 +24,21 @@ import { useAuthStore } from '@/stores/auth-store';
 
 import { useSessions } from './use-sessions';
 
+const COURSE_ITEM = {
+  key: 'learn',
+  label: '课程内容',
+  icon: Library,
+  path: '/learn',
+};
+
 const ACCOUNT_ITEMS = [
-  { key: 'learn', label: '课程内容', icon: Library, path: '/learn' },
   { key: 'memory', label: '记忆', icon: BookOpen, path: '/memory' },
   { key: 'knowledge', label: '知识库', icon: Database, path: '/knowledge' },
   { key: 'questions', label: '答题记录', icon: ListChecks, path: '/questions' },
   { key: 'stats', label: '统计', icon: LineChart, path: '/stats' },
 ];
 
-const ADMIN_ITEM = { key: 'admin', label: '管理', icon: Settings2, path: '/admin' };
+const ADMIN_ITEM = { key: 'admin', label: '后台管理', icon: Settings2, path: '/admin' };
 
 export function Sidebar({
   onNavigate,
@@ -71,10 +78,34 @@ export function Sidebar({
     return () => observer.disconnect();
   }, [hasMore]);
 
-  const accountItems = useMemo(
-    () => (user?.role === 'admin' ? [...ACCOUNT_ITEMS, ADMIN_ITEM] : ACCOUNT_ITEMS),
-    [user?.role],
-  );
+  const accountMenuItems: MenuProps['items'] = [
+    {
+      key: COURSE_ITEM.key,
+      label: COURSE_ITEM.label,
+      icon: <Library size={13} />,
+    },
+    { type: 'divider' },
+    ...ACCOUNT_ITEMS.map((item) => {
+      const Icon = item.icon;
+      return {
+        key: item.key,
+        label: item.label,
+        icon: <Icon size={13} />,
+      };
+    }),
+    { type: 'divider' },
+    ...(user?.role === 'admin'
+      ? [
+          {
+            key: ADMIN_ITEM.key,
+            label: ADMIN_ITEM.label,
+            icon: <Settings2 size={13} />,
+          },
+        ]
+      : []),
+    { key: 'password', label: '修改密码', icon: <KeyRound size={13} /> },
+    { key: 'logout', label: '退出登录', icon: <LogOut size={13} />, danger: true },
+  ];
 
   const handleCreate = () => {
     navigate('/chat');
@@ -114,7 +145,6 @@ export function Sidebar({
   });
 
   const displayName = user?.username ?? '未登录';
-  const initial = displayName.slice(0, 1).toUpperCase();
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-sidebar px-3 pt-4 pb-3">
@@ -259,19 +289,7 @@ export function Sidebar({
           trigger={['click']}
           placement="topLeft"
           menu={{
-            items: [
-              ...accountItems.map((item) => {
-                const Icon = item.icon;
-                return {
-                  key: item.key,
-                  label: item.label,
-                  icon: <Icon size={13} />,
-                };
-              }),
-              { key: 'password', label: '修改密码', icon: <KeyRound size={13} /> },
-              { type: 'divider' },
-              { key: 'logout', label: '退出登录', icon: <LogOut size={13} />, danger: true },
-            ],
+            items: accountMenuItems,
             onClick: ({ key }) => {
               if (key === 'logout') {
                 logout();
@@ -283,7 +301,15 @@ export function Sidebar({
                 onNavigate?.();
                 return;
               }
-              const target = accountItems.find((item) => item.key === key);
+              if (key === 'admin') {
+                window.open(ADMIN_ITEM.path, '_blank', 'noopener,noreferrer');
+                return;
+              }
+              if (key === 'learn') {
+                window.open(COURSE_ITEM.path, '_blank', 'noopener,noreferrer');
+                return;
+              }
+              const target = ACCOUNT_ITEMS.find((item) => item.key === key);
               if (target) {
                 navigate(target.path);
                 onNavigate?.();
@@ -296,9 +322,7 @@ export function Sidebar({
             aria-label="账户菜单"
             className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-surface/70 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
           >
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-brand-line bg-brand-soft text-[11px] font-semibold text-brand-strong">
-              {initial}
-            </span>
+            <UserRound className="size-4 shrink-0 text-ink-subtle" aria-hidden="true" />
             <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-ink">
               {displayName}
             </span>

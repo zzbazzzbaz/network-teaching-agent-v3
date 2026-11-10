@@ -97,9 +97,6 @@ export function LoginPage() {
             <h1 className="m-0 text-[26px] leading-tight font-semibold tracking-[-0.015em] text-ink">
               登录课程空间
             </h1>
-            <p className="mt-2 mb-0 text-[13px] leading-6 text-ink-muted">
-              使用账号登录，进入计算机网络学习工作台。
-            </p>
 
             <Form<LoginFormValues>
               layout="vertical"
@@ -143,10 +140,6 @@ export function LoginPage() {
                 登录
               </Button>
             </Form>
-
-            <p className="mt-6 mb-0 text-[11.5px] leading-5 text-ink-subtle">
-              遇到登录问题，请联系任课教师重置密码。
-            </p>
           </div>
         </main>
       </div>

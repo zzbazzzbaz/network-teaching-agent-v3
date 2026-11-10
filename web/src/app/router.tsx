@@ -155,44 +155,52 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundary />,
       },
       {
-        path: 'admin',
-        element: (
+        path: '*',
+        element: <NotFoundPage />,
+      },
+    ],
+  },
+  {
+    path: '/admin',
+    element: (
+      <RequireAuth>
+        <RequirePasswordChange>
           <RequireAdmin>
             <AdminLayout />
           </RequireAdmin>
-        ),
-        children: [
-          {
-            index: true,
-            element: <AdminOverviewPage />,
-            errorElement: <RouteErrorBoundary />,
-          },
-          {
-            path: 'users',
-            element: <AdminUsersPage />,
-            errorElement: <RouteErrorBoundary />,
-          },
-          {
-            path: 'users/:userId',
-            element: <AdminUserDetailPage />,
-            errorElement: <RouteErrorBoundary />,
-          },
-          {
-            path: 'users/:userId/sessions/:sessionId',
-            element: <AdminSessionDetailPage />,
-            errorElement: <RouteErrorBoundary />,
-          },
-          {
-            path: 'knowledge',
-            element: <AdminKnowledgePage />,
-            errorElement: <RouteErrorBoundary />,
-          },
-          {
-            path: 'materials',
-            element: <AdminMaterialsPage />,
-            errorElement: <RouteErrorBoundary />,
-          },
-        ],
+        </RequirePasswordChange>
+      </RequireAuth>
+    ),
+    children: [
+      {
+        index: true,
+        element: <AdminOverviewPage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: 'users',
+        element: <AdminUsersPage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: 'users/:userId',
+        element: <AdminUserDetailPage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: 'users/:userId/sessions/:sessionId',
+        element: <AdminSessionDetailPage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: 'knowledge',
+        element: <AdminKnowledgePage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: 'materials',
+        element: <AdminMaterialsPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
         path: '*',

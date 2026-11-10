@@ -1,6 +1,6 @@
 import { Button } from 'antd';
-import { Menu, PanelLeftOpen } from 'lucide-react';
-import { useLocation } from 'react-router';
+import { ArrowLeft, Menu, PanelLeftOpen } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router';
 
 import { useIsMobile } from '@/lib/use-media-query';
 import { useUiStore } from '@/stores/ui-store';
@@ -14,24 +14,6 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 function resolveTitle(pathname: string): string {
-  if (pathname === '/admin') {
-    return '管理概览';
-  }
-  if (pathname === '/admin/users') {
-    return '学生管理';
-  }
-  if (pathname.startsWith('/admin/users/') && pathname.includes('/sessions/')) {
-    return '会话详情';
-  }
-  if (pathname.startsWith('/admin/users/')) {
-    return '学生详情';
-  }
-  if (pathname === '/admin/knowledge') {
-    return '公共知识库';
-  }
-  if (pathname === '/admin/materials') {
-    return '教材内容';
-  }
   if (pathname.startsWith('/learn/')) {
     return '在线阅读';
   }
@@ -43,13 +25,15 @@ function resolveTitle(pathname: string): string {
 
 export function AppHeader() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const sidebarCollapsed = useUiStore((state) => state.sidebarCollapsed);
   const setSidebarCollapsed = useUiStore((state) => state.setSidebarCollapsed);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
   const pageTitle = resolveTitle(location.pathname);
-  const showSidebarToggle = isMobile || sidebarCollapsed;
+  const isLearn = location.pathname.startsWith('/learn');
+  const showSidebarToggle = !isLearn && (isMobile || sidebarCollapsed);
 
   const openSidebar = () => {
     if (isMobile) {
@@ -74,6 +58,17 @@ export function AppHeader() {
         <h1 className="min-w-0 truncate text-[20px] leading-tight font-semibold tracking-[-0.012em] text-ink">
           {pageTitle}
         </h1>
+        {isLearn ? (
+          <Button
+            className="ml-auto shrink-0 text-ink-muted"
+            type="text"
+            size="small"
+            icon={<ArrowLeft className="size-3.5" />}
+            onClick={() => navigate('/chat')}
+          >
+            返回工作台
+          </Button>
+        ) : null}
       </div>
     </header>
   );

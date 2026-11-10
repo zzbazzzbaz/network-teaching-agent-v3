@@ -18,6 +18,7 @@ export function AppLayout() {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
   const location = useLocation();
   const isChat = location.pathname.startsWith('/chat');
+  const isLearn = location.pathname.startsWith('/learn');
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -33,7 +34,7 @@ export function AppLayout() {
 
   return (
     <div className="flex h-full min-h-0">
-      {!isMobile ? (
+      {isLearn ? null : !isMobile ? (
         <aside
           className={`sticky top-0 h-screen shrink-0 overflow-hidden border-r border-line bg-sidebar transition-[width] duration-200 ease-out motion-reduce:transition-none ${
             sidebarCollapsed ? 'w-0 border-r-0' : 'w-[280px] max-[1199px]:w-[248px]'

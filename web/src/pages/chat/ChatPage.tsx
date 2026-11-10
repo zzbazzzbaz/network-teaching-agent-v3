@@ -253,7 +253,6 @@ export function ChatPage() {
                 onSubmit={handleSend}
                 uploads={uploads}
                 phase={phase}
-                placeholder="继续追问，或说说你的想法…"
                 onStop={actions.stop}
                 knowledgeBaseIds={sessionQuery.data?.knowledge_base_ids}
                 disabled={chat.loading}
@@ -263,11 +262,6 @@ export function ChatPage() {
                 draft={draft}
                 onDraftChange={setDraft}
                 onSubmit={handleNewChatSubmit}
-                placeholder={
-                  startMode === 'teach_agent'
-                    ? '从教材目录选一节，或直接问我…'
-                    : '上传题目，或直接粘贴题干…'
-                }
                 knowledgePicker={
                   <KnowledgePicker value={knowledgeIds} onChange={setKnowledgeIds} />
                 }
@@ -400,13 +394,11 @@ function PendingComposer({
   draft,
   onDraftChange,
   onSubmit,
-  placeholder,
   knowledgePicker,
 }: {
   draft: string;
   onDraftChange: (value: string) => void;
   onSubmit: (text: string, files: File[]) => Promise<boolean>;
-  placeholder?: string;
   knowledgePicker?: ReactNode;
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -481,7 +473,6 @@ function PendingComposer({
           onChange={onDraftChange}
           onSubmit={() => void handleSubmit()}
           canSubmit={canSubmit}
-          placeholder={placeholder}
           submitting={submitting}
           onPickFiles={addFiles}
           leading={knowledgePicker}
