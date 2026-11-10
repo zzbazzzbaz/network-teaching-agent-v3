@@ -5,6 +5,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY app ./app
+COPY scripts ./scripts
 RUN uv sync --frozen --no-dev
 
 FROM python:3.14-slim-bookworm
@@ -12,6 +13,7 @@ WORKDIR /app
 ENV PATH=/app/.venv/bin:$PATH PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/app /app/app
+COPY --from=builder /app/scripts /app/scripts
 RUN groupadd -g 10001 app \
  && useradd -u 10001 -g 10001 -M -s /usr/sbin/nologin app \
  && mkdir -p /data \
