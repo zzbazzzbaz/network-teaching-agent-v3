@@ -190,36 +190,6 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return result.payload as T;
 }
 
-async function sendBlob(path: string, token: string | null): Promise<Response> {
-  return fetch(`${API_BASE}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
-}
-
-export async function requestBlob(path: string): Promise<Blob> {
-  let token = getAccessToken();
-  let response = await sendBlob(path, token);
-  if (response.status === 401) {
-    try {
-      token = await refreshAccessToken();
-    } catch {
-      throw new ApiError(401, '登录已过期，请重新登录');
-    }
-    response = await sendBlob(path, token);
-  }
-  if (!response.ok) {
-    const text = await response.text();
-    let payload: unknown;
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      payload = text;
-    }
-    throw new ApiError(response.status, extractDetail(payload, response.status));
-  }
-  return response.blob();
-}
-
 export function toErrorMessage(error: unknown, fallback = '请求失败，请稍后重试'): string {
   if (error instanceof ApiError) {
     return error.detail || fallback;

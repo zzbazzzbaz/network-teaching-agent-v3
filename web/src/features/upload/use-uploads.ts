@@ -87,8 +87,8 @@ export function useUploads(sessionId: string | null): UseUploadsResult {
           onProgress: (percent) => patchItem(item.uid, { percent }),
         });
         patchItem(item.uid, { status: 'completing', percent: 100 });
-        const detail = await completeUpload(ticket.file_id);
-        patchItem(item.uid, { status: 'ready', fileId: detail.id, percent: 100 });
+        const result = await completeUpload(ticket.file_id);
+        patchItem(item.uid, { status: 'ready', fileId: result.file_id, percent: 100 });
       } catch (uploadError) {
         if (uploadError instanceof DOMException && uploadError.name === 'AbortError') {
           return;

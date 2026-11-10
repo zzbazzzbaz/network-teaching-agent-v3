@@ -56,7 +56,7 @@ class MaterialImageAsset(BaseModel):
     file_id: uuid.UUID
     name: str
     content_type: str
-    raw_path: str
+    url: str
 
 
 class MaterialNodeDetail(BaseModel):
@@ -152,7 +152,7 @@ class MaterialAssetUploadUrlResponse(BaseModel):
 
 class MaterialAssetCompleteResponse(BaseModel):
     file_id: uuid.UUID
-    raw_path: str
+    url: str
     markdown: str
 
 
@@ -172,7 +172,7 @@ class InternalMaterialImage(BaseModel):
     file_id: uuid.UUID
     name: str
     content_type: str
-    raw_path: str
+    url: str
 
 
 class InternalMaterialReadResponse(BaseModel):

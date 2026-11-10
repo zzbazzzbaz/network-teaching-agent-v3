@@ -338,7 +338,7 @@ async def _attachment_block(
             raise InvalidMessageError("仅支持图片附件")
         return DataBlock(
             source=URLSource(
-                url=file_service.raw_url(file),
+                url=file_service.public_url(file),
                 media_type=file.content_type,
             ),
             name=file.original_name,

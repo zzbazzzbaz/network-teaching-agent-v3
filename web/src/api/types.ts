@@ -100,6 +100,32 @@ export interface KnowledgeDocumentUploadResponse {
   status: KnowledgeDocumentStatus;
 }
 
+export interface KnowledgeDocumentUploadUrlRequest {
+  filename: string;
+  size_bytes: number;
+}
+
+export interface KnowledgeDocumentUploadUrlResponse {
+  upload_id: string;
+  upload_url: string;
+  method: 'PUT';
+  headers: Record<string, string>;
+  expires_in: number;
+}
+
+export interface KnowledgeDocumentCompleteRequest {
+  upload_id: string;
+  filename: string;
+  size_bytes: number;
+  content_type?: string | null;
+}
+
+export interface KnowledgeDocumentDownloadUrlResponse {
+  url: string;
+  filename: string;
+  expires_in: number;
+}
+
 export interface SessionListResponse {
   items: SessionItem[];
   total: number;
@@ -200,30 +226,13 @@ export interface UploadUrlResponse {
   upload_url: string;
   method: 'PUT';
   headers: Record<string, string>;
-  thumb_upload_url: string | null;
   expires_in: number;
 }
 
-export interface FileItem {
-  id: string;
-  original_name: string;
-  content_type: string;
-  size_bytes: number;
-  has_thumb: boolean;
-  thumb_url: string | null;
-  preview_url: string;
-  created_at: string;
-}
-
-export interface FileDetail extends FileItem {
-  session_id: string | null;
+export interface FileUploadResponse {
+  file_id: string;
+  url: string;
   status: FileStatus;
-  download_url: string;
-}
-
-export interface FileListResponse {
-  items: FileItem[];
-  total: number;
 }
 
 export interface ExternalExecutionResultPayload {
@@ -374,7 +383,7 @@ export interface MaterialImageAsset {
   file_id: string;
   name: string;
   content_type: string;
-  raw_path: string;
+  url: string;
 }
 
 export interface MaterialNodeDetail {
@@ -415,6 +424,6 @@ export interface MaterialAssetUploadUrlResponse {
 
 export interface MaterialAssetCompleteResponse {
   file_id: string;
-  raw_path: string;
+  url: string;
   markdown: string;
 }

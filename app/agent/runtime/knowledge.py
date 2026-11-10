@@ -1,5 +1,4 @@
 from agentscope.app._service._embedding import build_embedding_model
-from agentscope.app.rag.blob_store import LocalBlobStore
 from agentscope.app.rag.knowledge_base_manager import (
     CollectionPerKbManager,
     KnowledgeBaseNotFoundError,
@@ -15,6 +14,7 @@ from agentscope.rag import (
     WordParser,
 )
 
+from app.agent.runtime.cos_blob_store import COSBlobStore
 from app.agent.runtime.models import build_knowledge_embedding_model
 from app.shared.config import Settings
 from app.shared.constants import EMBEDDING_CREDENTIAL_ID, SYSTEM_USER_ID
@@ -76,8 +76,13 @@ def build_knowledge_base_manager(
     )
 
 
-def build_knowledge_blob_store(settings: Settings) -> LocalBlobStore:
-    return LocalBlobStore(root_dir=settings.storage.knowledge_blobs_dir)
+def build_knowledge_blob_store(settings: Settings) -> COSBlobStore:
+    return COSBlobStore(
+        bucket=settings.cos.bucket,
+        region=settings.cos.region,
+        secret_id=settings.cos.secret_id,
+        secret_key=settings.cos.secret_key,
+    )
 
 
 def build_knowledge_parsers() -> list[ParserBase]:

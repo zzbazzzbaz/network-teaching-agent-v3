@@ -1,11 +1,11 @@
 import uuid
 from datetime import UTC, datetime
-from pathlib import Path
 
 from sqlalchemy import Column, Index, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
+from app.shared import storage_keys
 from app.shared.enums import (
     AgentKind,
     FileStatus,
@@ -61,22 +61,14 @@ class File(SQLModel, table=True):
     content_type: str = Field(max_length=128)
     size_bytes: int
     status: FileStatus = Field(default=FileStatus.PENDING)
-    has_thumb: bool = Field(default=False)
     created_at: datetime = Field(default_factory=_now)
     deleted_at: datetime | None = Field(default=None)
 
     @property
     def storage_key(self) -> str:
-        suffix = Path(self.original_name).suffix.lower()
-        if len(suffix) > 10 or not suffix[1:].isalnum():
-            suffix = ""
         if self.session_id is None:
-            return f"materials/{self.id}{suffix}"
-        return f"sessions/{self.session_id}/{self.id}{suffix}"
-
-    @property
-    def thumb_key(self) -> str:
-        return f"{self.storage_key}.thumb.jpg"
+            return storage_keys.material_key(self.id, self.original_name)
+        return storage_keys.session_key(self.session_id, self.id, self.original_name)
 
 
 class MaterialCollection(SQLModel, table=True):

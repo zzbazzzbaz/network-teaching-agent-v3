@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import AwareDatetime, BaseModel, Field
+from pydantic import BaseModel, Field
 
 from app.shared.enums import FileStatus
 
@@ -16,35 +16,10 @@ class UploadUrlResponse(BaseModel):
     upload_url: str
     method: str = "PUT"
     headers: dict[str, str]
-    thumb_upload_url: str | None
     expires_in: int
 
 
-class FileItem(BaseModel):
-    id: uuid.UUID
-    original_name: str
-    content_type: str
-    size_bytes: int
-    has_thumb: bool
-    thumb_url: str | None
-    preview_url: str
-    created_at: AwareDatetime
-
-
-class FileDetail(BaseModel):
-    id: uuid.UUID
-    original_name: str
-    content_type: str
-    size_bytes: int
-    has_thumb: bool
-    thumb_url: str | None
-    preview_url: str
-    created_at: AwareDatetime
-    session_id: uuid.UUID | None
+class UploadCompletedResponse(BaseModel):
+    file_id: uuid.UUID
+    url: str
     status: FileStatus
-    download_url: str
-
-
-class FileListResponse(BaseModel):
-    items: list[FileItem]
-    total: int

@@ -58,22 +58,13 @@ describe('图片上传', () => {
       upload_url: 'https://cos.example.com/put',
       method: 'PUT',
       headers: { 'Content-Type': 'image/png' },
-      thumb_upload_url: null,
       expires_in: 600,
     });
     vi.mocked(completeUpload).mockReset();
     vi.mocked(completeUpload).mockResolvedValue({
-      id: 'file-1',
-      original_name: 'a.png',
-      content_type: 'image/png',
-      size_bytes: 1024,
-      has_thumb: false,
-      thumb_url: null,
-      preview_url: 'https://cos.example.com/a.png',
-      created_at: new Date().toISOString(),
-      session_id: 'session-1',
+      file_id: 'file-1',
+      url: 'https://cos.example.com/a.png',
       status: 'ready',
-      download_url: 'https://cos.example.com/a.png',
     });
   });
 
@@ -133,7 +124,6 @@ describe('图片上传', () => {
         upload_url: 'https://cos.example.com/put-2',
         method: 'PUT',
         headers: { 'Content-Type': 'image/png' },
-        thumb_upload_url: null,
         expires_in: 600,
       });
 

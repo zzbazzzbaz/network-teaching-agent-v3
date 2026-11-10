@@ -1,5 +1,5 @@
 import { request } from './client';
-import type { FileDetail, FileItem, FileListResponse, UploadUrlResponse } from './types';
+import type { FileUploadResponse, UploadUrlResponse } from './types';
 
 export interface UploadUrlRequest {
   session_id: string;
@@ -14,31 +14,8 @@ export function requestUploadUrl(payload: UploadUrlRequest): Promise<UploadUrlRe
   });
 }
 
-export function completeUpload(fileId: string): Promise<FileDetail> {
-  return request<FileDetail>(`/files/${encodeURIComponent(fileId)}/complete`, {
+export function completeUpload(fileId: string): Promise<FileUploadResponse> {
+  return request<FileUploadResponse>(`/files/${encodeURIComponent(fileId)}/complete`, {
     method: 'POST',
   });
-}
-
-export function listFiles(sessionId: string, limit = 20, offset = 0): Promise<FileListResponse> {
-  const search = new URLSearchParams({
-    session_id: sessionId,
-    limit: String(limit),
-    offset: String(offset),
-  });
-  return request<FileListResponse>(`/files?${search.toString()}`);
-}
-
-export function getFile(fileId: string): Promise<FileDetail> {
-  return request<FileDetail>(`/files/${encodeURIComponent(fileId)}`);
-}
-
-export function fileItemsToThumbMap(items: FileItem[]): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const item of items) {
-    if (item.thumb_url) {
-      map.set(item.id, item.thumb_url);
-    }
-  }
-  return map;
 }

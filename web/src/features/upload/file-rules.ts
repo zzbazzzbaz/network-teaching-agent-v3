@@ -1,6 +1,6 @@
 import { UPLOAD_MAX_BYTES, UPLOAD_MAX_COUNT } from '@/lib/config';
 
-export const ACCEPTED_IMAGE_TYPES = 'image/png,image/jpeg,image/webp,image/gif,image/bmp';
+export const ACCEPTED_IMAGE_TYPES = 'image/png,image/jpeg,image/webp,image/gif';
 
 const ALLOWED_TYPES = new Set(ACCEPTED_IMAGE_TYPES.split(','));
 
@@ -15,7 +15,7 @@ export function selectFiles(files: File[], existingCount: number): FileSelection
 
   for (const file of files) {
     if (!ALLOWED_TYPES.has(file.type)) {
-      rejection = '只支持 PNG、JPG、WebP、GIF、BMP 图片';
+      rejection = '只支持 PNG、JPG、WebP、GIF 图片';
       continue;
     }
     if (file.size > UPLOAD_MAX_BYTES) {

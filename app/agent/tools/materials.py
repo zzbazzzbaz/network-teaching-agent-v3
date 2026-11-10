@@ -14,7 +14,6 @@ from app.agent.tools.schemas.materials import (
     MaterialsLsInput,
     MaterialsReadInput,
 )
-from app.shared.config import get_settings
 from app.shared.errors import RemoteServiceError
 
 logger = logging.getLogger(__name__)
@@ -138,16 +137,15 @@ class MaterialsRead(_MaterialsTool):
         content: list[TextBlock | DataBlock] = [
             TextBlock(text=payload.get("content", "") or "空文件")
         ]
-        base = get_settings().api.base_url.rstrip("/")
         for image in payload.get("images", []):
-            raw_path = image.get("raw_path", "")
+            url = image.get("url", "")
             content_type = image.get("content_type", "")
-            if not raw_path or not content_type:
+            if not url or not content_type:
                 continue
             content.append(
                 DataBlock(
                     source=URLSource(
-                        url=f"{base}{raw_path}",
+                        url=url,
                         media_type=content_type,
                     ),
                     name=image.get("name", ""),

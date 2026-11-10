@@ -34,7 +34,7 @@ def _read_response(detail: MaterialNodeDetail) -> InternalMaterialReadResponse:
                 file_id=image.file_id,
                 name=image.name,
                 content_type=image.content_type,
-                raw_path=image.raw_path,
+                url=image.url,
             )
             for image in detail.images
         ],

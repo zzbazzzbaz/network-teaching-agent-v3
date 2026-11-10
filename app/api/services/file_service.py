@@ -1,5 +1,3 @@
-import hashlib
-import hmac
 import logging
 import mimetypes
 import uuid
@@ -12,30 +10,11 @@ from app.api.infra import cos
 from app.api.repositories import file_repositories
 from app.api.repositories.models import File, FileStatus
 from app.shared.config import get_settings
+from app.shared.storage_keys import PUBLIC_CACHE_CONTROL
 
 logger = logging.getLogger(__name__)
 
-_ALLOWED_SUFFIXES = {
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".webp",
-    ".bmp",
-    ".pdf",
-    ".doc",
-    ".docx",
-    ".xls",
-    ".xlsx",
-    ".ppt",
-    ".pptx",
-    ".txt",
-    ".md",
-    ".csv",
-    ".zip",
-}
-
-_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
+_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
 
 
 class FileError(Exception):
@@ -66,7 +45,6 @@ class UploadIncompleteError(FileError):
 class UploadTicket:
     file_id: uuid.UUID
     upload_url: str
-    thumb_upload_url: str | None
     headers: dict[str, str]
     expires_in: int
 
@@ -79,6 +57,19 @@ def _clean_name(filename: str) -> str:
     if len(name) > 255:
         name = name[: 255 - len(suffix)] + suffix
     return name
+
+
+def _image_headers(content_type: str) -> dict[str, str]:
+    return {
+        "Content-Type": content_type,
+        "Cache-Control": PUBLIC_CACHE_CONTROL,
+    }
+
+
+def _base_type(value: str | None) -> str:
+    if not value:
+        return ""
+    return value.split(";", 1)[0].strip().lower()
 
 
 async def request_upload(
@@ -97,9 +88,11 @@ async def request_upload(
         raise FileTooLargeError
     name = _clean_name(filename)
     suffix = Path(name).suffix.lower()
-    if suffix not in _ALLOWED_SUFFIXES:
+    if suffix not in _IMAGE_SUFFIXES:
         raise UnsupportedFileTypeError
     content_type = mimetypes.guess_type(name)[0] or "application/octet-stream"
+    if not content_type.startswith("image/"):
+        raise UnsupportedFileTypeError
     file = File(
         session_id=session_id,
         user_id=user_id,
@@ -109,15 +102,11 @@ async def request_upload(
     )
     await file_repositories.create(session, file)
     logger.info("upload requested: file_id=%s session_id=%s", file.id, session_id)
+    headers = _image_headers(content_type)
     return UploadTicket(
         file_id=file.id,
-        upload_url=cos.upload_url(file.storage_key, content_type),
-        thumb_upload_url=(
-            cos.upload_url(file.thumb_key, "image/jpeg")
-            if content_type.startswith("image/")
-            else None
-        ),
-        headers={"Content-Type": content_type},
+        upload_url=cos.upload_url(file.storage_key, headers),
+        headers=headers,
         expires_in=get_settings().cos.upload_expires,
     )
 
@@ -130,25 +119,32 @@ async def complete_upload(session: AsyncSession, *, user_id: uuid.UUID, file_id:
 async def _finalize_upload(session: AsyncSession, file: File) -> File:
     if file.status is FileStatus.READY:
         return file
-    size = await cos.object_size(file.storage_key)
-    if size is None:
+    meta = await cos.object_meta(file.storage_key)
+    if meta is None:
         logger.warning("upload missing in cos: file_id=%s", file.id)
         raise UploadIncompleteError
-    if size != file.size_bytes:
+    if meta.size != file.size_bytes:
         logger.warning(
             "upload size mismatch: file_id=%s expected=%s actual=%s",
             file.id,
             file.size_bytes,
-            size,
+            meta.size,
         )
         await cos.delete_object(file.storage_key)
         raise UploadIncompleteError
-    if file.content_type.startswith("image/"):
-        file.has_thumb = await cos.object_size(file.thumb_key) is not None
+    if _base_type(meta.content_type) != _base_type(file.content_type):
+        logger.warning(
+            "upload content type mismatch: file_id=%s expected=%s actual=%s",
+            file.id,
+            file.content_type,
+            meta.content_type,
+        )
+        await cos.delete_object(file.storage_key)
+        raise UploadIncompleteError
     file.status = FileStatus.READY
     session.add(file)
     await session.flush()
-    logger.info("upload completed: file_id=%s size=%s", file.id, size)
+    logger.info("upload completed: file_id=%s size=%s", file.id, meta.size)
     return file
 
 
@@ -177,11 +173,11 @@ async def request_material_upload(
     )
     await file_repositories.create(session, file)
     logger.info("material upload requested: file_id=%s user_id=%s", file.id, user_id)
+    headers = _image_headers(content_type)
     return UploadTicket(
         file_id=file.id,
-        upload_url=cos.upload_url(file.storage_key, content_type),
-        thumb_upload_url=None,
-        headers={"Content-Type": content_type},
+        upload_url=cos.upload_url(file.storage_key, headers),
+        headers=headers,
         expires_in=get_settings().cos.upload_expires,
     )
 
@@ -198,34 +194,6 @@ async def complete_material_upload(
     return await _finalize_upload(session, file)
 
 
-async def list_files(
-    session: AsyncSession,
-    *,
-    user_id: uuid.UUID,
-    session_id: uuid.UUID,
-    limit: int,
-    offset: int,
-) -> tuple[list[File], int]:
-    if not await file_repositories.session_owned_by(
-        session, session_id=session_id, user_id=user_id
-    ):
-        raise SessionNotFoundError
-    return await file_repositories.list_by_session(
-        session,
-        session_id=session_id,
-        user_id=user_id,
-        limit=limit,
-        offset=offset,
-    )
-
-
-async def get_file(session: AsyncSession, *, user_id: uuid.UUID, file_id: uuid.UUID) -> File:
-    file = await _get_owned(session, file_id=file_id, user_id=user_id)
-    if file.status is not FileStatus.READY:
-        raise AttachmentNotFoundError
-    return file
-
-
 async def _get_owned(session: AsyncSession, *, file_id: uuid.UUID, user_id: uuid.UUID) -> File:
     file = await file_repositories.get_by_id(session, file_id)
     if file is None or file.user_id != user_id or file.deleted_at is not None:
@@ -234,46 +202,11 @@ async def _get_owned(session: AsyncSession, *, file_id: uuid.UUID, user_id: uuid
     return file
 
 
-async def get_ready_file(session: AsyncSession, *, file_id: uuid.UUID) -> File:
-    file = await file_repositories.get_by_id(session, file_id)
-    if file is None or file.deleted_at is not None or file.status is not FileStatus.READY:
-        raise AttachmentNotFoundError
-    return file
-
-
-def raw_token(file_id: uuid.UUID) -> str:
-    secret = get_settings().jwt.secret_key.encode()
-    return hmac.new(secret, f"file:{file_id.hex}".encode(), hashlib.sha256).hexdigest()
-
-
-def verify_raw_token(file_id: uuid.UUID, token: str) -> bool:
-    return hmac.compare_digest(raw_token(file_id), token)
-
-
-def raw_path(file: File) -> str:
-    return f"/api/files/{file.id}/raw?token={raw_token(file.id)}"
-
-
-def raw_url(file: File) -> str:
-    base = get_settings().api.base_url.rstrip("/")
-    return f"{base}{raw_path(file)}"
-
-
-def preview_url(file: File) -> str:
-    return cos.download_url(file.storage_key, file.original_name, file.content_type, inline=True)
-
-
-def download_url(file: File) -> str:
-    return cos.download_url(file.storage_key, file.original_name, file.content_type, inline=False)
-
-
-def thumb_url(file: File) -> str | None:
-    if not file.has_thumb:
-        return None
-    name = f"{Path(file.original_name).stem}.jpg"
-    return cos.download_url(file.thumb_key, name, "image/jpeg", inline=True)
+def public_url(file: File) -> str:
+    base = get_settings().cos.public_base_url.rstrip("/")
+    return f"{base}/{file.storage_key}"
 
 
 def material_markdown(file: File) -> str:
     name = file.original_name.replace("]", "\\]")
-    return f"![{name}]({raw_path(file)})"
+    return f"![{name}]({public_url(file)})"

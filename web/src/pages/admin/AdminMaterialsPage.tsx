@@ -636,7 +636,7 @@ export function AdminMaterialsPage() {
                   {detail.kind === 'document' ? (
                     <Upload
                       showUploadList={false}
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
                       beforeUpload={(file) => {
                         void uploadImage(file as unknown as File);
                         return Upload.LIST_IGNORE;

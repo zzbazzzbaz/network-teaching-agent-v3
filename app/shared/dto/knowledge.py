@@ -77,6 +77,32 @@ class KnowledgeDocumentUploadResponse(BaseModel):
     status: KnowledgeDocumentStatus
 
 
+class KnowledgeDocumentUploadUrlRequest(BaseModel):
+    filename: str = Field(min_length=1, max_length=255)
+    size_bytes: int = Field(gt=0)
+
+
+class KnowledgeDocumentUploadUrlResponse(BaseModel):
+    upload_id: str
+    upload_url: str
+    method: str = "PUT"
+    headers: dict[str, str]
+    expires_in: int
+
+
+class KnowledgeDocumentCompleteRequest(BaseModel):
+    upload_id: str = Field(min_length=1, max_length=64)
+    filename: str = Field(min_length=1, max_length=255)
+    size_bytes: int = Field(gt=0)
+    content_type: str | None = None
+
+
+class KnowledgeDocumentDownloadUrlResponse(BaseModel):
+    url: str
+    filename: str
+    expires_in: int
+
+
 class KnowledgeSupportedContentTypesResponse(BaseModel):
     extensions: list[str]
     media_types: list[str]

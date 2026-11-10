@@ -8,9 +8,7 @@ from app.shared.errors import RemoteServiceError
 
 
 def _text(chunk) -> str:
-    return "\n".join(
-        block.text for block in chunk.content if isinstance(block, TextBlock)
-    )
+    return "\n".join(block.text for block in chunk.content if isinstance(block, TextBlock))
 
 
 class FakeMaterialsClient:
@@ -43,7 +41,7 @@ class FakeMaterialsClient:
                     "file_id": str(uuid.uuid4()),
                     "name": "fig-01.jpg",
                     "content_type": "image/jpeg",
-                    "raw_path": "/api/files/abc/raw?token=xyz",
+                    "url": "https://cos.example.com/public/materials/fig-01.jpg",
                 }
             ],
         }
@@ -103,9 +101,7 @@ class FakeMaterialsClient:
 @pytest.mark.asyncio
 async def test_ls_keeps_folder_suffix() -> None:
     tool = MaterialsLs(client=FakeMaterialsClient(), user_id="user-1")
-    assert _text(await tool.call(path="/")) == (
-        "computer-networks-8e/\nstep-demo.html"
-    )
+    assert _text(await tool.call(path="/")) == ("computer-networks-8e/\nstep-demo.html")
 
 
 @pytest.mark.asyncio
@@ -117,8 +113,8 @@ async def test_read_returns_text_and_images() -> None:
     images = [block for block in chunk.content if isinstance(block, DataBlock)]
     assert len(images) == 1
     assert images[0].name == "fig-01.jpg"
-    assert str(getattr(images[0].source, "url", "")).endswith(
-        "/api/files/abc/raw?token=xyz"
+    assert str(getattr(images[0].source, "url", "")) == (
+        "https://cos.example.com/public/materials/fig-01.jpg"
     )
 
 

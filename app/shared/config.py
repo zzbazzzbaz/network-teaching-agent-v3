@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -54,6 +54,17 @@ class COSSettings(_Base):
     bucket: str
     upload_expires: int
     download_expires: int
+    public_base_url: str
+
+    @field_validator("public_base_url")
+    @classmethod
+    def _validate_public_base_url(cls, value: str) -> str:
+        normalized = value.strip().rstrip("/")
+        if not normalized:
+            raise ValueError("COS_PUBLIC_BASE_URL is required")
+        if not normalized.startswith(("http://", "https://")):
+            raise ValueError("COS_PUBLIC_BASE_URL must be an http(s) URL")
+        return normalized
 
 
 class JWTSettings(_Base):
@@ -90,10 +101,6 @@ class StorageSettings(_Base):
     @property
     def memory_dir(self) -> Path:
         return self.data_root / "memory" / "reme"
-
-    @property
-    def knowledge_blobs_dir(self) -> Path:
-        return self.data_root / "knowledge" / "blobs"
 
 
 class LangfuseSettings(_Base):

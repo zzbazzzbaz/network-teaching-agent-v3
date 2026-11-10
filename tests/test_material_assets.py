@@ -1,5 +1,7 @@
 import uuid
 
+import pytest
+
 from app.api.repositories.models import File
 from app.api.services import file_service
 
@@ -14,34 +16,51 @@ def _file(*, session_id: uuid.UUID | None, name: str = "fig-05-23.jpg") -> File:
     )
 
 
+def _stub_settings(monkeypatch: pytest.MonkeyPatch, base_url: str) -> None:
+    class _Cos:
+        public_base_url = base_url
+
+    class _Settings:
+        cos = _Cos()
+
+    monkeypatch.setattr(file_service, "get_settings", lambda: _Settings())
+
+
 def test_material_storage_key() -> None:
     file = _file(session_id=None)
-    assert file.storage_key == f"materials/{file.id}.jpg"
-    assert file.thumb_key == f"materials/{file.id}.jpg.thumb.jpg"
+    assert file.storage_key == f"public/materials/{file.id}.jpg"
 
 
-def test_session_attachment_storage_key_unchanged() -> None:
+def test_session_attachment_storage_key() -> None:
     session_id = uuid.uuid4()
     file = _file(session_id=session_id, name="photo.PNG")
-    assert file.storage_key == f"sessions/{session_id}/{file.id}.png"
+    assert file.storage_key == f"public/sessions/{session_id}/{file.id}.png"
 
 
-def test_raw_path_works_for_material_image() -> None:
+def test_material_public_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    _stub_settings(monkeypatch, "https://cos.example.com/")
     file = _file(session_id=None)
-    token = file_service.raw_token(file.id)
 
-    assert file_service.verify_raw_token(file.id, token)
-    assert file_service.raw_path(file) == f"/api/files/{file.id}/raw?token={token}"
+    assert (
+        file_service.public_url(file) == f"https://cos.example.com/public/materials/{file.id}.jpg"
+    )
 
 
-def test_material_markdown_uses_relative_raw_path() -> None:
+def test_session_public_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    _stub_settings(monkeypatch, "https://cos.example.com")
+    session_id = uuid.uuid4()
+    file = _file(session_id=session_id, name="photo.PNG")
+
+    assert (
+        file_service.public_url(file)
+        == f"https://cos.example.com/public/sessions/{session_id}/{file.id}.png"
+    )
+
+
+def test_material_markdown_uses_public_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    _stub_settings(monkeypatch, "https://cos.example.com")
     file = _file(session_id=None)
+
     markdown = file_service.material_markdown(file)
 
-    assert markdown.startswith("![fig-05-23.jpg](/api/files/")
-    assert token_is_embedded(markdown, file.id)
-
-
-def token_is_embedded(markdown: str, file_id: uuid.UUID) -> bool:
-    token = file_service.raw_token(file_id)
-    return f"/api/files/{file_id}/raw?token={token}" in markdown
+    assert markdown == (f"![fig-05-23.jpg](https://cos.example.com/public/materials/{file.id}.jpg)")

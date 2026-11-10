@@ -45,7 +45,11 @@ function findNode(
 }
 
 function imageFilename(src: string, alt: string, detail: MaterialNodeDetail): string {
-  const match = src.match(/\/api\/files\/([0-9a-fA-F-]{36})\/raw/);
+  const direct = detail.images.find((image) => image.url === src);
+  if (direct) {
+    return direct.name;
+  }
+  const match = src.match(/([0-9a-fA-F-]{36})(?:\.[A-Za-z0-9]+)?$/);
   if (match) {
     const asset = detail.images.find((image) => image.file_id === match[1]);
     if (asset) {

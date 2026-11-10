@@ -61,6 +61,7 @@ _MIGRATION_DDL = (
     """,
     "ALTER TYPE agentkind ADD VALUE IF NOT EXISTS 'EXAM'",
     "ALTER TABLE files ALTER COLUMN session_id DROP NOT NULL",
+    "ALTER TABLE files DROP COLUMN IF EXISTS has_thumb",
 )
 
 

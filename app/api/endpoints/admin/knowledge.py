@@ -1,14 +1,10 @@
-import logging
 import uuid
-from collections.abc import AsyncIterator
 from typing import Annotated
 
-import httpx
-from fastapi import APIRouter, File, Form, Query, UploadFile, status
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Query, Response, status
 
 from app.api.dependencies import AdminUser, SessionDep
-from app.api.endpoints.knowledge import knowledge_http_error, stream_headers
+from app.api.endpoints.knowledge import knowledge_http_error
 from app.api.repositories.models import User
 from app.api.services import knowledge_service, user_service
 from app.shared.constants import SYSTEM_USER_ID
@@ -17,13 +13,15 @@ from app.shared.dto.knowledge import (
     KnowledgeBaseItem,
     KnowledgeBaseListResponse,
     KnowledgeBaseUpdateRequest,
+    KnowledgeDocumentCompleteRequest,
+    KnowledgeDocumentDownloadUrlResponse,
     KnowledgeDocumentListResponse,
     KnowledgeDocumentStatusResponse,
     KnowledgeDocumentUploadResponse,
+    KnowledgeDocumentUploadUrlRequest,
+    KnowledgeDocumentUploadUrlResponse,
 )
-from app.shared.errors import RemoteServiceError, not_found
-
-logger = logging.getLogger(__name__)
+from app.shared.errors import not_found
 
 public_router = APIRouter(prefix="/knowledge/public", tags=["管理-公共知识库"])
 user_router = APIRouter(prefix="/users", tags=["管理-学生知识库"])
@@ -137,31 +135,54 @@ async def public_document_status(
 
 
 @public_router.post(
-    "/bases/{knowledge_base_id}/documents",
-    response_model=KnowledgeDocumentUploadResponse,
+    "/bases/{knowledge_base_id}/documents/upload-url",
+    response_model=KnowledgeDocumentUploadUrlResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="上传公共知识库文档",
+    summary="申请公共知识库文档上传地址",
 )
-async def upload_public_document(
+async def create_public_document_upload_url(
     knowledge_base_id: str,
-    _admin: AdminUser,
-    file: Annotated[UploadFile, File()],
-    content_type: Annotated[str | None, Form()] = None,
-) -> KnowledgeDocumentUploadResponse:
-    filename = file.filename or "uploaded_file"
-    declared_size = file.size or 0
-    if declared_size > 0:
-        knowledge_service.validate_upload(filename=filename, size=declared_size)
-    content = await file.read()
-    knowledge_service.validate_upload(filename=filename, size=len(content))
-    media_type = content_type or file.content_type or "application/octet-stream"
+    payload: KnowledgeDocumentUploadUrlRequest,
+    admin: AdminUser,
+) -> KnowledgeDocumentUploadUrlResponse:
     try:
-        return await knowledge_service.upload_document(
+        ticket = await knowledge_service.create_upload_url(
             SYSTEM_USER_ID,
             knowledge_base_id,
-            filename=filename,
-            content=content,
-            content_type=media_type,
+            uploader_user_id=str(admin.id),
+            filename=payload.filename,
+            size_bytes=payload.size_bytes,
+        )
+    except knowledge_service.KnowledgeError as exc:
+        raise knowledge_http_error(exc) from exc
+    return KnowledgeDocumentUploadUrlResponse(
+        upload_id=ticket.upload_id,
+        upload_url=ticket.upload_url,
+        headers=ticket.headers,
+        expires_in=ticket.expires_in,
+    )
+
+
+@public_router.post(
+    "/bases/{knowledge_base_id}/documents/complete",
+    response_model=KnowledgeDocumentUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="确认公共知识库文档上传",
+)
+async def complete_public_document_upload(
+    knowledge_base_id: str,
+    payload: KnowledgeDocumentCompleteRequest,
+    admin: AdminUser,
+) -> KnowledgeDocumentUploadResponse:
+    try:
+        return await knowledge_service.complete_upload(
+            SYSTEM_USER_ID,
+            knowledge_base_id,
+            uploader_user_id=str(admin.id),
+            upload_id=payload.upload_id,
+            filename=payload.filename,
+            size_bytes=payload.size_bytes,
+            content_type=payload.content_type,
         )
     except knowledge_service.KnowledgeError as exc:
         raise knowledge_http_error(exc) from exc
@@ -188,40 +209,26 @@ async def delete_public_document(
 
 
 @public_router.get(
-    "/bases/{knowledge_base_id}/documents/{document_id}",
-    summary="下载公共知识库文档",
+    "/bases/{knowledge_base_id}/documents/{document_id}/download-url",
+    response_model=KnowledgeDocumentDownloadUrlResponse,
+    summary="获取公共知识库文档下载地址",
 )
-async def download_public_document(
+async def public_document_download_url(
     knowledge_base_id: str,
     document_id: str,
+    response: Response,
     _admin: AdminUser,
-    download: bool = False,
-) -> StreamingResponse:
-    stream = knowledge_service.stream_document(
-        SYSTEM_USER_ID,
-        knowledge_base_id,
-        document_id,
-        download=download,
-    )
+) -> KnowledgeDocumentDownloadUrlResponse:
     try:
-        upstream = await stream.__aenter__()
-    except RemoteServiceError as exc:
-        raise knowledge_http_error(knowledge_service.translate_remote_error(exc)) from exc
-
-    async def relay() -> AsyncIterator[bytes]:
-        try:
-            async for chunk in upstream.aiter_raw():
-                yield chunk
-        except httpx.HTTPError:
-            logger.warning("public knowledge document stream interrupted: %s", document_id)
-        finally:
-            await stream.__aexit__(None, None, None)
-
-    return StreamingResponse(
-        relay(),
-        media_type=upstream.headers.get("content-type", "application/octet-stream"),
-        headers=stream_headers(upstream),
-    )
+        result = await knowledge_service.document_download_url(
+            SYSTEM_USER_ID,
+            knowledge_base_id,
+            document_id,
+        )
+    except knowledge_service.KnowledgeError as exc:
+        raise knowledge_http_error(exc) from exc
+    response.headers["Cache-Control"] = "no-store"
+    return result
 
 
 @user_router.get(
@@ -284,40 +291,26 @@ async def user_document_status(
 
 
 @user_router.get(
-    "/{user_id}/knowledge/bases/{knowledge_base_id}/documents/{document_id}",
-    summary="下载学生知识库文档",
+    "/{user_id}/knowledge/bases/{knowledge_base_id}/documents/{document_id}/download-url",
+    response_model=KnowledgeDocumentDownloadUrlResponse,
+    summary="获取学生知识库文档下载地址",
 )
-async def download_user_document(
+async def user_document_download_url(
     user_id: uuid.UUID,
     knowledge_base_id: str,
     document_id: str,
+    response: Response,
     session: SessionDep,
     _admin: AdminUser,
-    download: bool = False,
-) -> StreamingResponse:
+) -> KnowledgeDocumentDownloadUrlResponse:
     user = await _target_user(session, user_id)
-    stream = knowledge_service.stream_document(
-        str(user.id),
-        knowledge_base_id,
-        document_id,
-        download=download,
-    )
     try:
-        upstream = await stream.__aenter__()
-    except RemoteServiceError as exc:
-        raise knowledge_http_error(knowledge_service.translate_remote_error(exc)) from exc
-
-    async def relay() -> AsyncIterator[bytes]:
-        try:
-            async for chunk in upstream.aiter_raw():
-                yield chunk
-        except httpx.HTTPError:
-            logger.warning("user knowledge document stream interrupted: %s", document_id)
-        finally:
-            await stream.__aexit__(None, None, None)
-
-    return StreamingResponse(
-        relay(),
-        media_type=upstream.headers.get("content-type", "application/octet-stream"),
-        headers=stream_headers(upstream),
-    )
+        result = await knowledge_service.document_download_url(
+            str(user.id),
+            knowledge_base_id,
+            document_id,
+        )
+    except knowledge_service.KnowledgeError as exc:
+        raise knowledge_http_error(exc) from exc
+    response.headers["Cache-Control"] = "no-store"
+    return result

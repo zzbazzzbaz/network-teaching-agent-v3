@@ -31,7 +31,8 @@ from app.api.repositories.models import (
     UserRole,
     UserStatus,
 )
-from app.api.services import file_service
+from app.shared import storage_keys
+from app.shared.config import get_settings
 from app.shared.enums import MaterialCollectionKind
 
 DEFAULT_SOURCE = Path("app/agent/resource/materials")
@@ -182,9 +183,10 @@ async def _rewrite_images(
             document_path=document_path,
             image_path=relative,
         )
-        raw_path = f"/api/files/{file_id}/raw?token={file_service.raw_token(file_id)}"
+        key = storage_keys.material_key(file_id, resolved.name)
+        base = get_settings().cos.public_base_url.rstrip("/")
         parts.append(content[cursor : match.start()])
-        parts.append(f"![{alt}]({raw_path})")
+        parts.append(f"![{alt}]({base}/{key})")
         cursor = match.end()
         ctx.stats.images += 1
         if ctx.dry_run:
@@ -225,7 +227,12 @@ async def _ensure_file(ctx: Context, *, file: Path, file_id: uuid.UUID) -> None:
     stored.size_bytes = len(content)
     stored.session_id = None
     if stored.status is not FileStatus.READY or previous_size != len(content):
-        await cos.put_object(stored.storage_key, content, content_type)
+        await cos.put_object(
+            stored.storage_key,
+            content,
+            content_type,
+            cache_control=storage_keys.PUBLIC_CACHE_CONTROL,
+        )
         stored.status = FileStatus.READY
         ctx.stats.uploaded += 1
     else:

@@ -241,6 +241,6 @@ async def complete_asset_upload(
     await session.commit()
     return MaterialAssetCompleteResponse(
         file_id=file.id,
-        raw_path=file_service.raw_path(file),
+        url=file_service.public_url(file),
         markdown=file_service.material_markdown(file),
     )

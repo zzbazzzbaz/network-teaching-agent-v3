@@ -1,12 +1,16 @@
-import { request, requestBlob } from './client';
+import { request } from './client';
 import type {
   KnowledgeBaseCreateRequest,
   KnowledgeBaseItem,
   KnowledgeBaseListResponse,
   KnowledgeBaseUpdateRequest,
+  KnowledgeDocumentCompleteRequest,
+  KnowledgeDocumentDownloadUrlResponse,
   KnowledgeDocumentListResponse,
   KnowledgeDocumentStatusResponse,
   KnowledgeDocumentUploadResponse,
+  KnowledgeDocumentUploadUrlRequest,
+  KnowledgeDocumentUploadUrlResponse,
 } from './types';
 
 export type KnowledgeScope = 'mine' | 'public' | 'user';
@@ -86,21 +90,39 @@ export function listKnowledgeDocumentStatus(
   );
 }
 
-export function uploadKnowledgeDocument(
+export async function uploadKnowledgeDocument(
   scope: KnowledgeScope,
   knowledgeBaseId: string,
   file: File,
   userId?: string,
 ): Promise<KnowledgeDocumentUploadResponse> {
-  const formData = new FormData();
-  formData.append('file', file);
-  if (file.type) {
-    formData.append('content_type', file.type);
+  const path = `${basePath(scope, userId)}/${encodeURIComponent(knowledgeBaseId)}/documents`;
+  const intentBody: KnowledgeDocumentUploadUrlRequest = {
+    filename: file.name,
+    size_bytes: file.size,
+  };
+  const intent = await request<KnowledgeDocumentUploadUrlResponse>(`${path}/upload-url`, {
+    method: 'POST',
+    body: intentBody,
+  });
+  const upload = await fetch(intent.upload_url, {
+    method: 'PUT',
+    headers: intent.headers,
+    body: file,
+  });
+  if (!upload.ok) {
+    throw new Error(`上传失败（${upload.status}）`);
   }
-  return request<KnowledgeDocumentUploadResponse>(
-    `${basePath(scope, userId)}/${encodeURIComponent(knowledgeBaseId)}/documents`,
-    { method: 'POST', formData },
-  );
+  const completeBody: KnowledgeDocumentCompleteRequest = {
+    upload_id: intent.upload_id,
+    filename: file.name,
+    size_bytes: file.size,
+    content_type: file.type || null,
+  };
+  return request<KnowledgeDocumentUploadResponse>(`${path}/complete`, {
+    method: 'POST',
+    body: completeBody,
+  });
 }
 
 export function deleteKnowledgeDocument(
@@ -122,15 +144,14 @@ export async function downloadKnowledgeDocument(
   filename: string,
   userId?: string,
 ): Promise<void> {
-  const blob = await requestBlob(
-    `${basePath(scope, userId)}/${encodeURIComponent(knowledgeBaseId)}/documents/${encodeURIComponent(documentId)}?download=true`,
+  const result = await request<KnowledgeDocumentDownloadUrlResponse>(
+    `${basePath(scope, userId)}/${encodeURIComponent(knowledgeBaseId)}/documents/${encodeURIComponent(documentId)}/download-url`,
   );
-  const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
+  anchor.href = result.url;
+  anchor.download = result.filename || filename;
+  anchor.rel = 'noopener';
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }

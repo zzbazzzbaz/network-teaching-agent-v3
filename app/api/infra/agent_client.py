@@ -1,5 +1,6 @@
 import re
-from collections.abc import AsyncGenerator
+import uuid
+from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -297,15 +298,41 @@ class AgentClient:
         user_id: str,
         knowledge_base_id: str,
         filename: str,
-        content: bytes,
         content_type: str,
+        size: int,
+        chunks: AsyncIterator[bytes],
     ) -> dict[str, Any]:
+        boundary = f"----teaching{uuid.uuid4().hex}"
+        safe_name = (
+            filename.replace("\\", "_").replace('"', "'").replace("\r", " ").replace("\n", " ")
+        )
+        head = (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="file"; filename="{safe_name}"\r\n'
+            f"Content-Type: {content_type}\r\n\r\n"
+        ).encode()
+        tail = (
+            f"\r\n--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="content_type"\r\n\r\n'
+            f"{content_type}\r\n"
+            f"--{boundary}--\r\n"
+        ).encode()
+
+        async def body() -> AsyncIterator[bytes]:
+            yield head
+            async for chunk in chunks:
+                yield chunk
+            yield tail
+
         response = await self._http.request(
             "POST",
             f"/knowledge_bases/{knowledge_base_id}/documents",
             user_id=user_id,
-            files={"file": (filename, content, content_type)},
-            data={"content_type": content_type},
+            content=body(),
+            headers={
+                "Content-Type": f"multipart/form-data; boundary={boundary}",
+                "Content-Length": str(size + len(head) + len(tail)),
+            },
             timeout=httpx.Timeout(connect=5.0, read=120.0, write=120.0, pool=5.0),
         )
         return response.json()
@@ -322,26 +349,6 @@ class AgentClient:
             f"/knowledge_bases/{knowledge_base_id}/documents/{document_id}",
             user_id=user_id,
         )
-
-    @asynccontextmanager
-    async def stream_knowledge_document(
-        self,
-        *,
-        user_id: str,
-        knowledge_base_id: str,
-        document_id: str,
-        download: bool,
-    ) -> AsyncGenerator[httpx.Response]:
-        params = {"download": "true"} if download else {}
-        async with self._http.stream(
-            "GET",
-            f"/knowledge_bases/{knowledge_base_id}/documents/{document_id}",
-            user_id=user_id,
-            params=params,
-            headers={"Accept-Encoding": "identity"},
-            timeout=httpx.Timeout(connect=5.0, read=None, write=30.0, pool=5.0),
-        ) as response:
-            yield response
 
     async def get_status(
         self,
