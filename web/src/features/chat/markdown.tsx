@@ -43,11 +43,14 @@ function CodeBlock(props: {
 
 const EMPTY_CONFIG: MarkedExtension = {};
 
+const MATH_DELIMITER = /(?:\$|\\\(|\\\[)/;
+
 function useMarkdownConfig(content: string): MarkedExtension {
   const [config, setConfig] = useState<MarkedExtension>(EMPTY_CONFIG);
+  const needsMath = MATH_DELIMITER.test(content);
 
   useEffect(() => {
-    if (config !== EMPTY_CONFIG || !content.includes('$')) {
+    if (config !== EMPTY_CONFIG || !needsMath) {
       return;
     }
     let cancelled = false;
@@ -59,7 +62,7 @@ function useMarkdownConfig(content: string): MarkedExtension {
     return () => {
       cancelled = true;
     };
-  }, [config, content]);
+  }, [config, needsMath]);
 
   return config;
 }
