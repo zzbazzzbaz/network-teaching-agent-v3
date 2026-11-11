@@ -93,9 +93,6 @@ export function ChatComposer({
             ) : null
           }
         />
-        <p className="px-1.5 pt-2 text-[11px] text-ink-subtle">
-          图片会生成公开链接，请勿上传敏感信息。
-        </p>
       </div>
     </div>
   );

@@ -4,10 +4,6 @@ import { useState } from 'react';
 
 import { describeToolCall, describeToolResult, toolStatus } from '@/lib/agentscope/render-policy';
 
-import { Markdown } from './markdown';
-
-const MEMORY_TOOLS = new Set(['memory_search']);
-
 function StatusIcon({ status }: { status: ReturnType<typeof toolStatus> }) {
   if (status === 'loading') {
     return <Loader2 className="size-3 animate-spin text-ink-subtle" aria-hidden="true" />;
@@ -18,17 +14,7 @@ function StatusIcon({ status }: { status: ReturnType<typeof toolStatus> }) {
   return <CheckCircle2 className="size-3 text-ink-subtle" aria-hidden="true" />;
 }
 
-function ToolBody({ raw, memory }: { raw: string; memory: boolean }) {
-  if (memory) {
-    return (
-      <div className="max-h-72 overflow-y-auto rounded-chip bg-surface-sunken/50 px-3 py-2">
-        <Markdown
-          content={raw.replace(/^-\s+/, '')}
-          className="text-[12.5px] leading-6 [&_h1]:mt-0 [&_h1]:mb-2 [&_h1]:text-[13.5px] [&_h2]:mt-3 [&_h2]:mb-1.5 [&_h2]:text-[13px] [&_h3]:text-[12.5px]"
-        />
-      </div>
-    );
-  }
+function ToolBody({ raw }: { raw: string }) {
   return (
     <pre className="m-0 max-h-72 overflow-y-auto whitespace-pre-wrap break-words rounded-chip bg-surface-sunken/50 px-3 py-2 font-code text-[12px] leading-[1.6]">
       {raw}
@@ -39,9 +25,8 @@ function ToolBody({ raw, memory }: { raw: string; memory: boolean }) {
 function ToolRow({ call, result }: { call: ToolCallBlock; result: ToolResultBlock | undefined }) {
   const callView = describeToolCall(call);
   const resultView = result ? describeToolResult(result) : null;
-  const memory = MEMORY_TOOLS.has(call.name) && Boolean(resultView?.raw);
   const hasBody = Boolean(resultView?.raw);
-  const [open, setOpen] = useState(memory);
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="px-3 py-2">
@@ -69,7 +54,7 @@ function ToolRow({ call, result }: { call: ToolCallBlock; result: ToolResultBloc
       </button>
       {open && hasBody && resultView?.raw ? (
         <div className="mt-2 pl-[19px]">
-          <ToolBody raw={resultView.raw} memory={memory} />
+          <ToolBody raw={resultView.raw} />
         </div>
       ) : null}
     </div>

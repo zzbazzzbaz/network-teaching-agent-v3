@@ -26,6 +26,7 @@ const TOOL_TITLES: Record<string, string> = {
 };
 
 const MAX_RAW_CHARS = 400;
+const SKILL_TOOL_NAME = 'Skill';
 
 function titleOf(name: string): string {
   return TOOL_TITLES[name] ?? name;
@@ -33,6 +34,10 @@ function titleOf(name: string): string {
 
 function textOf(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function pathOf(input: Record<string, unknown> | null): string {
+  return textOf(input?.path);
 }
 
 function outputToText(block: ToolResultBlock): string {
@@ -88,9 +93,35 @@ export function describeToolCall(block: ToolCallBlock): ToolCallView {
     };
   }
 
+  if (block.name === SKILL_TOOL_NAME) {
+    const skill = textOf(input?.skill) || textOf(input?.name);
+    return {
+      title,
+      description: skill,
+      waitingLabel: null,
+    };
+  }
+
+  if (block.name === 'materials_ls' || block.name === 'materials_read') {
+    return {
+      title,
+      description: pathOf(input),
+      waitingLabel: null,
+    };
+  }
+
+  if (block.name === 'materials_grep') {
+    const query = textOf(input?.query);
+    return {
+      title,
+      description: query ? `「${query}」` : pathOf(input),
+      waitingLabel: null,
+    };
+  }
+
   return {
     title,
-    description: input ? '已提交调用' : '准备中',
+    description: '',
     waitingLabel: block.state === 'asking' ? '等待确认' : null,
   };
 }
@@ -109,12 +140,20 @@ export function describeToolResult(block: ToolResultBlock): ToolResultView {
     return { summary: '已收到作答', raw: null, hidden: false };
   }
 
+  if (block.name === SKILL_TOOL_NAME) {
+    return {
+      summary: block.state === 'error' ? '加载失败' : '已加载',
+      raw: null,
+      hidden: false,
+    };
+  }
+
   if (block.name === 'memory_search') {
     const entries = splitMemoryEntries(raw);
     if (entries.length === 0) {
       return { summary: '没有命中结果', raw: null, hidden: false };
     }
-    return { summary: `检索到 ${entries.length} 条记忆`, raw, hidden: false };
+    return { summary: `检索到 ${entries.length} 条记忆`, raw: null, hidden: false };
   }
 
   if (!raw) {
