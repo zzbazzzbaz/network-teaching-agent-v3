@@ -4,6 +4,7 @@ import { Suspense, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
 
 import { PageLoading } from '@/components/common';
+import { AccountMenuButton } from '@/features/shell/AccountMenu';
 import { AppHeader } from '@/features/shell/AppHeader';
 import { Sidebar } from '@/features/shell/Sidebar';
 import { useIsMobile } from '@/lib/use-media-query';
@@ -77,11 +78,12 @@ export function AppLayout() {
             aria-label={isMobile ? '打开导航' : '展开侧边栏'}
           />
         ) : null}
-        <main
-          className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
-            isChat && (isMobile || sidebarCollapsed) ? 'pt-12' : ''
-          }`}
-        >
+        {isChat ? (
+          <div className="absolute top-3 right-3 z-20">
+            <AccountMenuButton className="border border-line bg-surface/90 text-ink-muted shadow-[0_2px_8px_rgb(18_26_28/10%)] backdrop-blur-sm" />
+          </div>
+        ) : null}
+        <main className={`flex min-h-0 flex-1 flex-col overflow-hidden ${isChat ? 'pt-12' : ''}`}>
           <Suspense fallback={<PageLoading text="正在加载页面" />}>
             <Outlet />
           </Suspense>

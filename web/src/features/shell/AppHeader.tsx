@@ -5,6 +5,8 @@ import { useLocation, useNavigate } from 'react-router';
 import { useIsMobile } from '@/lib/use-media-query';
 import { useUiStore } from '@/stores/ui-store';
 
+import { AccountMenuButton } from './AccountMenu';
+
 const PAGE_TITLES: Record<string, string> = {
   '/learn': '课程内容',
   '/memory': '记忆',
@@ -58,17 +60,20 @@ export function AppHeader() {
         <h1 className="min-w-0 truncate text-[20px] leading-tight font-semibold tracking-[-0.012em] text-ink">
           {pageTitle}
         </h1>
-        {isLearn ? (
-          <Button
-            className="ml-auto shrink-0 text-ink-muted"
-            type="text"
-            size="small"
-            icon={<ArrowLeft className="size-3.5" />}
-            onClick={() => navigate('/chat')}
-          >
-            返回工作台
-          </Button>
-        ) : null}
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          {isLearn ? (
+            <Button
+              className="text-ink-muted"
+              type="text"
+              size="small"
+              icon={<ArrowLeft className="size-3.5" />}
+              onClick={() => navigate('/chat')}
+            >
+              返回工作台
+            </Button>
+          ) : null}
+          <AccountMenuButton className="shrink-0 text-ink-muted" />
+        </div>
       </div>
     </header>
   );
