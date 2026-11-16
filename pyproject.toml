@@ -20,6 +20,7 @@ dependencies = [
     "cos-python-sdk-v5==1.9.44",
     "python-docx==1.2.0",
     "python-pptx==1.0.2",
+    "qdrant-client==1.20.0",
     # >=0.4.1.12 移除了 dream_topics_step, 与 agentscope 2.0.11 的内嵌配置不兼容
     "reme-ai==0.4.1.11",
 ]
