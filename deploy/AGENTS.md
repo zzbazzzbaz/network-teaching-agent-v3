@@ -1,20 +1,21 @@
 # deploy
 
-服务器 `101.35.223.219`（Ubuntu 24.04），域名 `network-agent2.test.chatgqt.top`，
+服务器 `106.54.224.201`（Ubuntu 22.04），域名 `network-agent2.test.chatgqt.top`，
 部署根 `/srv/network-teaching-agent-v3`，只放 `.env`、`docker-compose.yml`。
-nginx 由 `bootstrap.sh` 一次性安装，CD 不改 nginx。不要动同机 docx-check 和 network-agent。
+HTTPS 由系统级 Caddy 统一处理：站点片段 `/etc/caddy/sites.d/network-agent-v3.caddy`，
+由 `bootstrap.sh` 一次性安装，CD 不改 Caddy。不要动同机的 fresh-mall、docx-check 和 network-agent。
 
 ## 文件
 
 | 路径 | 作用 |
 |---|---|
 | `docker-compose.yml` | web/api/agent + postgres/redis/qdrant |
-| `nginx.conf` | 系统 nginx 站点配置 |
+| `Caddyfile` | 系统 Caddy 站点片段（域名路由与证书） |
 | `bootstrap.sh` | 一次性初始化，sudo 幂等 |
 | `docker/{api,agent,web}.Dockerfile` | CI 构建，服务器不构建 |
 
 端口：web `8084`、api `8085`、agent `8086`，全部只绑 `127.0.0.1`。
-路由：`/api/`、`/health` → 8085；其余 → 8084。agent 只在容器网络内被 api 访问，不经过 nginx。
+路由：`/api/`、`/health` → 8085；其余 → 8084。agent 只在容器网络内被 api 访问，不经过 Caddy。
 
 ## 配置
 

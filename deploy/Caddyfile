@@ -1,0 +1,28 @@
+network-agent2.test.chatgqt.top {
+	encode zstd gzip
+
+	request_body {
+		max_size 40MB
+	}
+
+	@internal path /api/internal/*
+	respond @internal 404
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8085 {
+			flush_interval -1
+			transport http {
+				read_timeout 3600s
+				write_timeout 3600s
+			}
+		}
+	}
+
+	handle /health {
+		reverse_proxy 127.0.0.1:8085
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8084
+	}
+}

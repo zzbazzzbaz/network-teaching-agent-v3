@@ -17,7 +17,7 @@ concurrency:
 
 env:
   SITE_DOMAIN: network-agent2.test.chatgqt.top
-  DEPLOY_HOST: 101.35.223.219
+  DEPLOY_HOST: 106.54.224.201
   DEPLOY_USER: ubuntu
   DEPLOY_ROOT: /srv/network-teaching-agent-v3
 
